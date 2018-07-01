@@ -26,6 +26,13 @@ public:
   Matrix33(const Vector3<T> &col0, const Vector3<T> &col1, const Vector3<T> &col2);
   Matrix33(const T *m);
 
+  template<typename T2>
+  explicit Matrix33(const Matrix33<T2> &other) : col{ Vector3<T>(other.col[0]), Vector3<T>(other.col[1]), Vector3<T>(other.col[2]) } {}
+
+  template<typename T2>
+  operator Matrix33<T2>() const { return Matrix33<T2>(cr00, cr01, cr02, cr10, cr11, cr12, cr20, cr21, cr22); }
+
+  Vector3<T> row(int i) const;
   void transpose();
   void invert();
   Matrix33<T> transposed() const;
@@ -38,6 +45,7 @@ public:
   Matrix33<T> operator-(const Matrix33<T> &other) const;
   Matrix33<T> operator*(const Matrix33<T> &other) const;
   Matrix33<T> operator-() const;
+  Vector3<T> operator*(const Vector3<T> &v) const;
 };
 
 typedef Matrix33<double> Matrix33d;

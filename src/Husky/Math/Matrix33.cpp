@@ -67,6 +67,12 @@ Matrix33<T>::Matrix33(const Vector3<T> &col0, const Vector3<T> &col1, const Vect
 }
 
 template<typename T>
+Vector3<T> Matrix33<T>::row(int i) const
+{
+  return Vector3<T>(col[0].val[i], col[1].val[i], col[2].val[i]);
+}
+
+template<typename T>
 void Matrix33<T>::transpose()
 {
   *this = transposed();
@@ -81,10 +87,7 @@ void Matrix33<T>::invert()
 template<typename T>
 Matrix33<T> Matrix33<T>::transposed() const
 {
-  return Matrix33<T>(
-    cr00, cr10, cr20,
-    cr01, cr11, cr21,
-    cr02, cr12, cr22);
+  return Matrix33<T>(row(0), row(1), row(2));
 }
 
 template<typename T>
@@ -138,6 +141,12 @@ template<typename T>
 Matrix33<T> Matrix33<T>::operator-() const
 {
   return Matrix33<T>(-col[0], -col[1], -col[2]);
+}
+
+template<typename T>
+Vector3<T> Matrix33<T>::operator*(const Vector3<T> &v) const
+{
+  return{}; // TODO
 }
 
 template class Matrix33<double>;

@@ -9,9 +9,11 @@ class __declspec(dllexport) Vector3
 {
 public:
   union {
-    T v[3];
+    T val[3];
     struct { T x, y, z; };
     struct { T r, g, b; };
+    struct { T s, t, p; };
+    struct { T u, v; };
     struct { T yaw, pitch, roll; };
   };
 
@@ -19,6 +21,12 @@ public:
   Vector3(T xyz);
   Vector3(T x, T y, T z);
   Vector3(const Vector2<T> &xy, T z);
+
+  template<typename T2>
+  explicit Vector3(const Vector3<T2> &xyz) : x(T(xyz.x)), y(T(xyz.y)), z(T(xyz.z)) {}
+
+  template<typename T2>
+  operator Vector3<T2>() const { return Vector3<T2>(x, y, z); }
 
   void set(T x, T y, T z);
   void normalize();

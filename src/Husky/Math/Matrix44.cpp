@@ -76,6 +76,12 @@ Matrix44<T>::Matrix44(const Vector4<T> &col0, const Vector4<T> &col1, const Vect
 }
 
 template<typename T>
+Vector4<T> Matrix44<T>::row(int i) const
+{
+  return Vector4<T>(col[0].val[i], col[1].val[i], col[2].val[i], col[3].val[i]);
+}
+
+template<typename T>
 void Matrix44<T>::transpose()
 {
   *this = transposed();
@@ -119,11 +125,7 @@ void Matrix44<T>::invert()
 template<typename T>
 Matrix44<T> Matrix44<T>::transposed() const
 {
-  return Matrix44<T>(
-    cr00, cr10, cr20, cr30,
-    cr01, cr11, cr21, cr31,
-    cr02, cr12, cr22, cr32,
-    cr03, cr13, cr23, cr33);
+  return Matrix44<T>(row(0), row(1), row(2), row(3));
 }
 
 template<typename T>
@@ -177,6 +179,18 @@ template<typename T>
 Matrix44<T> Matrix44<T>::operator-() const
 {
   return Matrix44<T>(-col[0], -col[1], -col[2], -col[3]);
+}
+
+template<typename T>
+Vector4<T> Matrix44<T>::operator*(const Vector4<T> &v) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Vector3<T> Matrix44<T>::operator*(const Vector3<T> &v) const
+{
+  return{}; // TODO
 }
 
 template class Matrix44<double>;

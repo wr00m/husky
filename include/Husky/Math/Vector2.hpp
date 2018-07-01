@@ -9,13 +9,22 @@ class __declspec(dllexport) Vector2
 {
 public:
   union {
-    T v[2];
+    T val[2];
     struct { T x, y; };
+    struct { T r, g; };
+    struct { T s, t; };
+    struct { T u, v; };
   };
 
   Vector2();
   Vector2(T xy);
   Vector2(T x, T y);
+
+  template<typename T2>
+  explicit Vector2(const Vector2<T2> &xy) : x(T(xy.x)), y(T(xy.y)) {}
+
+  template<typename T2>
+  operator Vector2<T2>() const { return Vector2<T2>(x, y); }
 
   void set(T x, T y);
   void normalize();
