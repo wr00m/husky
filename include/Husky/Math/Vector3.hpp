@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Husky/Math/Vector2.hpp>
+#include <husky/math/Vector2.hpp>
 
 namespace husky {
 
@@ -14,7 +14,6 @@ public:
     struct { T r, g, b; };
     struct { T s, t, p; };
     struct { T u, v; };
-    struct { T yaw, pitch, roll; };
   };
 
   Vector3();
@@ -46,6 +45,8 @@ public:
   Vector3<T> operator*(const Vector3<T> &other) const;
   Vector3<T> operator/(const Vector3<T> &other) const;
   Vector3<T> operator-() const;
+  inline T& operator[](int i) { return this->val[i]; }
+  inline T operator[](int i) const { return this->val[i]; }
 };
 
 typedef Vector3<double> Vector3d;

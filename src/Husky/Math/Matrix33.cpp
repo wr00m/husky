@@ -1,4 +1,4 @@
-#include <Husky/Math/Matrix33.hpp>
+#include <husky/math/Matrix33.hpp>
 #include <cmath>
 
 namespace husky {
@@ -6,40 +6,43 @@ namespace husky {
 template<typename T>
 Matrix33<T> Matrix33<T>::identity()
 {
-  return diagonal(1);
+  return {
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  };
 }
 
 template<typename T>
-Matrix33<T> Matrix33<T>::diagonal(T t)
+Matrix33<T> Matrix33<T>::scale(const Vector3<T> &s)
 {
-  return Matrix33<T>(
-    t, 0, 0,
-    0, t, 0,
-    0, 0, t);
+  return {
+    s.x,   0,   0,
+      0, s.y,   0,
+      0,   0, s.z
+  };
 }
 
 template<typename T>
-Matrix33<T> Matrix33<T>::rotate(T rad, const Vector3<T> &axis)
+Matrix33<T> Matrix33<T>::rotate(T rad, Vector3<T> axis)
 {
-  return identity(); // TODO
-}
+  axis.normalize();
 
-template<typename T>
-Matrix33<T> Matrix33<T>::rotateX(T rad)
-{
-  return rotate(rad, { 1, 0, 0 });
-}
+  T c = std::cos(rad);
+  T s = std::sin(rad);
+  T t = 1 - c;
 
-template<typename T>
-Matrix33<T> Matrix33<T>::rotateY(T rad)
-{
-  return rotate(rad, { 0, 1, 0 });
-}
-
-template<typename T>
-Matrix33<T> Matrix33<T>::rotateZ(T rad)
-{
-  return rotate(rad, { 0, 0, 1 });
+  Matrix33<T> res;
+  res[0][0] = t * axis.x * axis.x + c;
+  res[0][1] = t * axis.x * axis.y + axis.z * s;
+  res[0][2] = t * axis.x * axis.z - axis.y * s;
+  res[1][0] = t * axis.x * axis.y - axis.z * s;
+  res[1][1] = t * axis.y * axis.y + c;
+  res[1][2] = t * axis.y * axis.z + axis.x * s;
+  res[2][0] = t * axis.x * axis.z + axis.y * s;
+  res[2][1] = t * axis.y * axis.z - axis.x * s;
+  res[2][2] = t * axis.z * axis.z + c;
+  return res;
 }
 
 template<typename T>
@@ -63,6 +66,12 @@ Matrix33<T>::Matrix33(T cr00, T cr01, T cr02, T cr10, T cr11, T cr12, T cr20, T 
 template<typename T>
 Matrix33<T>::Matrix33(const Vector3<T> &col0, const Vector3<T> &col1, const Vector3<T> &col2)
   : col{ col0, col1, col2 }
+{
+}
+
+template<typename T>
+Matrix33<T>::Matrix33(const Matrix22<T> &other)
+  : col{ { other.col[0], 0 }, { other.col[1], 0 }, { 0, 0, 1 } }
 {
 }
 

@@ -1,4 +1,4 @@
-#include <Husky/Math/Matrix22.hpp>
+#include <husky/math/Matrix22.hpp>
 #include <cmath>
 
 namespace husky {
@@ -6,15 +6,19 @@ namespace husky {
 template<typename T>
 Matrix22<T> Matrix22<T>::identity()
 {
-  return diagonal(1);
+  return {
+    1, 0,
+    0, 1
+  };
 }
 
 template<typename T>
-Matrix22<T> Matrix22<T>::diagonal(T t)
+Matrix22<T> Matrix22<T>::scale(const Vector2<T> &s)
 {
-  return Matrix22<T>(
-    t, 0,
-    0, t);
+  return {
+    s.x, 0,
+    0, s.y
+  };
 }
 
 template<typename T>

@@ -1,4 +1,4 @@
-#include <Husky/Math/Vector4.hpp>
+#include <husky/math/Vector4.hpp>
 #include <cmath>
 
 namespace husky {

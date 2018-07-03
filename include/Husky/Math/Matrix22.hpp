@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Husky/Math/Vector2.hpp>
+#include <husky/math/Vector2.hpp>
 
 namespace husky {
 
@@ -15,7 +15,7 @@ public:
   };
 
   static Matrix22<T> identity();
-  static Matrix22<T> diagonal(T t);
+  static Matrix22<T> scale(const Vector2<T> &s);
   static Matrix22<T> rotate(T rad);
 
   Matrix22();
@@ -43,6 +43,8 @@ public:
   Matrix22<T> operator*(const Matrix22<T> &other) const;
   Matrix22<T> operator-() const;
   Vector2<T> operator*(const Vector2<T> &v) const;
+  inline Vector2<T>& operator[](int colIndex) { return this->col[colIndex]; }
+  inline const Vector2<T>& operator[](int colIndex) const { return this->col[colIndex]; }
 };
 
 typedef Matrix22<double> Matrix22d;

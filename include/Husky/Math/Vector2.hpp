@@ -42,6 +42,8 @@ public:
   Vector2<T> operator*(const Vector2<T> &other) const;
   Vector2<T> operator/(const Vector2<T> &other) const;
   Vector2<T> operator-() const;
+  inline T& operator[](int i) { return this->val[i]; }
+  inline T operator[](int i) const { return this->val[i]; }
 };
 
 typedef Vector2<double> Vector2d;

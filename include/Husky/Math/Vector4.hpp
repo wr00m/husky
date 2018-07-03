@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Husky/Math/Vector3.hpp>
+#include <husky/math/Vector3.hpp>
 
 namespace husky {
 
@@ -46,6 +46,8 @@ public:
   Vector4<T> operator*(const Vector4<T> &other) const;
   Vector4<T> operator/(const Vector4<T> &other) const;
   Vector4<T> operator-() const;
+  inline T& operator[](int i) { return this->val[i]; }
+  inline T operator[](int i) const { return this->val[i]; }
 };
 
 typedef Vector4<double> Vector4d;
