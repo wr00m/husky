@@ -10,6 +10,7 @@
 #include <husky/math/Random.hpp>
 #include <husky/math/Quaternion.hpp>
 #include <husky/math/MathUtil.hpp>
+#include <husky/mesh/SimpleMesh.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -103,6 +104,8 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   assert(quatDirsDiff < 1e-9);
 
   // TODO: Investigate why Quaternion::fromRotationMatrix() differs from GLM
+
+  husky::SimpleMesh mesh; // TODO
 }
 
 static const char *vertShaderSrc =
