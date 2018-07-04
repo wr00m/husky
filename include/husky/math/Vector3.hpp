@@ -10,6 +10,7 @@ class __declspec(dllexport) Vector3
 public:
   union {
     T val[3];
+    Vector2<T> xy;
     struct { T x, y, z; };
     struct { T r, g, b; };
     struct { T s, t, p; };
@@ -27,26 +28,26 @@ public:
   template<typename T2>
   operator Vector3<T2>() const { return Vector3<T2>(x, y, z); }
 
-  void set(T x, T y, T z);
-  void normalize();
-  T length() const;
-  T length2() const;
-  T dot(const Vector3<T> &other) const;
-  Vector3<T> cross(const Vector3<T> &other) const;
-  Vector3<T> normalized() const;
-  Vector2<T> xy() const;
+  void        set(T x, T y, T z);
+  T           dot(const Vector3<T> &other) const;
+  Vector3<T>  cross(const Vector3<T> &other) const;
+  void        normalize();
+  Vector3<T>  normalized() const;
+  T           length() const;
+  T           length2() const;
 
+  Vector3<T>  operator- () const;
+  Vector3<T>  operator+ (const Vector3<T> &other) const;
   Vector3<T>& operator+=(const Vector3<T> &other);
+  Vector3<T>  operator- (const Vector3<T> &other) const;
   Vector3<T>& operator-=(const Vector3<T> &other);
+  Vector3<T>  operator* (const Vector3<T> &other) const;
   Vector3<T>& operator*=(const Vector3<T> &other);
+  Vector3<T>  operator/ (const Vector3<T> &other) const;
   Vector3<T>& operator/=(const Vector3<T> &other);
-  Vector3<T> operator+(const Vector3<T> &other) const;
-  Vector3<T> operator-(const Vector3<T> &other) const;
-  Vector3<T> operator*(const Vector3<T> &other) const;
-  Vector3<T> operator/(const Vector3<T> &other) const;
-  Vector3<T> operator-() const;
-  inline T& operator[](int i) { return this->val[i]; }
-  inline T operator[](int i) const { return this->val[i]; }
+
+  T& operator[](int i) { return this->val[i]; }
+  T  operator[](int i) const { return this->val[i]; }
 };
 
 typedef Vector3<double> Vector3d;

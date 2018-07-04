@@ -13,7 +13,7 @@ public:
     T m[16];
     Vector4<T> col[4];
     //struct { Vector4<T> col0, col1, col2, col3; };
-    struct { T cr00, cr01, cr02, cr03, cr10, cr11, cr12, cr13, cr20, cr21, cr22, cr23, cr30, cr31, cr32, cr33; };
+    struct { T m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33; };
   };
 
   static Matrix44<T> identity();
@@ -26,7 +26,7 @@ public:
   static Matrix44<T> lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, Vector3<T> upDir);
 
   Matrix44();
-  Matrix44(T cr00, T cr01, T cr02, T cr03, T cr10, T cr11, T cr12, T cr13, T cr20, T cr21, T cr22, T cr23, T cr30, T cr31, T cr32, T cr33);
+  Matrix44(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33);
   Matrix44(const Vector4<T> &col0, const Vector4<T> &col1, const Vector4<T> &col2, const Vector4<T> &col3);
   Matrix44(const T *m);
   Matrix44(const Matrix33<T> &other);
@@ -35,25 +35,28 @@ public:
   explicit Matrix44(const Matrix44<T2> &other) : col{ Vector4<T>(other.col[0]), Vector4<T>(other.col[1]), Vector4<T>(other.col[2]), Vector4<T>(other.col[3]) } {}
 
   template<typename T2>
-  operator Matrix44<T2>() const { return Matrix44<T2>(cr00, cr01, cr02, cr03, cr10, cr11, cr12, cr13, cr20, cr21, cr22, cr23, cr30, cr31, cr32, cr33); }
+  operator Matrix44<T2>() const { return Matrix44<T2>(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33); }
 
-  Vector4<T> row(int i) const;
-  void transpose();
-  void invert();
+  Vector4<T>  row(int i) const;
+  Matrix33<T> get3x3() const;
+  void        transpose();
   Matrix44<T> transposed() const;
+  void        invert();
   Matrix44<T> inverted() const;
 
-  Matrix44<T>& operator+=(const Matrix44<T> &other);
-  Matrix44<T>& operator-=(const Matrix44<T> &other);
-  Matrix44<T>& operator*=(const Matrix44<T> &other);
-  Matrix44<T> operator+(const Matrix44<T> &other) const;
-  Matrix44<T> operator-(const Matrix44<T> &other) const;
-  Matrix44<T> operator*(const Matrix44<T> &other) const;
-  Matrix44<T> operator-() const;
   Vector4<T> operator*(const Vector4<T> &v) const;
   Vector3<T> operator*(const Vector3<T> &v) const;
-  inline Vector4<T>& operator[](int colIndex) { return this->col[colIndex]; }
-  inline const Vector4<T>& operator[](int colIndex) const { return this->col[colIndex]; }
+
+  Matrix44<T>  operator- () const;
+  Matrix44<T>  operator+ (const Matrix44<T> &other) const;
+  Matrix44<T>& operator+=(const Matrix44<T> &other);
+  Matrix44<T>  operator- (const Matrix44<T> &other) const;
+  Matrix44<T>& operator-=(const Matrix44<T> &other);
+  Matrix44<T>  operator* (const Matrix44<T> &other) const;
+  Matrix44<T>& operator*=(const Matrix44<T> &other);
+
+  Vector4<T>& operator[](int colIndex) { return this->col[colIndex]; }
+  const Vector4<T>& operator[](int colIndex) const { return this->col[colIndex]; }
 };
 
 typedef Matrix44<double> Matrix44d;

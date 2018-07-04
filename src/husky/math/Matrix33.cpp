@@ -58,8 +58,8 @@ Matrix33<T>::Matrix33(const T *m)
 }
 
 template<typename T>
-Matrix33<T>::Matrix33(T cr00, T cr01, T cr02, T cr10, T cr11, T cr12, T cr20, T cr21, T cr22)
-  : m{ cr00, cr01, cr02, cr10, cr11, cr12, cr20, cr21, cr22 }
+Matrix33<T>::Matrix33(T m00, T m01, T m02, T m10, T m11, T m12, T m20, T m21, T m22)
+  : m{ m00, m01, m02, m10, m11, m12, m20, m21, m22 }
 {
 }
 

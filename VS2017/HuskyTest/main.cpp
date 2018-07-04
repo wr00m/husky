@@ -7,11 +7,15 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <husky/math/Matrix44.hpp>
+#include <husky/math/Random.hpp>
+#include <husky/math/Quaternion.hpp>
 #include <husky/math/MathUtil.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
 static double matDiff(const husky::Matrix44d &a, const glm::dmat4x4 &g)
@@ -29,6 +33,22 @@ static double matDiff(const husky::Matrix44d &a, const glm::dmat4x4 &g)
       diffSumSq += elementDiff * elementDiff;
     }
   }
+
+  std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
+
+  return diffSumSq;
+}
+
+static double quatDiff(const husky::Quaterniond &a, const glm::dquat &g)
+{
+  std::ostringstream ossA, ossG;
+  ossA.precision(2);
+  ossG.precision(2);
+
+  ossA << std::fixed << std::setw(5) << a.x << " " << a.y << " " << a.z << " " << a.w << " " << std::endl;
+  ossG << std::fixed << std::setw(5) << g.x << " " << g.y << " " << g.z << " " << g.w << " " << std::endl;
+  husky::Vector4d diff(a.x - g.x, a.y - g.y, a.z - g.z, a.w - g.w);
+  double diffSumSq = diff.dot(diff);
 
   std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
 
@@ -66,6 +86,23 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   glm::dmat4x4 mulGlm = lookAtGlm * perspGlm;
   double mulDiff = matDiff(mul, mulGlm);
   assert(mulDiff < 1e-9);
+
+  husky::Quaterniond quatAxisAngle = husky::Quaterniond::fromAxisAngle(33.0, husky::Vector3d(12.0, 13.0, 14.0).normalized());
+  glm::dquat quatAxisAngleGlm = glm::angleAxis(33.0, glm::normalize(glm::dvec3{ 12.0, 13.0, 14.0 }));
+  double quatAxisAngleDiff = quatDiff(quatAxisAngle, quatAxisAngleGlm);
+  assert(quatAxisAngleDiff < 1e-9);
+
+  husky::Matrix44d matFromQuat = quatAxisAngle.toMatrix();
+  glm::dmat4x4 matFromQuatGlm(quatAxisAngleGlm);
+  double matFromQuatDiff = matDiff(matFromQuat, matFromQuatGlm);
+  assert(matFromQuatDiff < 1e-9);
+
+  husky::Quaterniond quatDirs = husky::Quaterniond::fromDirections(husky::Vector3d(1, -2, 3).normalized(), husky::Vector3d(-4, 5, -6).normalized());
+  glm::dquat quatDirsGlm = glm::rotation(glm::normalize(glm::dvec3(1, -2, 3)), glm::normalize(glm::dvec3(-4, 5, -6)));
+  double quatDirsDiff = quatDiff(quatDirs, quatDirsGlm);
+  assert(quatDirsDiff < 1e-9);
+
+  // TODO: Investigate why Quaternion::fromRotationMatrix() differs from GLM
 }
 
 static const char *vertShaderSrc =

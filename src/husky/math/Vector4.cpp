@@ -77,18 +77,6 @@ T Vector4<T>::dot(const Vector4<T> &other) const
 }
 
 template<typename T>
-Vector2<T> Vector4<T>::xy() const
-{
-  return Vector2<T>(x, y);
-}
-
-template<typename T>
-Vector3<T> Vector4<T>::xyz() const
-{
-  return Vector3<T>(x, y, z);
-}
-
-template<typename T>
 Vector4<T>& Vector4<T>::operator+=(const Vector4<T> &other)
 {
   x += other.x;

@@ -40,8 +40,8 @@ Matrix22<T>::Matrix22(const T *m)
 }
 
 template<typename T>
-Matrix22<T>::Matrix22(T cr00, T cr01, T cr10, T cr11)
-  : m{ cr00, cr01, cr10, cr11 }
+Matrix22<T>::Matrix22(T m00, T m01, T m10, T m11)
+  : m{ m00, m01, m10, m11 }
 {
 }
 

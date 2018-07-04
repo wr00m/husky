@@ -79,12 +79,6 @@ Vector3<T> Vector3<T>::cross(const Vector3<T> &other) const
 }
 
 template<typename T>
-Vector2<T> Vector3<T>::xy() const
-{
-  return Vector2<T>(x, y);
-}
-
-template<typename T>
 Vector3<T>& Vector3<T>::operator+=(const Vector3<T> &other)
 {
   x += other.x;

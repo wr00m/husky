@@ -156,6 +156,8 @@
     <ClCompile Include="..\..\src\Husky\Math\Matrix22.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix33.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix44.cpp" />
+    <ClCompile Include="..\..\src\husky\math\Quaternion.cpp" />
+    <ClCompile Include="..\..\src\husky\math\Random.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Vector2.cpp" />
     <ClCompile Include="..\..\src\husky\math\Vector3.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Vector4.cpp" />
@@ -169,6 +171,8 @@
     <ClInclude Include="..\..\include\Husky\Math\Matrix22.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix33.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix44.hpp" />
+    <ClInclude Include="..\..\include\husky\math\Quaternion.hpp" />
+    <ClInclude Include="..\..\include\husky\math\Random.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Vector2.hpp" />
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Vector4.hpp" />

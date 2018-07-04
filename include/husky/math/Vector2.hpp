@@ -26,24 +26,25 @@ public:
   template<typename T2>
   operator Vector2<T2>() const { return Vector2<T2>(x, y); }
 
-  void set(T x, T y);
-  void normalize();
-  T length() const;
-  T length2() const;
-  T dot(const Vector2<T> &other) const;
-  Vector2<T> normalized() const;
+  void        set(T x, T y);
+  T           dot(const Vector2<T> &other) const;
+  void        normalize();
+  Vector2<T>  normalized() const;
+  T           length() const;
+  T           length2() const;
 
+  Vector2<T>  operator- () const;
+  Vector2<T>  operator+ (const Vector2<T> &other) const;
   Vector2<T>& operator+=(const Vector2<T> &other);
+  Vector2<T>  operator- (const Vector2<T> &other) const;
   Vector2<T>& operator-=(const Vector2<T> &other);
+  Vector2<T>  operator* (const Vector2<T> &other) const;
   Vector2<T>& operator*=(const Vector2<T> &other);
+  Vector2<T>  operator/ (const Vector2<T> &other) const;
   Vector2<T>& operator/=(const Vector2<T> &other);
-  Vector2<T> operator+(const Vector2<T> &other) const;
-  Vector2<T> operator-(const Vector2<T> &other) const;
-  Vector2<T> operator*(const Vector2<T> &other) const;
-  Vector2<T> operator/(const Vector2<T> &other) const;
-  Vector2<T> operator-() const;
-  inline T& operator[](int i) { return this->val[i]; }
-  inline T operator[](int i) const { return this->val[i]; }
+
+  T& operator[](int i) { return this->val[i]; }
+  T  operator[](int i) const { return this->val[i]; }
 };
 
 typedef Vector2<double> Vector2d;

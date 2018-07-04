@@ -124,8 +124,8 @@ Matrix44<T>::Matrix44(const T *m)
 }
 
 template<typename T>
-Matrix44<T>::Matrix44(T cr00, T cr01, T cr02, T cr03, T cr10, T cr11, T cr12, T cr13, T cr20, T cr21, T cr22, T cr23, T cr30, T cr31, T cr32, T cr33)
-  : m{ cr00, cr01, cr02, cr03, cr10, cr11, cr12, cr13, cr20, cr21, cr22, cr23, cr30, cr31, cr32, cr33 }
+Matrix44<T>::Matrix44(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33)
+  : m{ m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33 }
 {
 }
 
@@ -145,6 +145,12 @@ template<typename T>
 Vector4<T> Matrix44<T>::row(int i) const
 {
   return Vector4<T>(col[0].val[i], col[1].val[i], col[2].val[i], col[3].val[i]);
+}
+
+template<typename T>
+Matrix33<T> Matrix44<T>::get3x3() const
+{
+  return Matrix33<T>(col[0].xyz, col[1].xyz, col[2].xyz);
 }
 
 template<typename T>
