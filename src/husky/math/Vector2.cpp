@@ -63,6 +63,18 @@ T Vector2<T>::dot(const Vector2<T> &other) const
 }
 
 template<typename T>
+Vector2<T> Vector2<T>::lerp(const Vector2<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Vector2<T> Vector2<T>::nlerp(const Vector2<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
 Vector2<T>& Vector2<T>::operator+=(const Vector2<T> &other)
 {
   x += other.x;

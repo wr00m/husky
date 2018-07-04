@@ -205,6 +205,18 @@ T Quaternion<T>::dot(const Quaternion<T> &other) const
 }
 
 template<typename T>
+Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Quaternion<T> Quaternion<T>::slerp(const Quaternion<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
 Vector3<T> Quaternion<T>::operator*(const Vector3<T> &v) const
 {
   Vector3<T> t = xyz.cross(v) * T(2);

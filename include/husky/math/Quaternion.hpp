@@ -39,9 +39,9 @@ public:
   Quaternion<T> conjugated() const;
   Matrix33<T> toMatrix() const;
   //Vector3<T> toEulerAngles() const;
-  //Quaternion<T> nlerp(const Quaternion<T> &other, T t) const;
-  //Quaternion<T> slerp(const Quaternion<T> &other, T t) const;
-  //Quaternion<T> lerp(const Quaternion<T> &other, T t) const;
+  
+  Quaternion<T> nlerp(const Quaternion<T> &target, T t) const;
+  Quaternion<T> slerp(const Quaternion<T> &target, T t) const;
   
   Vector3<T> operator*(const Vector3<T> &v) const;
   Quaternion<T>& operator*=(const Quaternion<T> &other);

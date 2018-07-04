@@ -79,6 +79,24 @@ Vector3<T> Vector3<T>::cross(const Vector3<T> &other) const
 }
 
 template<typename T>
+Vector3<T> Vector3<T>::lerp(const Vector3<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Vector3<T> Vector3<T>::nlerp(const Vector3<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Vector3<T> Vector3<T>::slerp(const Vector3<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
 Vector3<T>& Vector3<T>::operator+=(const Vector3<T> &other)
 {
   x += other.x;

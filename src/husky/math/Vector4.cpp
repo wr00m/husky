@@ -77,6 +77,18 @@ T Vector4<T>::dot(const Vector4<T> &other) const
 }
 
 template<typename T>
+Vector4<T> Vector4<T>::lerp(const Vector4<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
+Vector4<T> Vector4<T>::nlerp(const Vector4<T> &target, T t) const
+{
+  return{}; // TODO
+}
+
+template<typename T>
 Vector4<T>& Vector4<T>::operator+=(const Vector4<T> &other)
 {
   x += other.x;

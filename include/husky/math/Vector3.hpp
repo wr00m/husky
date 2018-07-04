@@ -36,6 +36,10 @@ public:
   T           length() const;
   T           length2() const;
 
+  Vector3<T>  lerp(const Vector3<T> &target, T t) const;
+  Vector3<T> nlerp(const Vector3<T> &target, T t) const;
+  Vector3<T> slerp(const Vector3<T> &target, T t) const;
+
   Vector3<T>  operator- () const;
   Vector3<T>  operator+ (const Vector3<T> &other) const;
   Vector3<T>& operator+=(const Vector3<T> &other);
