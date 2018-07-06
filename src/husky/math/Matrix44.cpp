@@ -54,11 +54,43 @@ Matrix44<T> Matrix44<T>::ortho(T left, T right, T bottom, T top, T near, T far)
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspective(T yFovDeg, T aspectRatio, T near, T far)
+Matrix44<T> Matrix44<T>::perspective(T yFovRad, T aspectRatio, T near, T far)
 {
-  T top = near * std::tan(yFovDeg * T(math::pi) / T(360.0));
+  T top = near * std::tan(yFovRad * T(0.5));
   T right = top * aspectRatio;
   return frustum(-right, right, -top, top, near, far);
+}
+
+template<typename T>
+Matrix44<T> Matrix44<T>::perspectiveInf(T yFovRad, T aspectRatio, T near, T epsilon) // 2.4e-7
+{
+  // Note: This differs slightly from http://www.terathon.com/gdc07_lengyel.pdf
+  T e = T(1) / (std::tan(T(0.5) * yFovRad) * aspectRatio);
+
+  Matrix44<T> m;
+  m[0][0] = e;
+  m[1][1] = e * aspectRatio;
+  m[2][2] = epsilon - T(1);
+  m[2][3] = T(-1);
+  m[3][2] = (epsilon - T(2)) * near;
+  m[3][3] = T(0);
+  return m;
+}
+
+template<typename T>
+Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T yFovRad, T aspectRatio, T near)
+{
+  // https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/
+  T e = T(1) / (std::tan(T(0.5) * yFovRad) * aspectRatio);
+
+  Matrix44<T> m;
+  m[0][0] = e;
+  m[1][1] = e * aspectRatio;
+  m[2][2] = T(-1);
+  m[2][3] = T(0);
+  m[3][2] = near;
+  m[3][3] = T(0);
+  return m;
 }
 
 template<typename T>
@@ -244,21 +276,12 @@ Matrix44<T> Matrix44<T>::operator-(const Matrix44<T> &other) const
 template<typename T>
 Matrix44<T> Matrix44<T>::operator*(const Matrix44<T> &other) const
 {
-  const Vector4<T> &a0 = col[0];
-  const Vector4<T> &a1 = col[1];
-  const Vector4<T> &a2 = col[2];
-  const Vector4<T> &a3 = col[3];
-  const Vector4<T> &b0 = other.col[0];
-  const Vector4<T> &b1 = other.col[1];
-  const Vector4<T> &b2 = other.col[2];
-  const Vector4<T> &b3 = other.col[3];
-
-  Matrix44<T> res;
-  res.col[0] = a0 * b0.val[0] + a1 * b0.val[1] + a2 * b0.val[2] + a3 * b0.val[3];
-  res.col[1] = a0 * b1.val[0] + a1 * b1.val[1] + a2 * b1.val[2] + a3 * b1.val[3];
-  res.col[2] = a0 * b2.val[0] + a1 * b2.val[1] + a2 * b2.val[2] + a3 * b2.val[3];
-  res.col[3] = a0 * b3.val[0] + a1 * b3.val[1] + a2 * b3.val[2] + a3 * b3.val[3];
-  return res;
+  Matrix44<T> m;
+  m[0] = col[0] * other[0][0] + col[1] * other[0][1] + col[2] * other[0][2] + col[3] * other[0][3];
+  m[1] = col[0] * other[1][0] + col[1] * other[1][1] + col[2] * other[1][2] + col[3] * other[1][3];
+  m[2] = col[0] * other[2][0] + col[1] * other[2][1] + col[2] * other[2][2] + col[3] * other[2][3];
+  m[3] = col[0] * other[3][0] + col[1] * other[3][1] + col[2] * other[3][2] + col[3] * other[3][3];
+  return m;
 }
 
 template<typename T>
@@ -270,13 +293,12 @@ Matrix44<T> Matrix44<T>::operator-() const
 template<typename T>
 Vector4<T> Matrix44<T>::operator*(const Vector4<T> &v) const
 {
-  return{}; // TODO
-}
-
-template<typename T>
-Vector3<T> Matrix44<T>::operator*(const Vector3<T> &v) const
-{
-  return{}; // TODO
+  Vector4<T> res;
+  res[0] = row(0).dot(v);
+  res[1] = row(1).dot(v);
+  res[2] = row(2).dot(v);
+  res[3] = row(3).dot(v);
+  return res;
 }
 
 template class Matrix44<double>;

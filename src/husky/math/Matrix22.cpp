@@ -119,7 +119,10 @@ Matrix22<T> Matrix22<T>::operator-(const Matrix22<T> &other) const
 template<typename T>
 Matrix22<T> Matrix22<T>::operator*(const Matrix22<T> &other) const
 {
-  return identity(); // TODO
+  Matrix22<T> m;
+  m[0] = col[0] * other[0][0] + col[1] * other[0][1];
+  m[1] = col[0] * other[1][0] + col[1] * other[1][1];
+  return m;
 }
 
 template<typename T>
@@ -131,7 +134,10 @@ Matrix22<T> Matrix22<T>::operator-() const
 template<typename T>
 Vector2<T> Matrix22<T>::operator*(const Vector2<T> &v) const
 {
-  return{}; // TODO
+  Vector2<T> res;
+  res[0] = row(0).dot(v);
+  res[1] = row(1).dot(v);
+  return v;
 }
 
 template class Matrix22<double>;

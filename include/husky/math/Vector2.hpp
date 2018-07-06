@@ -32,6 +32,8 @@ public:
   Vector2<T>  normalized() const;
   T           length() const;
   T           length2() const;
+  T           angleAbs(const Vector2<T> &target) const;
+  T           angleSigned(const Vector2<T> &target) const;
 
   Vector2<T>  lerp(const Vector2<T> &target, T t) const;
   Vector2<T> nlerp(const Vector2<T> &target, T t) const;

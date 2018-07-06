@@ -21,7 +21,9 @@ public:
   static Matrix44<T> translate(const Vector3<T> &pos);
   static Matrix44<T> rotate(T rad, Vector3<T> axis);
   static Matrix44<T> ortho(T left, T right, T bottom, T top, T near, T far);
-  static Matrix44<T> perspective(T fovY, T aspectRatio, T near, T far);
+  static Matrix44<T> perspective(T yFovRad, T aspectRatio, T near, T far);
+  static Matrix44<T> perspectiveInf(T yFovRad, T aspectRatio, T near, T epsilon = T(0));
+  static Matrix44<T> perspectiveInfRevZ(T yFovRad, T aspectRatio, T near);
   static Matrix44<T> frustum(T left, T right, T bottom, T top, T near, T far);
   static Matrix44<T> lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, Vector3<T> upDir);
 
@@ -45,7 +47,6 @@ public:
   Matrix44<T> inverted() const;
 
   Vector4<T> operator*(const Vector4<T> &v) const;
-  Vector3<T> operator*(const Vector3<T> &v) const;
 
   Matrix44<T>  operator- () const;
   Matrix44<T>  operator+ (const Matrix44<T> &other) const;

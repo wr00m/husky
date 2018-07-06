@@ -143,7 +143,11 @@ Matrix33<T> Matrix33<T>::operator-(const Matrix33<T> &other) const
 template<typename T>
 Matrix33<T> Matrix33<T>::operator*(const Matrix33<T> &other) const
 {
-  return identity(); // TODO
+  Matrix33<T> m;
+  m[0] = col[0] * other[0][0] + col[1] * other[0][1] + col[2] * other[0][2];
+  m[1] = col[0] * other[1][0] + col[1] * other[1][1] + col[2] * other[1][2];
+  m[2] = col[0] * other[2][0] + col[1] * other[2][1] + col[2] * other[2][2];
+  return m;
 }
 
 template<typename T>
@@ -155,7 +159,11 @@ Matrix33<T> Matrix33<T>::operator-() const
 template<typename T>
 Vector3<T> Matrix33<T>::operator*(const Vector3<T> &v) const
 {
-  return{}; // TODO
+  Vector3<T> res;
+  res[0] = row(0).dot(v);
+  res[1] = row(1).dot(v);
+  res[2] = row(2).dot(v);
+  return v;
 }
 
 template class Matrix33<double>;

@@ -73,7 +73,7 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double           frustumDiff = matDiff(frustum, frustumGlm);
   assert(frustumDiff < 1e-9);
 
-  husky::Matrix44d persp       = husky::Matrix44d::perspective(          60.0, 1.5, 1.0, 100.0);
+  husky::Matrix44d persp       = husky::Matrix44d::perspective(husky::math::deg2rad * 60.0, 1.5, 1.0, 100.0);
   glm::dmat4x4     perspGlm    = glm::perspective(husky::math::deg2rad * 60.0, 1.5, 1.0, 100.0);
   double           perspDiff   = matDiff(persp, perspGlm);
   assert(perspDiff < 1e-9);
@@ -104,6 +104,18 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   assert(quatDirsDiff < 1e-9);
 
   // TODO: Investigate why Quaternion::fromRotationMatrix() differs from GLM
+
+  husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::math::pi / 3.0, 1.25, 0.1);
+  glm::dmat4x4 perspInfGlm = glm::infinitePerspective(husky::math::pi / 3.0, 1.25, 0.1);
+  double perspInfDiff = matDiff(perspInf, perspInfGlm);
+  assert(perspInfDiff < 1e-9);
+
+  husky::Matrix44d perspInfTweak = husky::Matrix44d::perspectiveInf(husky::math::pi / 3.0, 1.25, 0.1, 1e-4);
+  glm::dmat4x4 perspInfTweakGlm = glm::tweakedInfinitePerspective(husky::math::pi / 3.0, 1.25, 0.1, 1e-4);
+  double perspInfTweakDiff = matDiff(perspInfTweak, perspInfTweakGlm);
+  assert(perspInfTweakDiff < 1e-9);
+
+  //husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::math::pi / 3.0, 1.25, 0.1);
 
   husky::SimpleMesh mesh; // TODO
 }
