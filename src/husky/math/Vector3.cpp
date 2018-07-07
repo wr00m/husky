@@ -1,4 +1,5 @@
 #include <husky/math/Vector3.hpp>
+#include <husky/math/MathUtil.hpp>
 #include <cmath>
 
 namespace husky {
@@ -91,13 +92,17 @@ Vector3<T> Vector3<T>::cross(const Vector3<T> &other) const
 template<typename T>
 Vector3<T> Vector3<T>::lerp(const Vector3<T> &target, T t) const
 {
-  return{}; // TODO
+  return{
+    (T)math::lerp(x, target.x, t),
+    (T)math::lerp(y, target.y, t),
+    (T)math::lerp(z, target.z, t)
+  };
 }
 
 template<typename T>
 Vector3<T> Vector3<T>::nlerp(const Vector3<T> &target, T t) const
 {
-  return{}; // TODO
+  return lerp(target, t).normalized();
 }
 
 template<typename T>

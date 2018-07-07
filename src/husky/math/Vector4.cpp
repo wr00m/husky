@@ -1,4 +1,5 @@
 #include <husky/math/Vector4.hpp>
+#include <husky/math/MathUtil.hpp>
 #include <cmath>
 
 namespace husky {
@@ -79,13 +80,18 @@ T Vector4<T>::dot(const Vector4<T> &other) const
 template<typename T>
 Vector4<T> Vector4<T>::lerp(const Vector4<T> &target, T t) const
 {
-  return{}; // TODO
+  return{
+    (T)math::lerp(x, target.x, t),
+    (T)math::lerp(y, target.y, t),
+    (T)math::lerp(z, target.z, t),
+    (T)math::lerp(w, target.w, t)
+  };
 }
 
 template<typename T>
 Vector4<T> Vector4<T>::nlerp(const Vector4<T> &target, T t) const
 {
-  return{}; // TODO
+  return lerp(target, t).normalized();
 }
 
 template<typename T>
