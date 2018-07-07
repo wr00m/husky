@@ -10,7 +10,9 @@
 #include <husky/math/Random.hpp>
 #include <husky/math/Quaternion.hpp>
 #include <husky/math/MathUtil.hpp>
-#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Primitive.hpp>
+#include <husky/render/Camera.hpp>
+#include <husky/render/Viewport.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -36,7 +38,7 @@ static double matDiff(const husky::Matrix44d &a, const glm::dmat4x4 &g)
     }
   }
 
-  std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
+  //std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
 
   return diffSumSq;
 }
@@ -52,7 +54,7 @@ static double quatDiff(const husky::Quaterniond &a, const glm::dquat &g)
   husky::Vector4d diff(a.x - g.x, a.y - g.y, a.z - g.z, a.w - g.w);
   double diffSumSq = diff.dot(diff);
 
-  std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
+  //std::cout << ossA.str() << std::endl << ossG.str() << std::endl << std::endl;
 
   return diffSumSq;
 }
@@ -132,36 +134,34 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   //double quatAngleGlm = ;
   //double quatAngleDiff = std::abs(quatAngle - quatAngleGlm);
   //assert(quatAngleDiff < 1e-9);
-
-  husky::SimpleMesh mesh; // TODO
 }
 
 static const char *vertShaderSrc =
 R"(#version 400
 uniform mat4 mvp;
-in vec3 vertPos;
-in vec3 vertColor;
-out vec3 varColor;
+in vec3 vPosition;
+in vec3 vNormal;
+in vec4 vColor;
+out vec3 varNormal;
+out vec4 varColor;
 void main() {
-  gl_Position = mvp * vec4(vertPos, 1.0);
-  varColor = vertColor;
+  varNormal = vNormal;
+  varColor = vColor;
+  gl_Position = mvp * vec4(vPosition, 1.0);
 })";
 
 static const char *fragShaderSrc =
 R"(#version 400
-in vec3 varColor;
+uniform vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+in vec3 varNormal;
+in vec4 varColor;
 out vec4 fragColor;
 void main() {
-  fragColor = vec4(varColor, 1.0);
+  float light = dot(varNormal, lightDir);
+  light = clamp(light, 0.0, 1.0);
+  fragColor = vec4(light * varColor.rgb, varColor.a);
+  //fragColor = vec4(varNormal * varColor.rgb, varColor.a);
 })";
-
-struct Vertex
-{
-  husky::Vector3f position;
-  husky::Vector3f color;
-};
-
-static const std::vector<Vertex> vertices = { { {-0.0f,0.5f,0.f},{1.f,0.f,0.f }},{ {0.5f,-0.5f,0.f},{0.f,1.f,0.f }},{ {-0.5f,-0.5f,0.f},{0.f,0.f,1.f }} };
 
 static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -180,6 +180,8 @@ static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severi
     break;
   }
 }
+
+static husky::Camera cam;
 
 int main()
 {
@@ -217,39 +219,74 @@ int main()
   glAttachShader(program, fragShader);
   glLinkProgram(program);
   GLint mvpLocation = glGetUniformLocation(program, "mvp");
-  GLint vertPosLocation = glGetAttribLocation(program, "vertPos");
-  GLint vertColorLocation = glGetAttribLocation(program, "vertColor");
+  GLint vertPositionLocation = glGetAttribLocation(program, "vPosition");
+  GLint vertNormalLocation = glGetAttribLocation(program, "vNormal");
+  GLint vertColorLocation = glGetAttribLocation(program, "vColor");
+
+  husky::SimpleMesh sphere = husky::Primitive::uvSphere(1.0);
+  sphere.setAllVertexColors({ 0, 255, 0, 255 });
+  sphere.transform(husky::Matrix44d::translate({ -1, -1, 0 }));
+
+  husky::SimpleMesh cylinder = husky::Primitive::cylinder(0.5, 2.0, true);
+  cylinder.setAllVertexColors({ 255, 0, 255, 255 });
+  cylinder.transform(husky::Matrix44d::translate({ 5, 0, 0 }));
+
+  husky::SimpleMesh box = husky::Primitive::box(2.0, 3.0, 1.0);
+  box.setAllVertexColors({ 255, 0, 0, 255 });
+  box.transform(husky::Matrix44d::translate({ -1, -1, 0 }));
+
+  husky::SimpleMesh combinedMesh;
+  combinedMesh.addMesh(sphere);
+  combinedMesh.addMesh(cylinder);
+  combinedMesh.addMesh(box);
+  husky::RenderData meshData = combinedMesh.getRenderData();
 
   GLuint vbo;
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, meshData.bytes.size(), meshData.bytes.data(), GL_STATIC_DRAW);
 
   GLuint vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glEnableVertexAttribArray(vertPosLocation);
+  //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glEnableVertexAttribArray(vertPositionLocation);
+  glEnableVertexAttribArray(vertNormalLocation);
   glEnableVertexAttribArray(vertColorLocation);
-  glVertexAttribPointer(vertPosLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), NULL);
-  glVertexAttribPointer(vertColorLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 3));
+  glVertexAttribPointer(vertPositionLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::POSITION));
+  glVertexAttribPointer(vertNormalLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::NORMAL));
+  glVertexAttribPointer(vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::COLOR));
+
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  //glCullFace(GL_FRONT);
 
   while (!glfwWindowShouldClose(window)) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    float ratio = width / (float)height;
 
-    auto m = husky::Matrix44f::rotate((float)glfwGetTime(), { 0, 0, 1 });
-    auto p = husky::Matrix44f::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    auto mvp = p * m;
+    double time = glfwGetTime();
+    husky::Viewport viewport(0, 0, width, height);
 
-    glViewport(0, 0, width, height);
+    //auto m = husky::Matrix44f::rotate((float)time, { 0, 0, 1 });
+    //auto p = husky::Matrix44f::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+    //auto mvp = p * m;
+
+    cam.position.set(std::cos(time) * 10, std::sin(time) * 10, 10);
+
+    auto lookAt = husky::Matrix44f::lookAt((husky::Vector3f)cam.position, { 0, 0, 0 }, { 0, 0, 1 });
+    
+    auto modelView = husky::Matrix44d::translate(cam.position) * cam.attitude.toMatrix();
+    auto perspective = husky::Matrix44f::perspectiveInf((float)husky::math::deg2rad * 60.0f, (float)viewport.aspectRatio(), 0.1f, 2.4e-7f);
+    auto mvp = perspective * lookAt;
+
+    glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
     glClearColor(0.f, 0.f, .5f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_CULL_FACE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(program);
     glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
+    //glDrawArrays(GL_TRIANGLES, 0, meshData.vertCount);
+    glDrawElements(GL_TRIANGLES, (int)meshData.triangleInds.size(), GL_UNSIGNED_SHORT, meshData.triangleInds.data());
 
     glfwSwapBuffers(window);
     glfwPollEvents();
