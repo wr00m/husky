@@ -141,26 +141,30 @@ R"(#version 400
 uniform mat4 mvp;
 in vec3 vPosition;
 in vec3 vNormal;
+in vec2 vTexCoord;
 in vec4 vColor;
 out vec3 varNormal;
+out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
   varNormal = vNormal;
+  varTexCoord = vTexCoord;
   varColor = vColor;
   gl_Position = mvp * vec4(vPosition, 1.0);
 })";
 
 static const char *fragShaderSrc =
 R"(#version 400
-uniform vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
 in vec3 varNormal;
+in vec2 varTexCoord;
 in vec4 varColor;
 out vec4 fragColor;
 void main() {
   float light = dot(varNormal, lightDir);
   light = clamp(light, 0.0, 1.0);
   fragColor = vec4(light * varColor.rgb, varColor.a);
-  //fragColor = vec4(varNormal * varColor.rgb, varColor.a);
+  //fragColor = vec4(varTexCoord, 0.0, 1.0);
 })";
 
 static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -221,24 +225,30 @@ int main()
   GLint mvpLocation = glGetUniformLocation(program, "mvp");
   GLint vertPositionLocation = glGetAttribLocation(program, "vPosition");
   GLint vertNormalLocation = glGetAttribLocation(program, "vNormal");
+  GLint vertTexCoordLocation = glGetAttribLocation(program, "vTexCoord");
   GLint vertColorLocation = glGetAttribLocation(program, "vColor");
 
-  husky::SimpleMesh sphere = husky::Primitive::uvSphere(1.0);
+  husky::SimpleMesh sphere = husky::Primitive::sphere(1.0);
   sphere.setAllVertexColors({ 0, 255, 0, 255 });
-  sphere.transform(husky::Matrix44d::translate({ -1, -1, 0 }));
+  sphere.transform(husky::Matrix44d::translate({ 0, 0, 0 }));
 
   husky::SimpleMesh cylinder = husky::Primitive::cylinder(0.5, 2.0, true);
   cylinder.setAllVertexColors({ 255, 0, 255, 255 });
-  cylinder.transform(husky::Matrix44d::translate({ 5, 0, 0 }));
+  cylinder.transform(husky::Matrix44d::translate({ 4, 0, 0 }));
 
   husky::SimpleMesh box = husky::Primitive::box(2.0, 3.0, 1.0);
   box.setAllVertexColors({ 255, 0, 0, 255 });
-  box.transform(husky::Matrix44d::translate({ -1, -1, 0 }));
+  box.transform(husky::Matrix44d::translate({ -4, 0, 0 }));
+
+  husky::SimpleMesh torus = husky::Primitive::torus(8.0, 0.5);
+  torus.setAllVertexColors({ 255, 255, 0, 255 });
+  torus.transform(husky::Matrix44d::translate({ 0, 0, 0 }));
 
   husky::SimpleMesh combinedMesh;
   combinedMesh.addMesh(sphere);
   combinedMesh.addMesh(cylinder);
   combinedMesh.addMesh(box);
+  combinedMesh.addMesh(torus);
   husky::RenderData meshData = combinedMesh.getRenderData();
 
   GLuint vbo;
@@ -249,13 +259,26 @@ int main()
   GLuint vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
-  //glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glEnableVertexAttribArray(vertPositionLocation);
-  glEnableVertexAttribArray(vertNormalLocation);
-  glEnableVertexAttribArray(vertColorLocation);
-  glVertexAttribPointer(vertPositionLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::POSITION));
-  glVertexAttribPointer(vertNormalLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::NORMAL));
-  glVertexAttribPointer(vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::COLOR));
+
+  if (vertPositionLocation != -1) {
+    glEnableVertexAttribArray(vertPositionLocation);
+    glVertexAttribPointer(vertPositionLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::POSITION));
+  }
+
+  if (vertNormalLocation != -1) {
+    glEnableVertexAttribArray(vertNormalLocation);
+    glVertexAttribPointer(vertNormalLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::NORMAL));
+  }
+
+  if (vertTexCoordLocation != -1) {
+    glEnableVertexAttribArray(vertTexCoordLocation);
+    glVertexAttribPointer(vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+  }
+
+  if (vertColorLocation != -1) {
+    glEnableVertexAttribArray(vertColorLocation);
+    glVertexAttribPointer(vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::COLOR));
+  }
 
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
