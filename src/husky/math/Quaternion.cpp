@@ -146,6 +146,34 @@ Matrix33<T> Quaternion<T>::toMatrix() const
 }
 
 template<typename T>
+T Quaternion<T>::toAxisAngle(Vector3<T> &axis) const
+{
+  Quaternion<T> q = *this;
+  if (q.w > T(1)) {
+    q.normalize();
+  }
+
+  axis.set(q.x, q.y, q.z);
+  T s = (T)std::sqrt(T(1) - q.w * q.w);
+
+  if (s > 1e-3) { // Avoid divide-by-zero
+    axis /= s;
+  }
+
+  T angle = T(2) * (T)std::acos(q.w);
+  return angle;
+}
+
+template<typename T>
+T Quaternion<T>::angleAbs(const Quaternion<T> &target) const
+{
+  Quaternion<T> q = this->conjugated() * target;
+  Vector3<T> axis;
+  T angle = q.toAxisAngle(axis);
+  return angle;
+}
+
+template<typename T>
 void Quaternion<T>::set(T x, T y, T z, T w)
 {
   this->x = x;

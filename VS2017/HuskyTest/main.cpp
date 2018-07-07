@@ -18,6 +18,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 static double matDiff(const husky::Matrix44d &a, const glm::dmat4x4 &g)
 {
@@ -116,6 +117,21 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   assert(perspInfTweakDiff < 1e-9);
 
   //husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::math::pi / 3.0, 1.25, 0.1);
+
+  double vec3Angle = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
+  double vec3AngleGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));
+  double vec3AngleDiff = std::abs(vec3Angle - vec3AngleGlm);
+  assert(vec3AngleDiff < 1e-9);
+
+  double vec2Angle = husky::Vector2d(1, 0).angleSigned({ 0, -1 });
+  double vec2AngleGlm = glm::orientedAngle(glm::dvec2(1, 0), glm::dvec2(0, -1));
+  double vec2AngleDiff = std::abs(vec2Angle - vec2AngleGlm);
+  assert(vec2AngleDiff < 1e-9);
+
+  //double quatAngle = ;
+  //double quatAngleGlm = ;
+  //double quatAngleDiff = std::abs(quatAngle - quatAngleGlm);
+  //assert(quatAngleDiff < 1e-9);
 
   husky::SimpleMesh mesh; // TODO
 }

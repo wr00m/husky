@@ -84,6 +84,12 @@ Matrix22<T> Matrix22<T>::inverted() const
 }
 
 template<typename T>
+T Matrix22<T>::determinant() const
+{
+  return col[0][0] * col[1][1] - col[1][0] * col[0][1];
+}
+
+template<typename T>
 Matrix22<T>& Matrix22<T>::operator+=(const Matrix22<T> &other)
 {
   *this = *this + other;

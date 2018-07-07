@@ -2,6 +2,8 @@
 #include <husky/math/MathUtil.hpp>
 #include <cmath>
 
+// TODO: Also return analytical inverse in ortho, perspective*, lookAt, etc.?
+
 namespace husky {
 
 template<typename T>

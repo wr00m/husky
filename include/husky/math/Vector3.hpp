@@ -36,7 +36,6 @@ public:
   T           length() const;
   T           length2() const;
   T           angleAbs(const Vector3<T> &target) const;
-  T           angleSigned(const Vector3<T> &target) const;
 
   Vector3<T>  lerp(const Vector3<T> &target, T t) const;
   Vector3<T> nlerp(const Vector3<T> &target, T t) const;

@@ -45,6 +45,7 @@ public:
   Matrix44<T> transposed() const;
   void        invert();
   Matrix44<T> inverted() const;
+  //T           determinant() const;
 
   Vector4<T> operator*(const Vector4<T> &v) const;
 

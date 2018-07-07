@@ -57,6 +57,16 @@ T Vector2<T>::length2() const
 }
 
 template<typename T>
+T Vector2<T>::angleSigned(const Vector2<T> &target) const
+{
+  T dot = this->dot(target);
+  T det = (x * target.y - y * target.x);
+  T angle = (T)std::atan2(det, dot); // [-pi,pi]
+  return angle;
+  //return (T)std::atan2(target.y, target.x) - (T)std::atan2(this->y, this->x);
+}
+
+template<typename T>
 T Vector2<T>::dot(const Vector2<T> &other) const
 {
   return (x * other.x + y * other.y);

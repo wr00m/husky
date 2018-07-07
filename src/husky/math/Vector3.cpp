@@ -64,6 +64,16 @@ T Vector3<T>::length2() const
 }
 
 template<typename T>
+T Vector3<T>::angleAbs(const Vector3<T> &target) const
+{
+  Vector3<T> a = this->normalized();
+  Vector3<T> b = target.normalized();
+  T angle = (T)std::acos(a.dot(b)); // [0,pi]
+  //Vector3<T> axis = a.cross(b);
+  return angle;
+}
+
+template<typename T>
 T Vector3<T>::dot(const Vector3<T> &other) const
 {
   return (x * other.x + y * other.y + z * other.z);

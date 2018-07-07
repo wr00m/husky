@@ -108,6 +108,14 @@ Matrix33<T> Matrix33<T>::inverted() const
 }
 
 template<typename T>
+T Matrix33<T>::determinant() const
+{
+  return col[0][0] * (col[1][1] * col[2][2] - col[2][1] * col[1][2])
+       - col[1][0] * (col[0][1] * col[2][2] - col[2][1] * col[0][2])
+       + col[2][0] * (col[0][1] * col[1][2] - col[1][1] * col[0][2]);
+}
+
+template<typename T>
 Matrix33<T>& Matrix33<T>::operator+=(const Matrix33<T> &other)
 {
   *this = *this + other;

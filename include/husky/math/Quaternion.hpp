@@ -29,16 +29,18 @@ public:
   template<typename T2>
   operator Quaternion<T2>() const { return Quaternion<T2>(x, y, z, w); }
   
-  void set(T x, T y, T z, T w);
-  void normalize();
-  void conjugate();
-  T length() const;
-  T length2() const;
-  T dot(const Quaternion<T> &other) const;
+  void          set(T x, T y, T z, T w);
+  void          normalize();
   Quaternion<T> normalized() const;
+  void          conjugate();
   Quaternion<T> conjugated() const;
-  Matrix33<T> toMatrix() const;
+  T             length() const;
+  T             length2() const;
+  T             dot(const Quaternion<T> &other) const;
+  Matrix33<T>   toMatrix() const;
+  T             toAxisAngle(Vector3<T> &axis) const;
   //Vector3<T> toEulerAngles() const;
+  T             angleAbs(const Quaternion<T> &target) const;
   
   Quaternion<T> nlerp(const Quaternion<T> &target, T t) const;
   Quaternion<T> slerp(const Quaternion<T> &target, T t) const;

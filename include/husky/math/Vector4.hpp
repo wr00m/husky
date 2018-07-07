@@ -36,6 +36,7 @@ public:
   Vector4<T>  normalized() const;
   T           length() const;
   T           length2() const;
+  //Vector4<T>  clamped(const Vector4<T> &min, const Vector4<T> &max) const;
 
   Vector4<T>  lerp(const Vector4<T> &target, T t) const;
   Vector4<T> nlerp(const Vector4<T> &target, T t) const;

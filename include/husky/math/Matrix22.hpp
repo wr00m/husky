@@ -34,6 +34,7 @@ public:
   Matrix22<T> transposed() const;
   void        invert();
   Matrix22<T> inverted() const;
+  T           determinant() const;
 
   Vector2<T> operator*(const Vector2<T> &v) const;
 
