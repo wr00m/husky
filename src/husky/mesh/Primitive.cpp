@@ -96,11 +96,11 @@ SimpleMesh Primitive::sphere(double radius, int uSegmentCount, int vSegmentCount
   SimpleMesh m;
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
-    const double u = iu / double(uSegmentCount); // [0.0,1.0]
+    const double u = iu / double(uSegmentCount); // [0,1]
     const double theta = u * 2.0 * math::pi; // Azimuthal angle [0,2*pi]
     
     for (int iv = 0; iv <= vSegmentCount; iv++) {
-      const double v = iv / double(vSegmentCount); // [0.0,1.0]
+      const double v = iv / double(vSegmentCount); // [0,1]
       const double phi = v * math::pi; // Polar angle [0,pi]
 
       Vector3d n;
@@ -131,7 +131,35 @@ SimpleMesh Primitive::torus(double innerRadius, double outerRadius, int uSegment
 {
   SimpleMesh m;
 
-  // TODO
+  for (int iu = 0; iu <= uSegmentCount; iu++) {
+    const double u = iu / double(uSegmentCount); // [0,1]
+    const double theta = u * 2.0 * math::pi; // [0,2*pi]
+
+    const Matrix44d translate = Matrix44d::translate({ std::cos(theta) * innerRadius, std::sin(theta) * innerRadius, 0.0 });
+    const Matrix33d rotate = Matrix33d::rotate(theta, { 0, 0, 1 });
+    const Matrix44d transform = translate * Matrix44d(rotate);
+
+    for (int iv = 0; iv <= vSegmentCount; iv++) {
+      const double v = iv / double(vSegmentCount); // [0,1]
+      const double phi = v * 2.0 * math::pi; // [0,2*pi]
+
+      const Vector3d vertNormal = rotate * Vector3d(std::cos(phi), 0.0, std::sin(-phi));
+      const Vector3d vertPosition = (transform * Vector4d(vertNormal * outerRadius, 1.0)).xyz;
+      m.addVertex(vertPosition, vertNormal, { u, v });
+
+      if (iu > 0 && iv > 0) {
+        assert(m.getVertexCount() >= 4);
+
+        SimpleMesh::Quad q;
+        q[0] = m.getVertexCount() - 1;
+        q[1] = q[0] - 1; 
+        q[2] = q[0] - (vSegmentCount + 2);
+        q[3] = q[0] - (vSegmentCount + 1);
+
+        m.addQuad(q);
+      }
+    }
+  }
 
   return m;
 }

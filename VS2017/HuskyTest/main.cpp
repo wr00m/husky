@@ -161,6 +161,7 @@ in vec2 varTexCoord;
 in vec4 varColor;
 out vec4 fragColor;
 void main() {
+  //vec3 normal = normalize(varNormal);
   float light = dot(varNormal, lightDir);
   light = clamp(light, 0.0, 1.0);
   fragColor = vec4(light * varColor.rgb, varColor.a);
@@ -240,7 +241,7 @@ int main()
   box.setAllVertexColors({ 255, 0, 0, 255 });
   box.transform(husky::Matrix44d::translate({ -4, 0, 0 }));
 
-  husky::SimpleMesh torus = husky::Primitive::torus(8.0, 0.5);
+  husky::SimpleMesh torus = husky::Primitive::torus(8.0, 1.0);
   torus.setAllVertexColors({ 255, 255, 0, 255 });
   torus.transform(husky::Matrix44d::translate({ 0, 0, 0 }));
 
