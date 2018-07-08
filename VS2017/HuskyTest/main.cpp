@@ -188,15 +188,13 @@ static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severi
 
 static husky::Camera cam({ 0, -20, 5 }, {});
 static GLFWwindow *window = nullptr;
+static husky::Vector2d prevMousePos(0, 0);
 static husky::Vector2i windowedPos(0, 0);
 static husky::Vector2i windowedSize(1280, 720);
 static husky::Viewport viewport;
 static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
-
-//static void resizeCallback(GLFWwindow *win, int w, int h)
-//{
-//}
+static bool mouseDragRight = false;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -228,12 +226,51 @@ static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int 
   }
 }
 
-static void handleInput()
+static void mouseMoveCallback(GLFWwindow* win, double x, double y)
+{
+  husky::Vector2d mousePos(x, y);
+  husky::Vector2d mouseDelta = mousePos - prevMousePos;
+
+  //if (mousePos.x < 0 || mousePos.y < 0) {
+  //  std::cout << "pos   : " << mousePos.x << " " << mousePos.y << std::endl;
+  //  std::cout << "delta : " << mouseDelta.x << " " << mouseDelta.y << std::endl;
+  //}
+
+  if (mouseDragRight) {
+    const double rotSpeed = 0.01;
+    cam.attitude = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.x, { 0, 0, 1 }) * cam.attitude; // Yaw
+    cam.attitude = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.y, cam.right()) * cam.attitude; // Pitch
+  }
+
+  prevMousePos = mousePos;
+}
+
+static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods)
+{
+  if (action == GLFW_PRESS) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+      glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      mouseDragRight = true;
+    }
+  }
+  else if (action == GLFW_RELEASE) {
+    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    mouseDragRight = false;
+  }
+}
+
+static void scrollCallback(GLFWwindow *win, double deltaX, double deltaY)
+{
+  constexpr double zoomSpeed = 1.0;
+  cam.position += cam.forward() * zoomSpeed * deltaY;
+}
+
+static void handleInput(GLFWwindow *win)
 {
   husky::Vector3d input;
-  input.x = (glfwGetKey(window, GLFW_KEY_D) - glfwGetKey(window, GLFW_KEY_A));
-  input.y = (glfwGetKey(window, GLFW_KEY_W) - glfwGetKey(window, GLFW_KEY_S));
-  input.z = (glfwGetKey(window, GLFW_KEY_SPACE) - glfwGetKey(window, GLFW_KEY_LEFT_CONTROL));
+  input.x = (glfwGetKey(win, GLFW_KEY_D) - glfwGetKey(win, GLFW_KEY_A));
+  input.y = (glfwGetKey(win, GLFW_KEY_W) - glfwGetKey(win, GLFW_KEY_S));
+  input.z = (glfwGetKey(win, GLFW_KEY_SPACE) - glfwGetKey(win, GLFW_KEY_LEFT_CONTROL));
 
   const husky::Vector3d camSpeed(20, 20, 20);
 
@@ -252,9 +289,6 @@ int main()
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  //glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-  //glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
-  //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
   window = glfwCreateWindow(windowedSize.x, windowedSize.y, "Hello Husky!", NULL, NULL);
   if (window == nullptr) {
@@ -265,8 +299,10 @@ int main()
   glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
   glfwMakeContextCurrent(window);
-  //glfwSetWindowSizeCallback(window, resizeCallback);
   glfwSetKeyCallback(window, keyCallback);
+  glfwSetCursorPosCallback(window, mouseMoveCallback);
+  glfwSetMouseButtonCallback(window, mouseButtonCallback);
+  glfwSetScrollCallback(window, scrollCallback);
 
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   //glfwSwapInterval(1);
@@ -353,7 +389,7 @@ int main()
     prevTime = time;
     //std::cout << frameTime << std::endl;
 
-    handleInput();
+    handleInput(window);
 
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
