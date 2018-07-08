@@ -14,8 +14,8 @@ public:
 class HUSKY_DLL Viewport
 {
 public:
-  int x; // Left
-  int y; // Bottom (??)
+  int x;
+  int y;
   int width;
   int height;
   

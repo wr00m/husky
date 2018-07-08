@@ -14,7 +14,7 @@ Viewport::Viewport(int x, int y, int width, int height)
 
 double Viewport::aspectRatio() const
 {
-  return width / (double)height;
+  return (height != 0 ? (width / (double)height) : 0.0);
 }
 
 Vector3d Viewport::project(const Vector3d &worldPos, const Matrix44d &modelView, const Matrix44d &proj) const

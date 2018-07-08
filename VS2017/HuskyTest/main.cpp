@@ -187,6 +187,44 @@ static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severi
 }
 
 static husky::Camera cam;
+static GLFWwindow *window = nullptr;
+static husky::Vector2i windowedPos(0, 0);
+static husky::Vector2i windowedSize(1280, 720);
+static husky::Viewport viewport;
+
+//static void resizeCallback(GLFWwindow *win, int w, int h)
+//{
+//}
+
+static void toggleFullscreen(GLFWwindow *win)
+{
+  bool fullscreen = (glfwGetWindowMonitor(win) != nullptr);
+  if (fullscreen) {
+    glfwSetWindowMonitor(win, nullptr, windowedPos.x, windowedPos.y, windowedSize.x, windowedSize.y, 0);
+  }
+  else {
+    // Remember windowed position and size
+    glfwGetWindowPos(win, &windowedPos.x, &windowedPos.y);
+    glfwGetWindowSize(win, &windowedSize.x, &windowedSize.y);
+
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
+    glfwSetWindowMonitor(win, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+  }
+}
+
+static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods)
+{
+  if (action == GLFW_PRESS) {
+    if (key == GLFW_KEY_F11) {
+      toggleFullscreen(win);
+    }
+    else if (key == GLFW_KEY_ESCAPE) {
+      glfwSetWindowShouldClose(win, GLFW_TRUE);
+    }
+  }
+}
 
 int main()
 {
@@ -198,14 +236,22 @@ int main()
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  //glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+  //glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+  //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-  GLFWwindow *window = glfwCreateWindow(1280, 720, "Hello Husky!", NULL, NULL);
+  window = glfwCreateWindow(windowedSize.x, windowedSize.y, "Hello Husky!", NULL, NULL);
   if (window == nullptr) {
     glfwTerminate();
     return -1;
   }
 
+  glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+
   glfwMakeContextCurrent(window);
+  //glfwSetWindowSizeCallback(window, resizeCallback);
+  glfwSetKeyCallback(window, keyCallback);
+
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   //glfwSwapInterval(1);
   //const std::string glVer = reinterpret_cast<const char*>(glGetString(GL_VERSION));
@@ -231,7 +277,7 @@ int main()
 
   husky::SimpleMesh sphere = husky::Primitive::sphere(1.0);
   sphere.setAllVertexColors({ 0, 255, 0, 255 });
-  sphere.transform(husky::Matrix44d::translate({ 0, 0, 0 }));
+  sphere.transform(husky::Matrix44d::scale({ 1, 1, 1 }));
 
   husky::SimpleMesh cylinder = husky::Primitive::cylinder(0.5, 2.0, true);
   cylinder.setAllVertexColors({ 255, 0, 255, 255 });
@@ -286,11 +332,9 @@ int main()
   //glCullFace(GL_FRONT);
 
   while (!glfwWindowShouldClose(window)) {
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-
     double time = glfwGetTime();
-    husky::Viewport viewport(0, 0, width, height);
+
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
     //auto m = husky::Matrix44f::rotate((float)time, { 0, 0, 1 });
     //auto p = husky::Matrix44f::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
