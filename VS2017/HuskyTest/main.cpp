@@ -186,11 +186,13 @@ static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severi
   }
 }
 
-static husky::Camera cam;
+static husky::Camera cam({ 0, -20, 5 }, {});
 static GLFWwindow *window = nullptr;
 static husky::Vector2i windowedPos(0, 0);
 static husky::Vector2i windowedSize(1280, 720);
 static husky::Viewport viewport;
+static double prevTime = 0.0;
+static double frameTime = (1.0 / 60.0);
 
 //static void resizeCallback(GLFWwindow *win, int w, int h)
 //{
@@ -224,6 +226,20 @@ static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int 
       glfwSetWindowShouldClose(win, GLFW_TRUE);
     }
   }
+}
+
+static void handleInput()
+{
+  husky::Vector3d input;
+  input.x = (glfwGetKey(window, GLFW_KEY_D) - glfwGetKey(window, GLFW_KEY_A));
+  input.y = (glfwGetKey(window, GLFW_KEY_W) - glfwGetKey(window, GLFW_KEY_S));
+  input.z = (glfwGetKey(window, GLFW_KEY_SPACE) - glfwGetKey(window, GLFW_KEY_LEFT_CONTROL));
+
+  const husky::Vector3d camSpeed(20, 20, 20);
+
+  cam.position += cam.right() * input.x * camSpeed.x * frameTime;
+  cam.position += cam.forward() * input.y * camSpeed.y * frameTime;
+  cam.position += cam.up() * input.z * camSpeed.z * frameTime;
 }
 
 int main()
@@ -333,27 +349,23 @@ int main()
 
   while (!glfwWindowShouldClose(window)) {
     double time = glfwGetTime();
+    frameTime = (time - prevTime);
+    prevTime = time;
+    //std::cout << frameTime << std::endl;
+
+    handleInput();
 
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
-    //auto m = husky::Matrix44f::rotate((float)time, { 0, 0, 1 });
-    //auto p = husky::Matrix44f::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    //auto mvp = p * m;
-
-    cam.position.set(std::cos(time) * 10, std::sin(time) * 10, 10);
-
-    auto lookAt = husky::Matrix44f::lookAt((husky::Vector3f)cam.position, { 0, 0, 0 }, { 0, 0, 1 });
-    
-    auto modelView = husky::Matrix44d::translate(cam.position) * cam.attitude.toMatrix();
-    auto perspective = husky::Matrix44f::perspectiveInf((float)husky::math::deg2rad * 60.0f, (float)viewport.aspectRatio(), 0.1f, 2.4e-7f);
-    auto mvp = perspective * lookAt;
+    auto modelView = cam.getViewMatrix();
+    auto perspective = husky::Matrix44d::perspectiveInf(husky::math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
+    auto mvp = perspective * modelView;
 
     glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
     glClearColor(0.f, 0.f, .5f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(program);
-    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
-    //glDrawArrays(GL_TRIANGLES, 0, meshData.vertCount);
+    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, ((husky::Matrix44f)mvp).m);
     glDrawElements(GL_TRIANGLES, (int)meshData.triangleInds.size(), GL_UNSIGNED_SHORT, meshData.triangleInds.data());
 
     glfwSwapBuffers(window);
