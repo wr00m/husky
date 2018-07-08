@@ -4,7 +4,10 @@
 #include <cstdio>
 #include <stdio.h>
 #include <stdarg.h>
+
+#if defined(HUSKY_WINDOWS)
 #include <Windows.h>
+#endif
 
 namespace husky {
 
@@ -12,8 +15,9 @@ static const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 void Log::debug(const char *format, ...)
 {
+#if defined(HUSKY_WINDOWS)
   SetConsoleTextAttribute(hConsole, 10); // Lime green
-  //printf("DEBUG: ");
+#endif
 
   va_list argptr;
   va_start(argptr, format);
@@ -25,8 +29,9 @@ void Log::debug(const char *format, ...)
 
 void Log::info(const char *format, ...)
 {
+#if defined(HUSKY_WINDOWS)
   SetConsoleTextAttribute(hConsole, 7); // Light gray (Windows default)
-  //printf("INFO: ");
+#endif
 
   va_list argptr;
   va_start(argptr, format);
@@ -38,8 +43,9 @@ void Log::info(const char *format, ...)
 
 void Log::warning(const char *format, ...)
 {
+#if defined(HUSKY_WINDOWS)
   SetConsoleTextAttribute(hConsole, 14); // Yellow
-  //printf("WARNING: ");
+#endif
 
   va_list argptr;
   va_start(argptr, format);
@@ -51,8 +57,9 @@ void Log::warning(const char *format, ...)
 
 void Log::error(const char *format, ...)
 {
+#if defined(HUSKY_WINDOWS)
   SetConsoleTextAttribute(hConsole, 12); // Red
-  //printf("ERROR: ");
+#endif
 
   va_list argptr;
   va_start(argptr, format);
