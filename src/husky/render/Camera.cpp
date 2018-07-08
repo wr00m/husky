@@ -29,9 +29,9 @@ Vector3d Camera::up() const
   return attitude * Vector3d(0, 0, 1);
 }
 
-Matrix44d Camera::getViewMatrix() const
+void Camera::buildViewMatrix()
 {
-  return Matrix44d::lookAt(position, position + forward(), up());
+  view = Matrix44d::lookAt(position, position + forward(), up());
 }
 
 }

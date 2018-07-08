@@ -1,6 +1,7 @@
 #pragma once
 
 #include <husky/math/Matrix44.hpp>
+#include <husky/mesh/BoundingBox.hpp>
 #include <vector>
 #include <cassert>
 
@@ -247,6 +248,21 @@ public:
     }
 
     return r;
+  }
+
+  BoundingBox getBoundingBox() const
+  {
+    BoundingBox box;
+    if (verts.empty()) {
+      return box;
+    }
+
+    box.init(verts.front().pos);
+    for (const Vertex &vert : verts) {
+      box.expand(vert.pos);
+    }
+
+    return box;
   }
 
 private:

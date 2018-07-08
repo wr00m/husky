@@ -32,7 +32,7 @@ template<typename T>
 Matrix44<T> Matrix44<T>::translate(const Vector3<T> &pos)
 {
   Matrix44<T> res = identity();
-  res.col[3] = { pos, 0 };
+  res.col[3].xyz = pos;
   return res;
 }
 

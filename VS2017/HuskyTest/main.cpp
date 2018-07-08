@@ -279,6 +279,87 @@ static void handleInput(GLFWwindow *win)
   cam.position += cam.up() * input.z * camSpeed.z * frameTime;
 }
 
+class Material
+{
+public:
+  Material(GLuint shaderProgram)
+    : shaderProgram(shaderProgram)
+  {
+    mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+    vertPositionLocation = glGetAttribLocation(shaderProgram, "vPosition");
+    vertNormalLocation = glGetAttribLocation(shaderProgram, "vNormal");
+    vertTexCoordLocation = glGetAttribLocation(shaderProgram, "vTexCoord");
+    vertColorLocation = glGetAttribLocation(shaderProgram, "vColor");
+  }
+
+  GLuint shaderProgram;
+  GLint mvpLocation;
+  GLint vertPositionLocation;
+  GLint vertNormalLocation;
+  GLint vertTexCoordLocation;
+  GLint vertColorLocation;
+};
+
+class Entity
+{
+public:
+  Entity(const Material &material, const husky::SimpleMesh &mesh)
+    : material(material)
+  {
+    renderData = mesh.getRenderData();
+    bboxLocal = mesh.getBoundingBox();
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, renderData.bytes.size(), renderData.bytes.data(), GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &vao);
+    //glBindVertexArray(vao);
+  }
+
+  void draw(const husky::Camera &cam) const
+  {
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindVertexArray(vao);
+
+    if (material.vertPositionLocation != -1) {
+      glEnableVertexAttribArray(material.vertPositionLocation);
+      glVertexAttribPointer(material.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
+    }
+
+    if (material.vertNormalLocation != -1) {
+      glEnableVertexAttribArray(material.vertNormalLocation);
+      glVertexAttribPointer(material.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
+    }
+
+    if (material.vertTexCoordLocation != -1) {
+      glEnableVertexAttribArray(material.vertTexCoordLocation);
+      glVertexAttribPointer(material.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+    }
+
+    if (material.vertColorLocation != -1) {
+      glEnableVertexAttribArray(material.vertColorLocation);
+      glVertexAttribPointer(material.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
+    }
+
+    husky::Matrix44f mvp(cam.projection * cam.view * transform);
+
+    glUseProgram(material.shaderProgram);
+    glUniformMatrix4fv(material.mvpLocation, 1, GL_FALSE, mvp.m);
+    glDrawElements(GL_TRIANGLES, (int)renderData.triangleInds.size(), GL_UNSIGNED_SHORT, renderData.triangleInds.data());
+  }
+
+  Material material;
+  husky::RenderData renderData;
+  husky::Matrix44d transform = husky::Matrix44d::identity();
+  husky::BoundingBox bboxLocal;
+  husky::BoundingBox bboxWorld;
+
+private:
+  GLuint vbo;
+  GLuint vao;
+};
+
 int main()
 {
   runUnitTests();
@@ -321,62 +402,44 @@ int main()
   glAttachShader(program, vertShader);
   glAttachShader(program, fragShader);
   glLinkProgram(program);
-  GLint mvpLocation = glGetUniformLocation(program, "mvp");
-  GLint vertPositionLocation = glGetAttribLocation(program, "vPosition");
-  GLint vertNormalLocation = glGetAttribLocation(program, "vNormal");
-  GLint vertTexCoordLocation = glGetAttribLocation(program, "vTexCoord");
-  GLint vertColorLocation = glGetAttribLocation(program, "vColor");
 
-  husky::SimpleMesh sphere = husky::Primitive::sphere(1.0);
-  sphere.setAllVertexColors({ 0, 255, 0, 255 });
-  sphere.transform(husky::Matrix44d::scale({ 1, 1, 1 }));
+  Material defaultMaterial(program);
+  std::vector<Entity> entities;
 
-  husky::SimpleMesh cylinder = husky::Primitive::cylinder(0.5, 2.0, true);
-  cylinder.setAllVertexColors({ 255, 0, 255, 255 });
-  cylinder.transform(husky::Matrix44d::translate({ 4, 0, 0 }));
+  {
+    husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
+    mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-  husky::SimpleMesh box = husky::Primitive::box(2.0, 3.0, 1.0);
-  box.setAllVertexColors({ 255, 0, 0, 255 });
-  box.transform(husky::Matrix44d::translate({ -4, 0, 0 }));
-
-  husky::SimpleMesh torus = husky::Primitive::torus(8.0, 1.0);
-  torus.setAllVertexColors({ 255, 255, 0, 255 });
-  torus.transform(husky::Matrix44d::translate({ 0, 0, 0 }));
-
-  husky::SimpleMesh combinedMesh;
-  combinedMesh.addMesh(sphere);
-  combinedMesh.addMesh(cylinder);
-  combinedMesh.addMesh(box);
-  combinedMesh.addMesh(torus);
-  husky::RenderData meshData = combinedMesh.getRenderData();
-
-  GLuint vbo;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, meshData.bytes.size(), meshData.bytes.data(), GL_STATIC_DRAW);
-
-  GLuint vao;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-
-  if (vertPositionLocation != -1) {
-    glEnableVertexAttribArray(vertPositionLocation);
-    glVertexAttribPointer(vertPositionLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::POSITION));
+    Entity entity(defaultMaterial, mesh);
+    entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
+    entities.emplace_back(entity);
   }
 
-  if (vertNormalLocation != -1) {
-    glEnableVertexAttribArray(vertNormalLocation);
-    glVertexAttribPointer(vertNormalLocation, 3, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::NORMAL));
+  {
+    husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
+    mesh.setAllVertexColors({ 255, 0, 255, 255 });
+
+    Entity entity(defaultMaterial, mesh);
+    entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
+    entities.emplace_back(entity);
   }
 
-  if (vertTexCoordLocation != -1) {
-    glEnableVertexAttribArray(vertTexCoordLocation);
-    glVertexAttribPointer(vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+  {
+    husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
+    mesh.setAllVertexColors({ 255, 0, 0, 255 });
+
+    Entity entity(defaultMaterial, mesh);
+    entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
+    entities.emplace_back(entity);
   }
 
-  if (vertColorLocation != -1) {
-    glEnableVertexAttribArray(vertColorLocation);
-    glVertexAttribPointer(vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, meshData.vertByteCount, meshData.attribPointer(husky::RenderData::Attribute::COLOR));
+  {
+    husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
+    mesh.setAllVertexColors({ 255, 255, 0, 255 });
+
+    Entity entity(defaultMaterial, mesh);
+    entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
+    entities.emplace_back(entity);
   }
 
   glEnable(GL_CULL_FACE);
@@ -393,16 +456,16 @@ int main()
 
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
-    auto modelView = cam.getViewMatrix();
-    auto perspective = husky::Matrix44d::perspectiveInf(husky::math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
-    auto mvp = perspective * modelView;
+    cam.projection = husky::Matrix44d::perspectiveInf(husky::math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
+    cam.buildViewMatrix();
 
     glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
     glClearColor(0.f, 0.f, .5f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(program);
-    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, ((husky::Matrix44f)mvp).m);
-    glDrawElements(GL_TRIANGLES, (int)meshData.triangleInds.size(), GL_UNSIGNED_SHORT, meshData.triangleInds.data());
+    
+    for (const Entity &entity : entities) {
+      entity.draw(cam);
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
