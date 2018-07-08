@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\src\husky\image\Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\husky\Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp">
@@ -117,6 +120,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\husky\image\Image.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\husky\Log.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

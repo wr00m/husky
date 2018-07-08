@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <husky/Log.hpp>
 #include <husky/image/Image.hpp>
 #include <husky/math/Matrix44.hpp>
 #include <husky/math/Random.hpp>
@@ -174,15 +175,13 @@ void main() {
   //fragColor = vec4(varTexCoord, 0.0, 1.0);
 })";
 
-static void MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+static void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
   switch (severity) {
   case GL_DEBUG_SEVERITY_LOW:
   case GL_DEBUG_SEVERITY_MEDIUM:
   case GL_DEBUG_SEVERITY_HIGH:
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-      (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-      type, severity, message);
+    husky::Log::warning("OpenGL callback: %s", message);
     break;
 
   case GL_DEBUG_SEVERITY_NOTIFICATION:
@@ -416,10 +415,11 @@ int main()
 
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   //glfwSwapInterval(1);
-  //const std::string glVer = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+
+  husky::Log::debug("OpenGL version: %s", glGetString(GL_VERSION));
 
   glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback((GLDEBUGPROC)MessageCallback, 0);
+  glDebugMessageCallback((GLDEBUGPROC)messageCallback, 0);
 
   GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertShader, 1, &vertShaderSrc, NULL);
