@@ -159,6 +159,7 @@ static const char *fragShaderSrc =
 R"(#version 400
 uniform sampler2D tex;
 uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
+uniform vec3 ambientColor = vec3(0.05, 0.05, 0.05);
 in vec3 varNormal;
 in vec2 varTexCoord;
 in vec4 varColor;
@@ -168,7 +169,7 @@ void main() {
   float light = dot(varNormal, lightDir);
   light = clamp(light, 0.0, 1.0);
   vec4 texColor = texture(tex, varTexCoord);
-  fragColor = vec4(light * varColor.rgb * texColor.rgb, varColor.a * texColor.a);
+  fragColor = vec4(light * varColor.rgb * texColor.rgb + ambientColor, varColor.a * texColor.a);
   //fragColor = texColor;
   //fragColor = vec4(varTexCoord, 0.0, 1.0);
 })";
@@ -432,10 +433,10 @@ int main()
   glLinkProgram(shaderProg);
 
   husky::Image image(2, 2, sizeof(husky::Vector4b));
-  image.setPixel(0, 0, husky::Vector4b(255,   0,   0, 255));
-  image.setPixel(1, 0, husky::Vector4b(  0, 255,   0, 255));
-  image.setPixel(0, 1, husky::Vector4b(  0,   0, 255, 255));
-  image.setPixel(1, 1, husky::Vector4b(255, 255,   0, 255));
+  image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
+  image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
+  image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
+  image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
 
   GLuint tex;
   glGenTextures(1, &tex);
@@ -452,7 +453,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
-    //mesh.setAllVertexColors({ 0, 255, 0, 255 });
+    mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
@@ -461,7 +462,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
-    //mesh.setAllVertexColors({ 255, 0, 255, 255 });
+    mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
@@ -470,7 +471,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
-    //mesh.setAllVertexColors({ 255, 0, 0, 255 });
+    mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
@@ -479,7 +480,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
-    //mesh.setAllVertexColors({ 255, 255, 0, 255 });
+    mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
