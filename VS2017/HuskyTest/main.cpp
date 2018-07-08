@@ -138,7 +138,8 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
 
 static const char *vertShaderSrc =
 R"(#version 400
-uniform mat4 mvp;
+uniform mat4 modelView;
+uniform mat4 projection;
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
@@ -150,7 +151,7 @@ void main() {
   varNormal = vNormal;
   varTexCoord = vTexCoord;
   varColor = vColor;
-  gl_Position = mvp * vec4(vPosition, 1.0);
+  gl_Position = projection * (modelView * vec4(vPosition, 1.0));
 })";
 
 static const char *fragShaderSrc =
@@ -285,7 +286,8 @@ public:
   Material(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
   {
-    mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+    modelViewLocation = glGetUniformLocation(shaderProgram, "modelView");
+    projectionLocation = glGetUniformLocation(shaderProgram, "projection");
     vertPositionLocation = glGetAttribLocation(shaderProgram, "vPosition");
     vertNormalLocation = glGetAttribLocation(shaderProgram, "vNormal");
     vertTexCoordLocation = glGetAttribLocation(shaderProgram, "vTexCoord");
@@ -293,7 +295,8 @@ public:
   }
 
   GLuint shaderProgram;
-  GLint mvpLocation;
+  GLint modelViewLocation;
+  GLint projectionLocation;
   GLint vertPositionLocation;
   GLint vertNormalLocation;
   GLint vertTexCoordLocation;
@@ -342,10 +345,12 @@ public:
       glVertexAttribPointer(material.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
     }
 
-    husky::Matrix44f mvp(cam.projection * cam.view * transform);
+    husky::Matrix44f modelView(cam.view * transform);
+    husky::Matrix44f projection(cam.projection);
 
     glUseProgram(material.shaderProgram);
-    glUniformMatrix4fv(material.mvpLocation, 1, GL_FALSE, mvp.m);
+    glUniformMatrix4fv(material.modelViewLocation, 1, GL_FALSE, modelView.m);
+    glUniformMatrix4fv(material.projectionLocation, 1, GL_FALSE, projection.m);
     glDrawElements(GL_TRIANGLES, (int)renderData.triangleInds.size(), GL_UNSIGNED_SHORT, renderData.triangleInds.data());
   }
 
