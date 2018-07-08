@@ -7,7 +7,7 @@ Image::Image(int width, int height, int bytesPerPixel)
   , height(height)
   , bytesPerPixel(bytesPerPixel)
 {
-  int totalByteCount = (width * height * bytesPerPixel);
+  const int totalByteCount = (width * height * bytesPerPixel);
   bytes.resize(totalByteCount, 0);
 }
 

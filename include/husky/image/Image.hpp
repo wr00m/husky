@@ -5,10 +5,10 @@
 
 namespace husky {
 
-class HUSKY_DLL Image
+class Image
 {
 public:
-  Image(int width, int height, int bytesPerPixel);
+  HUSKY_DLL Image(int width, int height, int bytesPerPixel);
 
   template<typename T>
   void setPixel(int x, int y, const T &px)
@@ -20,7 +20,7 @@ public:
   }
 
   int width, height, bytesPerPixel;
-  std::vector<std::uint8_t> bytes;
+  std::vector<uint8_t> bytes;
 };
 
 }
