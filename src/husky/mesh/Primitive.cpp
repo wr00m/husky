@@ -16,10 +16,10 @@ SimpleMesh Primitive::box(double sizeX, double sizeY, double sizeZ)
     m.addVertex({  h.x, -h.y,  h.z }, {  1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // X-
-    m.addVertex({ -h.x,  h.y, -h.z }, { -1,  0,  0 }, { 1, 0 }),
-    m.addVertex({ -h.x, -h.y, -h.z }, { -1,  0,  0 }, { 0, 0 }),
-    m.addVertex({ -h.x, -h.y,  h.z }, { -1,  0,  0 }, { 0, 1 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, { -1,  0,  0 }, { 1, 1 }));
+    m.addVertex({ -h.x,  h.y, -h.z }, { -1,  0,  0 }, { 0, 0 }),
+    m.addVertex({ -h.x, -h.y, -h.z }, { -1,  0,  0 }, { 1, 0 }),
+    m.addVertex({ -h.x, -h.y,  h.z }, { -1,  0,  0 }, { 1, 1 }),
+    m.addVertex({ -h.x,  h.y,  h.z }, { -1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // Y+
     m.addVertex({  h.x,  h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
@@ -28,10 +28,10 @@ SimpleMesh Primitive::box(double sizeX, double sizeY, double sizeZ)
     m.addVertex({  h.x,  h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }));
 
   m.addQuad( // Y-
-    m.addVertex({ -h.x, -h.y, -h.z }, {  0,  1,  0 }, { 1, 0 }),
-    m.addVertex({  h.x, -h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
-    m.addVertex({  h.x, -h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }),
-    m.addVertex({ -h.x, -h.y,  h.z }, {  0,  1,  0 }, { 1, 1 }));
+    m.addVertex({ -h.x, -h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
+    m.addVertex({  h.x, -h.y, -h.z }, {  0,  1,  0 }, { 1, 0 }),
+    m.addVertex({  h.x, -h.y,  h.z }, {  0,  1,  0 }, { 1, 1 }),
+    m.addVertex({ -h.x, -h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }));
 
   m.addQuad( // Z+
     m.addVertex({ -h.x, -h.y,  h.z }, {  0,  0,  1 }, { 0, 0 }),
