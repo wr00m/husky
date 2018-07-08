@@ -107,5 +107,8 @@
     <ClInclude Include="..\..\include\husky\mesh\Primitive.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\husky\Common.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

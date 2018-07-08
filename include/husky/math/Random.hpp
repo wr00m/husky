@@ -5,7 +5,7 @@
 namespace husky
 {
 
-class __declspec(dllexport) Random
+class HUSKY_DLL Random
 {
 public:
   Random(int seed = 0);

@@ -5,7 +5,7 @@
 namespace husky {
 
 template<typename T>
-class __declspec(dllexport) Quaternion
+class HUSKY_DLL Quaternion
 {
 public:
   static Quaternion<T> identity();

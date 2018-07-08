@@ -11,7 +11,7 @@ public:
   Vector3d dir;
 };
 
-class __declspec(dllexport) Viewport
+class HUSKY_DLL Viewport
 {
 public:
   int x; // Left

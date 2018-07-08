@@ -4,7 +4,7 @@
 
 namespace husky {
 
-class __declspec(dllexport) Primitive
+class HUSKY_DLL Primitive
 {
 public:
   static SimpleMesh box(double sizeX, double sizeY, double sizeZ);

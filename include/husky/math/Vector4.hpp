@@ -5,7 +5,7 @@
 namespace husky {
 
 template<typename T>
-class __declspec(dllexport) Vector4
+class HUSKY_DLL Vector4
 {
 public:
   union {

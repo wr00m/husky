@@ -4,7 +4,7 @@
 
 namespace husky {
 
-class __declspec(dllexport) Camera
+class HUSKY_DLL Camera
 {
 public:
   Vector3d position;

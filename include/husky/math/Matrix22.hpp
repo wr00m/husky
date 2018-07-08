@@ -5,7 +5,7 @@
 namespace husky {
 
 template<typename T>
-class __declspec(dllexport) Matrix22
+class HUSKY_DLL Matrix22
 {
 public:
   union { // Column-major

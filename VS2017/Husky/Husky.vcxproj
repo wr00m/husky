@@ -168,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\glad\glad.h" />
+    <ClInclude Include="..\..\include\husky\Common.hpp" />
     <ClInclude Include="..\..\include\husky\math\MathUtil.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix22.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix33.hpp" />

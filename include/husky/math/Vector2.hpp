@@ -1,11 +1,12 @@
 #pragma once
 
+#include <husky/Common.hpp>
 #include <cstdint>
 
 namespace husky {
 
 template<typename T>
-class __declspec(dllexport) Vector2
+class HUSKY_DLL Vector2
 {
 public:
   union {

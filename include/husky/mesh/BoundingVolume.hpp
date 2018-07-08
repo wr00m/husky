@@ -5,13 +5,13 @@
 namespace husky
 {
 
-class __declspec(dllexport) BoundingBox
+class HUSKY_DLL BoundingBox
 {
 public:
   // TODO
 };
 
-class __declspec(dllexport) BoundingSphere
+class HUSKY_DLL BoundingSphere
 {
 public:
   // TODO
