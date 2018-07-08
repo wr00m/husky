@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\glad.c" />
+    <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\math\MathUtil.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix22.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix33.cpp" />
@@ -170,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\glad\glad.h" />
     <ClInclude Include="..\..\include\husky\Common.hpp" />
+    <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\math\MathUtil.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix22.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix33.hpp" />

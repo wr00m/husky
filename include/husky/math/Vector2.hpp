@@ -1,7 +1,6 @@
 #pragma once
 
 #include <husky/Common.hpp>
-#include <cstdint>
 
 namespace husky {
 

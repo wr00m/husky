@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <husky/image/Image.hpp>
 #include <husky/math/Matrix44.hpp>
 #include <husky/math/Random.hpp>
 #include <husky/math/Quaternion.hpp>
@@ -156,6 +157,7 @@ void main() {
 
 static const char *fragShaderSrc =
 R"(#version 400
+uniform sampler2D tex;
 uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
 in vec3 varNormal;
 in vec2 varTexCoord;
@@ -165,7 +167,9 @@ void main() {
   //vec3 normal = normalize(varNormal);
   float light = dot(varNormal, lightDir);
   light = clamp(light, 0.0, 1.0);
-  fragColor = vec4(light * varColor.rgb, varColor.a);
+  vec4 texColor = texture(tex, varTexCoord);
+  fragColor = vec4(light * varColor.rgb * texColor.rgb, varColor.a * texColor.a);
+  //fragColor = texColor;
   //fragColor = vec4(varTexCoord, 0.0, 1.0);
 })";
 
@@ -275,32 +279,37 @@ static void handleInput(GLFWwindow *win)
 
   const husky::Vector3d camSpeed(20, 20, 20);
 
-  cam.position += cam.right() * input.x * camSpeed.x * frameTime;
+  cam.position += cam.right()   * input.x * camSpeed.x * frameTime;
   cam.position += cam.forward() * input.y * camSpeed.y * frameTime;
-  cam.position += cam.up() * input.z * camSpeed.z * frameTime;
+  cam.position += cam.up()      * input.z * camSpeed.z * frameTime;
 }
 
 class Material
 {
 public:
-  Material(GLuint shaderProgram)
+  Material(GLuint shaderProgram, GLuint tex)
     : shaderProgram(shaderProgram)
+    , tex(tex)
   {
-    modelViewLocation = glGetUniformLocation(shaderProgram, "modelView");
-    projectionLocation = glGetUniformLocation(shaderProgram, "projection");
-    vertPositionLocation = glGetAttribLocation(shaderProgram, "vPosition");
-    vertNormalLocation = glGetAttribLocation(shaderProgram, "vNormal");
-    vertTexCoordLocation = glGetAttribLocation(shaderProgram, "vTexCoord");
-    vertColorLocation = glGetAttribLocation(shaderProgram, "vColor");
+    modelViewLocation   = glGetUniformLocation(shaderProgram, "modelView");
+    projectionLocation  = glGetUniformLocation(shaderProgram, "projection");
+    texLocation         = glGetUniformLocation(shaderProgram, "tex");
+
+    vertPositionLocation  = glGetAttribLocation(shaderProgram, "vPosition");
+    vertNormalLocation    = glGetAttribLocation(shaderProgram, "vNormal");
+    vertTexCoordLocation  = glGetAttribLocation(shaderProgram, "vTexCoord");
+    vertColorLocation     = glGetAttribLocation(shaderProgram, "vColor");
   }
 
   GLuint shaderProgram;
   GLint modelViewLocation;
   GLint projectionLocation;
+  GLint texLocation;
   GLint vertPositionLocation;
   GLint vertNormalLocation;
   GLint vertTexCoordLocation;
   GLint vertColorLocation;
+  GLuint tex;
 };
 
 class Entity
@@ -310,7 +319,7 @@ public:
     : material(material)
   {
     renderData = mesh.getRenderData();
-    bboxLocal = mesh.getBoundingBox();
+    //bboxLocal = mesh.getBoundingBox();
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -322,6 +331,9 @@ public:
 
   void draw(const husky::Camera &cam) const
   {
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, material.tex);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindVertexArray(vao);
 
@@ -349,16 +361,27 @@ public:
     husky::Matrix44f projection(cam.projection);
 
     glUseProgram(material.shaderProgram);
-    glUniformMatrix4fv(material.modelViewLocation, 1, GL_FALSE, modelView.m);
-    glUniformMatrix4fv(material.projectionLocation, 1, GL_FALSE, projection.m);
+
+    if (material.modelViewLocation != -1) {
+      glUniformMatrix4fv(material.modelViewLocation, 1, GL_FALSE, modelView.m);
+    }
+
+    if (material.projectionLocation != -1) {
+      glUniformMatrix4fv(material.projectionLocation, 1, GL_FALSE, projection.m);
+    }
+
+    if (material.texLocation != -1) {
+      glUniform1i(material.texLocation, 0);
+    }
+
     glDrawElements(GL_TRIANGLES, (int)renderData.triangleInds.size(), GL_UNSIGNED_SHORT, renderData.triangleInds.data());
   }
 
   Material material;
   husky::RenderData renderData;
   husky::Matrix44d transform = husky::Matrix44d::identity();
-  husky::BoundingBox bboxLocal;
-  husky::BoundingBox bboxWorld;
+  //husky::BoundingBox bboxLocal;
+  //husky::BoundingBox bboxWorld;
 
 private:
   GLuint vbo;
@@ -403,17 +426,33 @@ int main()
   GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragShader, 1, &fragShaderSrc, NULL);
   glCompileShader(fragShader);
-  GLuint program = glCreateProgram();
-  glAttachShader(program, vertShader);
-  glAttachShader(program, fragShader);
-  glLinkProgram(program);
+  GLuint shaderProg = glCreateProgram();
+  glAttachShader(shaderProg, vertShader);
+  glAttachShader(shaderProg, fragShader);
+  glLinkProgram(shaderProg);
 
-  Material defaultMaterial(program);
+  husky::Image image(2, 2, sizeof(husky::Vector4b));
+  image.setPixel(0, 0, husky::Vector4b(255,   0,   0, 255));
+  image.setPixel(1, 0, husky::Vector4b(  0, 255,   0, 255));
+  image.setPixel(0, 1, husky::Vector4b(  0,   0, 255, 255));
+  image.setPixel(1, 1, husky::Vector4b(255, 255,   0, 255));
+
+  GLuint tex;
+  glGenTextures(1, &tex);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bytes.data());
+  //glGenerateMipmap(GL_TEXTURE_2D);
+
+  Material defaultMaterial(shaderProg, tex);
   std::vector<Entity> entities;
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
-    mesh.setAllVertexColors({ 0, 255, 0, 255 });
+    //mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
@@ -422,7 +461,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
-    mesh.setAllVertexColors({ 255, 0, 255, 255 });
+    //mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
@@ -431,7 +470,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
-    mesh.setAllVertexColors({ 255, 0, 0, 255 });
+    //mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
@@ -440,7 +479,7 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
-    mesh.setAllVertexColors({ 255, 255, 0, 255 });
+    //mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
     Entity entity(defaultMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
