@@ -138,8 +138,67 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   //assert(quatAngleDiff < 1e-9);
 }
 
-static const char *vertShaderSrc =
-R"(#version 400
+static const char *lineVertSrc =
+R"(#version 400 core
+uniform mat4 modelView;
+uniform mat4 projection;
+in vec3 vPosition;
+in vec4 vColor;
+out vec4 vsColor;
+void main()
+{
+  vsColor = vColor;
+  gl_Position = projection * (modelView * vec4(vPosition, 1.0));
+})";
+
+static const char *lineGeomSrc =
+R"(#version 400 core
+uniform vec2 viewportSize = vec2(1280, 720); // Pixels
+uniform float lineWidth = 2.0; // Pixels
+in vec4 vsColor[2];
+out vec4 gsColor;
+layout (lines) in;
+layout (triangle_strip, max_vertices = 4) out;
+void main()
+{
+  vec3 ndc0 = gl_in[0].gl_Position.xyz / gl_in[0].gl_Position.w;
+  vec3 ndc1 = gl_in[1].gl_Position.xyz / gl_in[1].gl_Position.w;
+
+  vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
+  vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
+  vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
+
+  gl_Position = vec4(ndc0.xy + lineScreenOffset, ndc0.z, 1.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(ndc0.xy - lineScreenOffset, ndc0.z, 1.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(ndc1.xy + lineScreenOffset, ndc1.z, 1.0);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  gl_Position = vec4(ndc1.xy - lineScreenOffset, ndc1.z, 1.0);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  EndPrimitive();
+})";
+
+static const char *lineFragSrc =
+R"(#version 400 core
+in vec4 gsColor;
+out vec4 fsColor;
+void main()
+{
+  fsColor = gsColor;
+}
+)";
+
+static const char *defaultVertSrc =
+R"(#version 400 core
 uniform mat4 modelView;
 uniform mat4 projection;
 in vec3 vPosition;
@@ -156,8 +215,8 @@ void main() {
   gl_Position = projection * (modelView * vec4(vPosition, 1.0));
 })";
 
-static const char *fragShaderSrc =
-R"(#version 400
+static const char *defaultFragSrc =
+R"(#version 400 core
 uniform sampler2D tex;
 uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
 uniform vec3 ambientColor = vec3(0.05, 0.05, 0.05);
@@ -287,9 +346,15 @@ static void handleInput(GLFWwindow *win)
 class Material
 {
 public:
-  Material(GLuint shaderProgram, GLuint tex)
+  Material()
+    : shaderProgram(0)
+    , textureHandle(0)
+  {
+  }
+
+  Material(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
-    , tex(tex)
+    , textureHandle(0)
   {
     modelViewLocation   = glGetUniformLocation(shaderProgram, "modelView");
     projectionLocation  = glGetUniformLocation(shaderProgram, "projection");
@@ -309,7 +374,7 @@ public:
   GLint vertNormalLocation;
   GLint vertTexCoordLocation;
   GLint vertColorLocation;
-  GLuint tex;
+  GLuint textureHandle;
 };
 
 class Entity
@@ -317,6 +382,11 @@ class Entity
 private:
   static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
   {
+    if (mtl.shaderProgram == 0) {
+      husky::Log::warning("Invalid shader program");
+      return;
+    }
+
     glUseProgram(mtl.shaderProgram);
 
     if (mtl.modelViewLocation != -1) {
@@ -333,8 +403,10 @@ private:
 
     //glLineWidth(2.f);
 
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, mtl.tex);
+    if (mtl.textureHandle != 0) {
+      glActiveTexture(GL_TEXTURE0 + 0);
+      glBindTexture(GL_TEXTURE_2D, mtl.textureHandle);
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindVertexArray(vao);
@@ -371,8 +443,9 @@ private:
   }
 
 public:
-  Entity(const Material &material, const husky::SimpleMesh &mesh)
-    : material(material)
+  Entity(const Material &mtl, const Material &lineMtl, const husky::SimpleMesh &mesh)
+    : mtl(mtl)
+    , lineMtl(lineMtl)
   {
     renderData = mesh.getRenderData();
 
@@ -404,12 +477,13 @@ public:
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
 
-    draw(material, renderData, modelView, projection, vbo, vao);
-    draw(material, bboxRenderData, modelView, projection, vboBbox, vaoBbox);
+    draw(mtl, renderData, modelView, projection, vbo, vao);
+    draw(lineMtl, bboxRenderData, modelView, projection, vboBbox, vaoBbox);
   }
 
   husky::Matrix44d transform = husky::Matrix44d::identity();
-  Material material;
+  Material mtl;
+  Material lineMtl;
   husky::RenderData renderData;
   husky::BoundingBox bboxLocal;
   //husky::BoundingBox bboxWorld;
@@ -455,16 +529,31 @@ int main()
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)messageCallback, 0);
 
-  GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertShader, 1, &vertShaderSrc, NULL);
-  glCompileShader(vertShader);
-  GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragShader, 1, &fragShaderSrc, NULL);
-  glCompileShader(fragShader);
-  GLuint shaderProg = glCreateProgram();
-  glAttachShader(shaderProg, vertShader);
-  glAttachShader(shaderProg, fragShader);
-  glLinkProgram(shaderProg);
+  GLuint defaultVertShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(defaultVertShader, 1, &defaultVertSrc, NULL);
+  glCompileShader(defaultVertShader);
+  GLuint defaultFragShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(defaultFragShader, 1, &defaultFragSrc, NULL);
+  glCompileShader(defaultFragShader);
+  GLuint defaultShaderProg = glCreateProgram();
+  glAttachShader(defaultShaderProg, defaultVertShader);
+  glAttachShader(defaultShaderProg, defaultFragShader);
+  glLinkProgram(defaultShaderProg);
+
+  GLuint lineVertShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(lineVertShader, 1, &lineVertSrc, NULL);
+  glCompileShader(lineVertShader);
+  GLuint lineGeomShader = glCreateShader(GL_GEOMETRY_SHADER);
+  glShaderSource(lineGeomShader, 1, &lineGeomSrc, NULL);
+  glCompileShader(lineGeomShader);
+  GLuint lineFragShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(lineFragShader, 1, &lineFragSrc, NULL);
+  glCompileShader(lineFragShader);
+  GLuint lineShaderProg = glCreateProgram();
+  glAttachShader(lineShaderProg, lineVertShader);
+  glAttachShader(lineShaderProg, lineGeomShader);
+  glAttachShader(lineShaderProg, lineFragShader);
+  glLinkProgram(lineShaderProg);
 
   husky::Image image(2, 2, sizeof(husky::Vector4b));
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
@@ -472,9 +561,9 @@ int main()
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
 
-  GLuint tex;
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
+  GLuint textureHandle;
+  glGenTextures(1, &textureHandle);
+  glBindTexture(GL_TEXTURE_2D, textureHandle);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -482,14 +571,18 @@ int main()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bytes.data());
   //glGenerateMipmap(GL_TEXTURE_2D);
 
-  Material defaultMaterial(shaderProg, tex);
+  Material defaultMaterial(defaultShaderProg);
+  defaultMaterial.textureHandle = textureHandle;
+
+  Material lineMaterial(lineShaderProg);
+
   std::vector<Entity> entities;
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
     mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-    Entity entity(defaultMaterial, mesh);
+    Entity entity(defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
     entities.emplace_back(entity);
   }
@@ -498,7 +591,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
     mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
-    Entity entity(defaultMaterial, mesh);
+    Entity entity(defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
     entities.emplace_back(entity);
   }
@@ -507,7 +600,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
     mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
-    Entity entity(defaultMaterial, mesh);
+    Entity entity(defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
     entities.emplace_back(entity);
   }
@@ -516,7 +609,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
     mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    Entity entity(defaultMaterial, mesh);
+    Entity entity(defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(entity);
   }
