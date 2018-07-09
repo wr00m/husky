@@ -48,16 +48,12 @@ Vector3d Viewport::unproject(const Vector3d &windowPos, const Matrix44d &modelVi
   return worldPos.xyz;
 }
 
-Ray Viewport::getPickingRay(const Vector2d &windowPos, const Matrix44d &modelView, const Matrix44d &proj) const
+Vector3d Viewport::getPickingRayDir(const Vector2d &mousePos, const Camera &cam) const
 {
-  const Vector3d &camPos = modelView[3].xyz;
-  Vector3d worldPos = unproject(Vector3d(windowPos, 0.0), modelView, proj);
-  
-  Ray rayWorld;
-  rayWorld.startPos = camPos;
-  rayWorld.dir = (worldPos - camPos).normalized();
-  
-  return rayWorld;
+  Vector3d windowPos(mousePos.x, height - mousePos.y, 0.0);
+  Vector3d worldPos = unproject(windowPos, cam.view, cam.projection);
+  Vector3d dir = (worldPos - cam.position).normalized();
+  return dir;
 }
 
 }

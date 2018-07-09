@@ -187,7 +187,13 @@ static void mouseMoveCallback(GLFWwindow* win, double x, double y)
 static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods)
 {
   if (action == GLFW_PRESS) {
-    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+      for (const Entity &entity : entities) {
+        husky::Vector3d rayDir = viewport.getPickingRayDir(prevMousePos, cam);
+        husky::Log::debug("rayDir: %f,%f,%f", rayDir.x, rayDir.y, rayDir.z);
+      }
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
       glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
       mouseDragRight = true;
     }
