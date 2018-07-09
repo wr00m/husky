@@ -25,4 +25,14 @@ void BoundingBox::expand(const Vector3d &pt)
   else if (pt.z > max.z) max.z = pt.z;
 }
 
+Vector3d BoundingBox::size() const
+{
+  return (max - min);
+}
+
+Vector3d BoundingBox::center() const
+{
+  return (min + max) * 0.5;
+}
+
 }

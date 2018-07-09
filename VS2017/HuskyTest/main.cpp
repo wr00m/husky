@@ -314,12 +314,65 @@ public:
 
 class Entity
 {
+private:
+  static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
+  {
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, mtl.tex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindVertexArray(vao);
+
+    if (mtl.vertPositionLocation != -1) {
+      glEnableVertexAttribArray(mtl.vertPositionLocation);
+      glVertexAttribPointer(mtl.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
+    }
+
+    if (mtl.vertNormalLocation != -1) {
+      glEnableVertexAttribArray(mtl.vertNormalLocation);
+      glVertexAttribPointer(mtl.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
+    }
+
+    if (mtl.vertTexCoordLocation != -1) {
+      glEnableVertexAttribArray(mtl.vertTexCoordLocation);
+      glVertexAttribPointer(mtl.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+    }
+
+    if (mtl.vertColorLocation != -1) {
+      glEnableVertexAttribArray(mtl.vertColorLocation);
+      glVertexAttribPointer(mtl.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
+    }
+
+    glUseProgram(mtl.shaderProgram);
+
+    if (mtl.modelViewLocation != -1) {
+      glUniformMatrix4fv(mtl.modelViewLocation, 1, GL_FALSE, modelView.m);
+    }
+
+    if (mtl.projectionLocation != -1) {
+      glUniformMatrix4fv(mtl.projectionLocation, 1, GL_FALSE, projection.m);
+    }
+
+    if (mtl.texLocation != -1) {
+      glUniform1i(mtl.texLocation, 0);
+    }
+
+    GLenum mode = GL_POINTS; // Default fallback;
+    switch (renderData.mode) {
+    case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;    break;
+    case     husky::RenderData::Mode::LINES:     mode = GL_LINES;     break;
+    case     husky::RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES; break;
+    default: husky::Log::warning("Unsupported RenderData::Mode");     break;
+    }
+
+    glDrawElements(mode, (int)renderData.indices.size(), GL_UNSIGNED_SHORT, renderData.indices.data());
+  }
+
 public:
   Entity(const Material &material, const husky::SimpleMesh &mesh)
     : material(material)
   {
     renderData = mesh.getRenderData();
-    //bboxLocal = mesh.getBoundingBox();
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -327,65 +380,43 @@ public:
 
     glGenVertexArrays(1, &vao);
     //glBindVertexArray(vao);
+
+
+    bboxLocal = mesh.getBoundingBox();
+    husky::Vector3d bboxSize = bboxLocal.size();
+    husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
+    bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
+    bboxRenderData = bboxMesh.getRenderDataWireframe();
+
+    glGenBuffers(1, &vboBbox);
+    glBindBuffer(GL_ARRAY_BUFFER, vboBbox);
+    glBufferData(GL_ARRAY_BUFFER, bboxRenderData.bytes.size(), bboxRenderData.bytes.data(), GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &vaoBbox);
+    //glBindVertexArray(vaoBbox);
   }
 
   void draw(const husky::Camera &cam) const
   {
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, material.tex);
+    const husky::Matrix44f modelView(cam.view * transform);
+    const husky::Matrix44f projection(cam.projection);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindVertexArray(vao);
-
-    if (material.vertPositionLocation != -1) {
-      glEnableVertexAttribArray(material.vertPositionLocation);
-      glVertexAttribPointer(material.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
-    }
-
-    if (material.vertNormalLocation != -1) {
-      glEnableVertexAttribArray(material.vertNormalLocation);
-      glVertexAttribPointer(material.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
-    }
-
-    if (material.vertTexCoordLocation != -1) {
-      glEnableVertexAttribArray(material.vertTexCoordLocation);
-      glVertexAttribPointer(material.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
-    }
-
-    if (material.vertColorLocation != -1) {
-      glEnableVertexAttribArray(material.vertColorLocation);
-      glVertexAttribPointer(material.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
-    }
-
-    husky::Matrix44f modelView(cam.view * transform);
-    husky::Matrix44f projection(cam.projection);
-
-    glUseProgram(material.shaderProgram);
-
-    if (material.modelViewLocation != -1) {
-      glUniformMatrix4fv(material.modelViewLocation, 1, GL_FALSE, modelView.m);
-    }
-
-    if (material.projectionLocation != -1) {
-      glUniformMatrix4fv(material.projectionLocation, 1, GL_FALSE, projection.m);
-    }
-
-    if (material.texLocation != -1) {
-      glUniform1i(material.texLocation, 0);
-    }
-
-    glDrawElements(GL_TRIANGLES, (int)renderData.triangleInds.size(), GL_UNSIGNED_SHORT, renderData.triangleInds.data());
+    draw(material, renderData, modelView, projection, vbo, vao);
+    draw(material, bboxRenderData, modelView, projection, vboBbox, vaoBbox);
   }
 
+  husky::Matrix44d transform = husky::Matrix44d::identity();
   Material material;
   husky::RenderData renderData;
-  husky::Matrix44d transform = husky::Matrix44d::identity();
-  //husky::BoundingBox bboxLocal;
+  husky::BoundingBox bboxLocal;
   //husky::BoundingBox bboxWorld;
+  husky::RenderData bboxRenderData;
 
 private:
   GLuint vbo;
   GLuint vao;
+  GLuint vboBbox;
+  GLuint vaoBbox;
 };
 
 int main()

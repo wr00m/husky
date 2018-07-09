@@ -125,5 +125,8 @@
     <ClInclude Include="..\..\include\husky\Log.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\husky\render\RenderData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

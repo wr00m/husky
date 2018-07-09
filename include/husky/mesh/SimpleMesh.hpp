@@ -2,74 +2,11 @@
 
 #include <husky/math/Matrix44.hpp>
 #include <husky/mesh/BoundingBox.hpp>
+#include <husky/render/RenderData.hpp>
 #include <vector>
 #include <cassert>
 
 namespace husky {
-
-struct RenderData
-{
-  enum class Attribute
-  {
-    POSITION,
-    NORMAL,
-    TEXCOORD,
-    COLOR,
-  };
-
-  Vector3f anchor;
-  int vertCount;
-  int vertByteCount;
-  std::vector<std::uint8_t> bytes;
-  std::vector<int> attrByteOffsets;
-  std::vector<std::uint16_t> triangleInds;
-
-  RenderData()
-    : anchor(0, 0, 0)
-    , vertCount(0)
-    , vertByteCount(0)
-    , bytes{}
-    , attrByteOffsets((int)Attribute::COLOR + 1, -1)
-  {
-  }
-
-  void init(int vertCount)
-  {
-    this->vertCount = vertCount;
-    bytes.resize(vertCount * vertByteCount);
-  }
-
-  void addTriangle(int v0, int v1, int v2)
-  {
-    triangleInds.emplace_back(v0);
-    triangleInds.emplace_back(v1);
-    triangleInds.emplace_back(v2);
-  }
-
-  void addAttr(Attribute attr, int attrByteCount)
-  {
-    attrByteOffsets[(int)attr] = vertByteCount;
-    vertByteCount += attrByteCount;
-    //return attrByteOffsets[(int)attr];
-  }
-
-  const void* attribPointer(Attribute attr) const
-  {
-    return ((const std::uint8_t*)NULL) + attrByteOffsets[(int)attr];
-  }
-
-  template<typename T>
-  void setValue(int vertIndex, Attribute attr, const T &value)
-  {
-    const int attrByteOffset = attrByteOffsets[(int)attr];
-    assert(attrByteOffset >= 0);
-
-    const std::uint8_t *b = reinterpret_cast<const std::uint8_t*>(&value);
-    
-    const int byteStartIndex = (vertIndex * vertByteCount + attrByteOffset);
-    std::copy(b, b + sizeof(T), bytes.begin() + byteStartIndex);
-  }
-};
 
 class SimpleMesh
 {
@@ -218,16 +155,15 @@ public:
 
   RenderData getRenderData() const
   {
-    RenderData r;
+    RenderData r(RenderData::Mode::TRIANGLES);
     r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-    r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::NORMAL,   sizeof(Vector3f));
     r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
-    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    r.addAttr(RenderData::Attribute::COLOR,    sizeof(Vector4b));
     r.init((int)verts.size());
 
     if (!verts.empty()) {
-      r.anchor = Vector3f(0, 0, 0);
-      //r.anchor = (Vector3f)verts.front().pos;
+      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < verts.size(); i++) {
         const Vertex &vert = verts[i];
@@ -244,6 +180,39 @@ public:
       for (const Quad &q : quads) {
         r.addTriangle(q[0], q[1], q[2]);
         r.addTriangle(q[0], q[2], q[3]);
+      }
+    }
+
+    return r;
+  }
+
+  RenderData getRenderDataWireframe() const
+  {
+    RenderData r(RenderData::Mode::LINES);
+    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::COLOR,    sizeof(Vector4b));
+    r.init((int)verts.size());
+
+    if (!verts.empty()) {
+      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+
+      for (int i = 0; i < verts.size(); i++) {
+        const Vertex &vert = verts[i];
+        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vert.pos);
+        r.setValue(i, RenderData::Attribute::COLOR, vert.color);
+      }
+
+      for (const Triangle &t : tris) {
+        r.addLine(t[0], t[1]);
+        r.addLine(t[1], t[2]);
+        r.addLine(t[2], t[0]);
+      }
+
+      for (const Quad &q : quads) {
+        r.addLine(q[0], q[1]);
+        r.addLine(q[1], q[2]);
+        r.addLine(q[2], q[3]);
+        r.addLine(q[3], q[0]);
       }
     }
 

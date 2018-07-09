@@ -12,6 +12,8 @@ public:
 
   void init(const Vector3d &pt);
   void expand(const Vector3d &pt);
+  Vector3d size() const;
+  Vector3d center() const;
 
   Vector3d min, max;
 };

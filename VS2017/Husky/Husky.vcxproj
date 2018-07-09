@@ -187,6 +187,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Primitive.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
+    <ClInclude Include="..\..\include\husky\render\RenderData.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Viewport.hpp" />
     <ClInclude Include="..\..\include\KHR\khrplatform.h" />
   </ItemGroup>
