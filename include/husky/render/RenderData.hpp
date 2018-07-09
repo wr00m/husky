@@ -78,6 +78,11 @@ public:
     //return attrByteOffsets[(int)attr];
   }
 
+  bool hasAttrib(Attribute attr) const
+  {
+    return (attrByteOffsets[(int)attr] != -1);
+  }
+
   const void* attribPointer(Attribute attr) const
   {
     return ((const std::uint8_t*)NULL) + attrByteOffsets[(int)attr];

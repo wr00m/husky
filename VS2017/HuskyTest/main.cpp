@@ -317,32 +317,6 @@ class Entity
 private:
   static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
   {
-    glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, mtl.tex);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindVertexArray(vao);
-
-    if (mtl.vertPositionLocation != -1) {
-      glEnableVertexAttribArray(mtl.vertPositionLocation);
-      glVertexAttribPointer(mtl.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
-    }
-
-    if (mtl.vertNormalLocation != -1) {
-      glEnableVertexAttribArray(mtl.vertNormalLocation);
-      glVertexAttribPointer(mtl.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
-    }
-
-    if (mtl.vertTexCoordLocation != -1) {
-      glEnableVertexAttribArray(mtl.vertTexCoordLocation);
-      glVertexAttribPointer(mtl.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
-    }
-
-    if (mtl.vertColorLocation != -1) {
-      glEnableVertexAttribArray(mtl.vertColorLocation);
-      glVertexAttribPointer(mtl.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
-    }
-
     glUseProgram(mtl.shaderProgram);
 
     if (mtl.modelViewLocation != -1) {
@@ -355,6 +329,34 @@ private:
 
     if (mtl.texLocation != -1) {
       glUniform1i(mtl.texLocation, 0);
+    }
+
+    //glLineWidth(2.f);
+
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, mtl.tex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindVertexArray(vao);
+
+    if (mtl.vertPositionLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::POSITION)) {
+      glEnableVertexAttribArray(mtl.vertPositionLocation);
+      glVertexAttribPointer(mtl.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
+    }
+
+    if (mtl.vertNormalLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::NORMAL)) {
+      glEnableVertexAttribArray(mtl.vertNormalLocation);
+      glVertexAttribPointer(mtl.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
+    }
+
+    if (mtl.vertTexCoordLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::TEXCOORD)) {
+      glEnableVertexAttribArray(mtl.vertTexCoordLocation);
+      glVertexAttribPointer(mtl.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+    }
+
+    if (mtl.vertColorLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::COLOR)) {
+      glEnableVertexAttribArray(mtl.vertColorLocation);
+      glVertexAttribPointer(mtl.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
     }
 
     GLenum mode = GL_POINTS; // Default fallback;
@@ -385,6 +387,7 @@ public:
     bboxLocal = mesh.getBoundingBox();
     husky::Vector3d bboxSize = bboxLocal.size();
     husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
+    bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
     bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
     bboxRenderData = bboxMesh.getRenderDataWireframe();
 
