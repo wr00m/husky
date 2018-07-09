@@ -161,26 +161,28 @@ layout (lines) in;
 layout (triangle_strip, max_vertices = 4) out;
 void main()
 {
-  vec3 ndc0 = gl_in[0].gl_Position.xyz / gl_in[0].gl_Position.w;
-  vec3 ndc1 = gl_in[1].gl_Position.xyz / gl_in[1].gl_Position.w;
+  vec4 p0 = gl_in[0].gl_Position;
+  vec4 p1 = gl_in[1].gl_Position;
+  vec3 ndc0 = p0.xyz / p0.w;
+  vec3 ndc1 = p1.xyz / p1.w;
 
   vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
   vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
   vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
 
-  gl_Position = vec4(ndc0.xy + lineScreenOffset, ndc0.z, 1.0);
+  gl_Position = vec4(p0.xy + lineScreenOffset * p0.w, p0.zw);
   gsColor = vsColor[0];
   EmitVertex();
 
-  gl_Position = vec4(ndc0.xy - lineScreenOffset, ndc0.z, 1.0);
+  gl_Position = vec4(p0.xy - lineScreenOffset * p0.w, p0.zw);
   gsColor = vsColor[0];
   EmitVertex();
 
-  gl_Position = vec4(ndc1.xy + lineScreenOffset, ndc1.z, 1.0);
+  gl_Position = vec4(p1.xy + lineScreenOffset * p1.w, p1.zw);
   gsColor = vsColor[1];
   EmitVertex();
 
-  gl_Position = vec4(ndc1.xy - lineScreenOffset, ndc1.z, 1.0);
+  gl_Position = vec4(p1.xy - lineScreenOffset * p1.w, p1.zw);
   gsColor = vsColor[1];
   EmitVertex();
 
@@ -347,18 +349,20 @@ class Material
 {
 public:
   Material()
-    : shaderProgram(0)
-    , textureHandle(0)
+    : Material(0)
   {
   }
 
   Material(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
     , textureHandle(0)
+    , lineWidth(2)
   {
-    modelViewLocation   = glGetUniformLocation(shaderProgram, "modelView");
-    projectionLocation  = glGetUniformLocation(shaderProgram, "projection");
-    texLocation         = glGetUniformLocation(shaderProgram, "tex");
+    modelViewLocation     = glGetUniformLocation(shaderProgram, "modelView");
+    projectionLocation    = glGetUniformLocation(shaderProgram, "projection");
+    texLocation           = glGetUniformLocation(shaderProgram, "tex");
+    viewportSizeLocation  = glGetUniformLocation(shaderProgram, "viewportSize");
+    lineWidthLocation     = glGetUniformLocation(shaderProgram, "lineWidth");
 
     vertPositionLocation  = glGetAttribLocation(shaderProgram, "vPosition");
     vertNormalLocation    = glGetAttribLocation(shaderProgram, "vNormal");
@@ -370,17 +374,20 @@ public:
   GLint modelViewLocation;
   GLint projectionLocation;
   GLint texLocation;
+  GLint viewportSizeLocation;
+  GLint lineWidthLocation;
   GLint vertPositionLocation;
   GLint vertNormalLocation;
   GLint vertTexCoordLocation;
   GLint vertColorLocation;
   GLuint textureHandle;
+  float lineWidth;
 };
 
 class Entity
 {
 private:
-  static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
+  static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
   {
     if (mtl.shaderProgram == 0) {
       husky::Log::warning("Invalid shader program");
@@ -399,6 +406,14 @@ private:
 
     if (mtl.texLocation != -1) {
       glUniform1i(mtl.texLocation, 0);
+    }
+
+    if (mtl.viewportSizeLocation != -1) {
+      glUniform2f(mtl.viewportSizeLocation, (float)viewport.width, (float)viewport.height);
+    }
+
+    if (mtl.lineWidthLocation != -1) {
+      glUniform1f(mtl.lineWidthLocation, mtl.lineWidth);
     }
 
     //glLineWidth(2.f);
@@ -472,13 +487,16 @@ public:
     //glBindVertexArray(vaoBbox);
   }
 
-  void draw(const husky::Camera &cam) const
+  void draw(const husky::Viewport &viewport, const husky::Camera &cam) const
   {
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
 
-    draw(mtl, renderData, modelView, projection, vbo, vao);
-    draw(lineMtl, bboxRenderData, modelView, projection, vboBbox, vaoBbox);
+    glEnable(GL_CULL_FACE);
+    draw(mtl, renderData, viewport, modelView, projection, vbo, vao);
+
+    glDisable(GL_CULL_FACE);
+    draw(lineMtl, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
   }
 
   husky::Matrix44d transform = husky::Matrix44d::identity();
@@ -614,7 +632,6 @@ int main()
     entities.emplace_back(entity);
   }
 
-  glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   //glCullFace(GL_FRONT);
 
@@ -636,7 +653,7 @@ int main()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     for (const Entity &entity : entities) {
-      entity.draw(cam);
+      entity.draw(viewport, cam);
     }
 
     glfwSwapBuffers(window);
