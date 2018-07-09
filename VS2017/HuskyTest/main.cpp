@@ -193,8 +193,10 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
     }
   }
   else if (action == GLFW_RELEASE) {
-    glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    mouseDragRight = false;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+      glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      mouseDragRight = false;
+    }
   }
 }
 
@@ -207,9 +209,9 @@ static void scrollCallback(GLFWwindow *win, double deltaX, double deltaY)
 static void handleInput(GLFWwindow *win)
 {
   husky::Vector3d input;
-  input.x = (glfwGetKey(win, GLFW_KEY_D) - glfwGetKey(win, GLFW_KEY_A));
-  input.y = (glfwGetKey(win, GLFW_KEY_W) - glfwGetKey(win, GLFW_KEY_S));
-  input.z = (glfwGetKey(win, GLFW_KEY_SPACE) - glfwGetKey(win, GLFW_KEY_LEFT_CONTROL));
+  input.x = glfwGetKey(win, GLFW_KEY_D)     - glfwGetKey(win, GLFW_KEY_A);
+  input.y = glfwGetKey(win, GLFW_KEY_W)     - glfwGetKey(win, GLFW_KEY_S);
+  input.z = glfwGetKey(win, GLFW_KEY_SPACE) - glfwGetKey(win, GLFW_KEY_LEFT_CONTROL);
 
   const husky::Vector3d camSpeed(20, 20, 20);
 
