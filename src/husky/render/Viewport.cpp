@@ -50,7 +50,8 @@ Vector3d Viewport::unproject(const Vector3d &windowPos, const Matrix44d &modelVi
 
 Vector3d Viewport::getPickingRayDir(const Vector2d &mousePos, const Camera &cam) const
 {
-  Vector3d windowPos(mousePos.x, height - mousePos.y, 0.0);
+  // TODO: Take viewport position and size into consideration
+  Vector3d windowPos(mousePos.x, height - mousePos.y, 0.0); // Flip Y
   Vector3d worldPos = unproject(windowPos, cam.view, cam.projection);
   Vector3d dir = (worldPos - cam.position).normalized();
   return dir;

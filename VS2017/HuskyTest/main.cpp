@@ -126,7 +126,7 @@ static void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severi
 
 static husky::Camera cam({ 0, -20, 5 }, {});
 static GLFWwindow *window = nullptr;
-static husky::Vector2d prevMousePos(0, 0);
+static husky::Vector2d mousePos(0, 0);
 static husky::Vector2i windowedPos(0, 0);
 static husky::Vector2i windowedSize(1280, 720);
 static husky::Viewport viewport;
@@ -167,11 +167,11 @@ static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int 
 
 static void mouseMoveCallback(GLFWwindow* win, double x, double y)
 {
-  husky::Vector2d mousePos(x, y);
-  husky::Vector2d mouseDelta = mousePos - prevMousePos;
+  husky::Vector2d newMousePos(x, y);
+  husky::Vector2d mouseDelta = newMousePos - mousePos;
 
-  //if (mousePos.x < 0 || mousePos.y < 0) {
-  //  std::cout << "pos   : " << mousePos.x << " " << mousePos.y << std::endl;
+  //if (newMousePos.x < 0 || newMousePos.y < 0) {
+  //  std::cout << "pos   : " << newMousePos.x << " " << newMousePos.y << std::endl;
   //  std::cout << "delta : " << mouseDelta.x << " " << mouseDelta.y << std::endl;
   //}
 
@@ -181,7 +181,7 @@ static void mouseMoveCallback(GLFWwindow* win, double x, double y)
     cam.attitude = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.y, cam.right()) * cam.attitude; // Pitch
   }
 
-  prevMousePos = mousePos;
+  mousePos = newMousePos;
 }
 
 static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods)
@@ -189,7 +189,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
       for (const Entity &entity : entities) {
-        husky::Vector3d rayDir = viewport.getPickingRayDir(prevMousePos, cam);
+        husky::Vector3d rayDir = viewport.getPickingRayDir(mousePos, cam);
         husky::Log::debug("rayDir: %f,%f,%f", rayDir.x, rayDir.y, rayDir.z);
       }
     }
