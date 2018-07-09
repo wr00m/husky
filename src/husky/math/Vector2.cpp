@@ -1,5 +1,5 @@
 #include <husky/math/Vector2.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 #include <cmath>
 
 namespace husky {
@@ -77,8 +77,8 @@ template<typename T>
 Vector2<T> Vector2<T>::lerp(const Vector2<T> &target, T t) const
 {
   return{
-    (T)math::lerp(x, target.x, t),
-    (T)math::lerp(y, target.y, t)
+    (T)Math::lerp(x, target.x, t),
+    (T)Math::lerp(y, target.y, t)
   };
 }
 

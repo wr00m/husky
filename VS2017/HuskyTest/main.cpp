@@ -355,7 +355,7 @@ int main()
 
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
-    cam.projection = husky::Matrix44d::perspectiveInf(husky::math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
+    cam.projection = husky::Matrix44d::perspectiveInf(husky::Math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
     cam.buildViewMatrix();
 
     glViewport(viewport.x, viewport.y, viewport.width, viewport.height);

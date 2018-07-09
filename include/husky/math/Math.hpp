@@ -2,7 +2,7 @@
 
 namespace husky {
 
-class math {
+class Math {
 public:
   static constexpr double pi = 3.14159265358979323846;
   static constexpr double pi2 = pi / 2.0;

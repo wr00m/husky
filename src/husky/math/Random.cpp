@@ -1,5 +1,5 @@
 #include <husky/math/Random.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 #include <cmath>
 
 #define RANDOM_MAX  0x7FFF
@@ -43,7 +43,7 @@ void Random::getSphericalCoordinates(double &theta, double &phi)
 {
   const double u = getDouble();
   const double v = getDouble();
-  theta = 2.0 * math::pi * u;
+  theta = 2.0 * Math::pi * u;
   phi = std::acos(2.0 * v - 1.0);
 }
 

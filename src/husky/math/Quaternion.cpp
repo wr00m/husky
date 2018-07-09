@@ -1,5 +1,5 @@
 #include <husky/math/Quaternion.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 #include <algorithm>
 #include <cmath>
 
@@ -67,7 +67,7 @@ Quaternion<T> Quaternion<T>::fromDirections(const Vector3<T> &from, const Vector
       axis = Vector3<T>(0, 1, 0).cross(from); // Guess again
     }
     axis.normalize();
-    return fromAxisAngle(T(math::pi), axis);
+    return fromAxisAngle(T(Math::pi), axis);
   }
   
   axis = from.cross(to);

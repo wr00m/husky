@@ -1,5 +1,5 @@
 #include <husky/math/Matrix44.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 #include <cmath>
 
 // TODO: Also return analytical inverse in ortho, perspective*, lookAt, etc.?

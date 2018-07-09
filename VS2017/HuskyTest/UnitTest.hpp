@@ -1,5 +1,5 @@
 #include <husky/Log.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 #include <husky/math/Matrix44.hpp>
 #include <husky/math/Quaternion.hpp>
 #include <glm/mat4x4.hpp>
@@ -65,8 +65,8 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double           frustumDiff = matDiff(frustum, frustumGlm);
   assert(frustumDiff < 1e-9);
 
-  husky::Matrix44d persp       = husky::Matrix44d::perspective(husky::math::deg2rad * 60.0, 1.5, 1.0, 100.0);
-  glm::dmat4x4     perspGlm    = glm::perspective(husky::math::deg2rad * 60.0, 1.5, 1.0, 100.0);
+  husky::Matrix44d persp       = husky::Matrix44d::perspective(husky::Math::deg2rad * 60.0, 1.5, 1.0, 100.0);
+  glm::dmat4x4     perspGlm    = glm::perspective(husky::Math::deg2rad * 60.0, 1.5, 1.0, 100.0);
   double           perspDiff   = matDiff(persp, perspGlm);
   assert(perspDiff < 1e-9);
 
@@ -97,17 +97,17 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
 
   // TODO: Investigate why Quaternion::fromRotationMatrix() differs from GLM
 
-  husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::math::pi / 3.0, 1.25, 0.1);
-  glm::dmat4x4 perspInfGlm = glm::infinitePerspective(husky::math::pi / 3.0, 1.25, 0.1);
+  husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1);
+  glm::dmat4x4 perspInfGlm = glm::infinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1);
   double perspInfDiff = matDiff(perspInf, perspInfGlm);
   assert(perspInfDiff < 1e-9);
 
-  husky::Matrix44d perspInfTweak = husky::Matrix44d::perspectiveInf(husky::math::pi / 3.0, 1.25, 0.1, 1e-4);
-  glm::dmat4x4 perspInfTweakGlm = glm::tweakedInfinitePerspective(husky::math::pi / 3.0, 1.25, 0.1, 1e-4);
+  husky::Matrix44d perspInfTweak = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1, 1e-4);
+  glm::dmat4x4 perspInfTweakGlm = glm::tweakedInfinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1, 1e-4);
   double perspInfTweakDiff = matDiff(perspInfTweak, perspInfTweakGlm);
   assert(perspInfTweakDiff < 1e-9);
 
-  //husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::math::pi / 3.0, 1.25, 0.1);
+  //husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::Math::pi / 3.0, 1.25, 0.1);
 
   double vec3Angle = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
   double vec3AngleGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));

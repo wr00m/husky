@@ -154,7 +154,7 @@
     <ClCompile Include="..\..\src\glad.c" />
     <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\Log.cpp" />
-    <ClCompile Include="..\..\src\husky\math\MathUtil.cpp" />
+    <ClCompile Include="..\..\src\husky\math\Intersect.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix22.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix33.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix44.cpp" />
@@ -174,7 +174,8 @@
     <ClInclude Include="..\..\include\husky\Common.hpp" />
     <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\Log.hpp" />
-    <ClInclude Include="..\..\include\husky\math\MathUtil.hpp" />
+    <ClInclude Include="..\..\include\husky\math\Intersect.hpp" />
+    <ClInclude Include="..\..\include\husky\math\Math.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix22.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix33.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix44.hpp" />

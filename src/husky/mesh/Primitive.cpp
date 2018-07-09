@@ -1,5 +1,5 @@
 #include <husky/mesh/Primitive.hpp>
-#include <husky/math/MathUtil.hpp>
+#include <husky/math/Math.hpp>
 
 namespace husky {
 
@@ -60,7 +60,7 @@ SimpleMesh Primitive::cylinder(double radius, double height, bool cap, int segme
   Vector2d pPrev;
   for (int i = 0; i <= segmentCount; i++) {
     double u = i / double(segmentCount); // [0.0,1.0]
-    Vector3d n(std::cos(u * math::twoPi), std::sin(u * math::twoPi), 0.0);
+    Vector3d n(std::cos(u * Math::twoPi), std::sin(u * Math::twoPi), 0.0);
     Vector2d p = n.xy * radius;
 
     int v0 = m.addVertex({ p, h0 }, n, { u, 0.0 });
@@ -97,11 +97,11 @@ SimpleMesh Primitive::sphere(double radius, int uSegmentCount, int vSegmentCount
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
     const double u = iu / double(uSegmentCount); // [0,1]
-    const double theta = u * 2.0 * math::pi; // Azimuthal angle [0,2*pi]
+    const double theta = u * 2.0 * Math::pi; // Azimuthal angle [0,2*pi]
     
     for (int iv = 0; iv <= vSegmentCount; iv++) {
       const double v = iv / double(vSegmentCount); // [0,1]
-      const double phi = v * math::pi; // Polar angle [0,pi]
+      const double phi = v * Math::pi; // Polar angle [0,pi]
 
       Vector3d n;
       n.x = std::cos(theta) * std::sin(phi);
@@ -133,7 +133,7 @@ SimpleMesh Primitive::torus(double innerRadius, double outerRadius, int uSegment
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
     const double u = iu / double(uSegmentCount); // [0,1]
-    const double theta = u * 2.0 * math::pi; // [0,2*pi]
+    const double theta = u * 2.0 * Math::pi; // [0,2*pi]
 
     const Matrix44d translate = Matrix44d::translate({ std::cos(theta) * innerRadius, std::sin(theta) * innerRadius, 0.0 });
     const Matrix33d rotate = Matrix33d::rotate(theta, { 0, 0, 1 });
@@ -141,7 +141,7 @@ SimpleMesh Primitive::torus(double innerRadius, double outerRadius, int uSegment
 
     for (int iv = 0; iv <= vSegmentCount; iv++) {
       const double v = iv / double(vSegmentCount); // [0,1]
-      const double phi = v * 2.0 * math::pi; // [0,2*pi]
+      const double phi = v * 2.0 * Math::pi; // [0,2*pi]
 
       const Vector3d vertNormal = rotate * Vector3d(std::cos(phi), 0.0, std::sin(-phi));
       const Vector3d vertPosition = (transform * Vector4d(vertNormal * outerRadius, 1.0)).xyz;
