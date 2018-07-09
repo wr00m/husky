@@ -26,5 +26,8 @@
     <ClInclude Include="Material.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UnitTest.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

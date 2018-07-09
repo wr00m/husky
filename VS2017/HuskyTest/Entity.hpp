@@ -1,5 +1,7 @@
 #pragma once
 
+#include <husky/Log.hpp>
+#include <husky/mesh/Primitive.hpp>
 #include <husky/mesh/SimpleMesh.hpp>
 #include <husky/render/Viewport.hpp>
 #include <husky/render/Camera.hpp>
