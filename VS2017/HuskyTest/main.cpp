@@ -23,6 +23,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#include "Entity.hpp"
 
 static double matDiff(const husky::Matrix44d &a, const glm::dmat4x4 &g)
 {
@@ -261,6 +262,7 @@ static husky::Viewport viewport;
 static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
+static std::vector<Entity> entities;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -345,175 +347,6 @@ static void handleInput(GLFWwindow *win)
   cam.position += cam.up()      * input.z * camSpeed.z * frameTime;
 }
 
-class Material
-{
-public:
-  Material()
-    : Material(0)
-  {
-  }
-
-  Material(GLuint shaderProgram)
-    : shaderProgram(shaderProgram)
-    , textureHandle(0)
-    , lineWidth(2)
-  {
-    modelViewLocation     = glGetUniformLocation(shaderProgram, "modelView");
-    projectionLocation    = glGetUniformLocation(shaderProgram, "projection");
-    texLocation           = glGetUniformLocation(shaderProgram, "tex");
-    viewportSizeLocation  = glGetUniformLocation(shaderProgram, "viewportSize");
-    lineWidthLocation     = glGetUniformLocation(shaderProgram, "lineWidth");
-
-    vertPositionLocation  = glGetAttribLocation(shaderProgram, "vPosition");
-    vertNormalLocation    = glGetAttribLocation(shaderProgram, "vNormal");
-    vertTexCoordLocation  = glGetAttribLocation(shaderProgram, "vTexCoord");
-    vertColorLocation     = glGetAttribLocation(shaderProgram, "vColor");
-  }
-
-  GLuint shaderProgram;
-  GLint modelViewLocation;
-  GLint projectionLocation;
-  GLint texLocation;
-  GLint viewportSizeLocation;
-  GLint lineWidthLocation;
-  GLint vertPositionLocation;
-  GLint vertNormalLocation;
-  GLint vertTexCoordLocation;
-  GLint vertColorLocation;
-  GLuint textureHandle;
-  float lineWidth;
-};
-
-class Entity
-{
-private:
-  static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
-  {
-    if (mtl.shaderProgram == 0) {
-      husky::Log::warning("Invalid shader program");
-      return;
-    }
-
-    glUseProgram(mtl.shaderProgram);
-
-    if (mtl.modelViewLocation != -1) {
-      glUniformMatrix4fv(mtl.modelViewLocation, 1, GL_FALSE, modelView.m);
-    }
-
-    if (mtl.projectionLocation != -1) {
-      glUniformMatrix4fv(mtl.projectionLocation, 1, GL_FALSE, projection.m);
-    }
-
-    if (mtl.texLocation != -1) {
-      glUniform1i(mtl.texLocation, 0);
-    }
-
-    if (mtl.viewportSizeLocation != -1) {
-      glUniform2f(mtl.viewportSizeLocation, (float)viewport.width, (float)viewport.height);
-    }
-
-    if (mtl.lineWidthLocation != -1) {
-      glUniform1f(mtl.lineWidthLocation, mtl.lineWidth);
-    }
-
-    //glLineWidth(2.f);
-
-    if (mtl.textureHandle != 0) {
-      glActiveTexture(GL_TEXTURE0 + 0);
-      glBindTexture(GL_TEXTURE_2D, mtl.textureHandle);
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindVertexArray(vao);
-
-    if (mtl.vertPositionLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::POSITION)) {
-      glEnableVertexAttribArray(mtl.vertPositionLocation);
-      glVertexAttribPointer(mtl.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
-    }
-
-    if (mtl.vertNormalLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::NORMAL)) {
-      glEnableVertexAttribArray(mtl.vertNormalLocation);
-      glVertexAttribPointer(mtl.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
-    }
-
-    if (mtl.vertTexCoordLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::TEXCOORD)) {
-      glEnableVertexAttribArray(mtl.vertTexCoordLocation);
-      glVertexAttribPointer(mtl.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
-    }
-
-    if (mtl.vertColorLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::COLOR)) {
-      glEnableVertexAttribArray(mtl.vertColorLocation);
-      glVertexAttribPointer(mtl.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
-    }
-
-    GLenum mode = GL_POINTS; // Default fallback;
-    switch (renderData.mode) {
-    case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;    break;
-    case     husky::RenderData::Mode::LINES:     mode = GL_LINES;     break;
-    case     husky::RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES; break;
-    default: husky::Log::warning("Unsupported RenderData::Mode");     break;
-    }
-
-    glDrawElements(mode, (int)renderData.indices.size(), GL_UNSIGNED_SHORT, renderData.indices.data());
-  }
-
-public:
-  Entity(const Material &mtl, const Material &lineMtl, const husky::SimpleMesh &mesh)
-    : mtl(mtl)
-    , lineMtl(lineMtl)
-  {
-    renderData = mesh.getRenderData();
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, renderData.bytes.size(), renderData.bytes.data(), GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &vao);
-    //glBindVertexArray(vao);
-
-
-    bboxLocal = mesh.getBoundingBox();
-    husky::Vector3d bboxSize = bboxLocal.size();
-    husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
-    bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
-    bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
-    bboxRenderData = bboxMesh.getRenderDataWireframe();
-
-    glGenBuffers(1, &vboBbox);
-    glBindBuffer(GL_ARRAY_BUFFER, vboBbox);
-    glBufferData(GL_ARRAY_BUFFER, bboxRenderData.bytes.size(), bboxRenderData.bytes.data(), GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &vaoBbox);
-    //glBindVertexArray(vaoBbox);
-  }
-
-  void draw(const husky::Viewport &viewport, const husky::Camera &cam) const
-  {
-    const husky::Matrix44f modelView(cam.view * transform);
-    const husky::Matrix44f projection(cam.projection);
-
-    glEnable(GL_CULL_FACE);
-    draw(mtl, renderData, viewport, modelView, projection, vbo, vao);
-
-    glDisable(GL_CULL_FACE);
-    draw(lineMtl, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
-  }
-
-  husky::Matrix44d transform = husky::Matrix44d::identity();
-  Material mtl;
-  Material lineMtl;
-  husky::RenderData renderData;
-  husky::BoundingBox bboxLocal;
-  //husky::BoundingBox bboxWorld;
-  husky::RenderData bboxRenderData;
-
-private:
-  GLuint vbo;
-  GLuint vao;
-  GLuint vboBbox;
-  GLuint vaoBbox;
-};
-
 int main()
 {
   runUnitTests();
@@ -593,8 +426,6 @@ int main()
   defaultMaterial.textureHandle = textureHandle;
 
   Material lineMaterial(lineShaderProg);
-
-  std::vector<Entity> entities;
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);

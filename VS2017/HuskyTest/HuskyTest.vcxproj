@@ -166,6 +166,10 @@
       <Project>{bacf0575-873b-4ae0-b175-f17743add9fd}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Entity.hpp" />
+    <ClInclude Include="Material.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
