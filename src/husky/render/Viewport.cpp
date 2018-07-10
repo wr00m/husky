@@ -12,6 +12,14 @@ Viewport::Viewport(int x, int y, int width, int height)
 {
 }
 
+void Viewport::set(int x, int y, int width, int height)
+{
+  this->x = x;
+  this->y = y;
+  this->width = width;
+  this->height = height;
+}
+
 double Viewport::aspectRatio() const
 {
   return (height != 0 ? (width / (double)height) : 0.0);
@@ -48,11 +56,9 @@ Vector3d Viewport::unproject(const Vector3d &windowPos, const Matrix44d &modelVi
   return worldPos.xyz;
 }
 
-Vector3d Viewport::getPickingRayDir(const Vector2d &mousePos, const Camera &cam) const
+Vector3d Viewport::getPickingRayDir(const Vector2d &windowPos, const Camera &cam) const
 {
-  // TODO: Take viewport position and size into consideration
-  Vector3d windowPos(mousePos.x, height - mousePos.y, 0.0); // Flip Y
-  Vector3d worldPos = unproject(windowPos, cam.view, cam.projection);
+  Vector3d worldPos = unproject({ windowPos, 0.0 }, cam.view, cam.projection);
   Vector3d dir = (worldPos - cam.position).normalized();
   return dir;
 }

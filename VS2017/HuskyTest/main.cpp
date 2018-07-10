@@ -136,6 +136,8 @@ static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
 static std::vector<std::unique_ptr<Entity>> entities;
 static const Entity *selectedEntity = nullptr;
+static GLuint fbo = 0;
+static husky::Viewport fboViewport;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -197,9 +199,13 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
           continue;
         }
 
+        husky::Vector2i windowSize;
+        glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
+        husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
+
         husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
-        husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(mousePos, cam);
+        husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(windowPos, cam);
 
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
@@ -241,6 +247,40 @@ static void handleInput(GLFWwindow *win)
   cam.position += cam.up()      * input.z * camSpeed.z * frameTime;
 }
 
+static void updateViewportAndRebuildFbo()
+{
+  glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+  fboViewport.set(0, 0, viewport.width, viewport.height);
+
+  GLuint color, depth;
+  glGenTextures(1, &color);
+  glBindTexture(GL_TEXTURE_2D, color);
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_SRGB8_ALPHA8, fboViewport.width, fboViewport.height);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glGenTextures(1, &depth);
+  glBindTexture(GL_TEXTURE_2D, depth);
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, fboViewport.width, fboViewport.height);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glGenFramebuffers(1, &fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+
+  GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
+    husky::Log::error("Framebuffer status: %x", fboStatus);
+  }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+static void windowSizeCallback(GLFWwindow *win, int width, int height)
+{
+  updateViewportAndRebuildFbo();
+}
+
 int main()
 {
   runUnitTests();
@@ -258,9 +298,8 @@ int main()
     return -1;
   }
 
-  glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-
   glfwMakeContextCurrent(window);
+  glfwSetWindowSizeCallback(window, windowSizeCallback);
   glfwSetKeyCallback(window, keyCallback);
   glfwSetCursorPosCallback(window, mouseMoveCallback);
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -280,6 +319,8 @@ int main()
 
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)messageCallback, 0);
+
+  updateViewportAndRebuildFbo();
 
   GLuint defaultVertShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(defaultVertShader, 1, &defaultVertSrc, NULL);
@@ -376,18 +417,31 @@ int main()
 
     handleInput(window);
 
-    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-
-    cam.projection = husky::Matrix44d::perspectiveInf(husky::Math::deg2rad * 60.0, viewport.aspectRatio(), 0.1, 2.4e-7);
+    cam.projection = husky::Matrix44d::perspectiveInf(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1, 2.4e-7);
     cam.buildViewMatrix();
 
-    glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
-    glClearColor(0.f, 0.f, .5f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    for (const auto &entity : entities) {
-      bool selected = (entity.get() == selectedEntity);
-      entity->draw(viewport, cam, selected);
+    { // Render scene to FBO
+      glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+      glViewport(fboViewport.x, fboViewport.y, fboViewport.width, fboViewport.height);
+      glClearColor(0.f, 0.f, .5f, 1.f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      for (const auto &entity : entities) {
+        bool selected = (entity.get() == selectedEntity);
+        entity->draw(viewport, cam, selected);
+      }
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    { // Blit FBO to screen
+      glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+      glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+      glBlitFramebuffer(fboViewport.x, fboViewport.y, fboViewport.x + fboViewport.width, fboViewport.y + fboViewport.height,
+                           viewport.x,    viewport.y,    viewport.x +    viewport.width,    viewport.y +    viewport.height,
+                        GL_COLOR_BUFFER_BIT, GL_NEAREST); // GL_LINEAR
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     glfwSwapBuffers(window);
