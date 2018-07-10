@@ -88,8 +88,8 @@ Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T yFovRad, T aspectRatio, T near)
   Matrix44<T> m;
   m[0][0] = e;
   m[1][1] = e * aspectRatio;
-  m[2][2] = T(-1);
-  m[2][3] = T(0);
+  m[2][2] = T(0);
+  m[2][3] = T(-1);
   m[3][2] = near;
   m[3][3] = T(0);
   return m;

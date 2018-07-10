@@ -206,6 +206,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
         husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
         husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(windowPos, cam);
+        rayDir = -rayDir; // Reverse Z
 
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
@@ -417,7 +418,7 @@ int main()
 
     handleInput(window);
 
-    cam.projection = husky::Matrix44d::perspectiveInf(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1, 2.4e-7);
+    cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
     cam.buildViewMatrix();
 
     { // Render scene to FBO
@@ -425,6 +426,9 @@ int main()
 
       glViewport(fboViewport.x, fboViewport.y, fboViewport.width, fboViewport.height);
       glClearColor(0.f, 0.f, .5f, 1.f);
+      glClearDepth(0.0f); // Reverse Z
+      glDepthFunc(GL_GREATER); // Reverse Z
+      glEnable(GL_DEPTH_CLAMP); // http://www.terathon.com/gdc07_lengyel.pdf
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       for (const auto &entity : entities) {
