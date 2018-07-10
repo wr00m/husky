@@ -1,7 +1,7 @@
 #include <husky/math/Intersect.hpp>
 #include <husky/math/Math.hpp>
 #include <husky/math/Vector4.hpp>
-#include <vector>
+#include <algorithm>
 #include <cmath>
 
 namespace husky {
@@ -100,62 +100,43 @@ int Intersect::lineIntersectsQuad(
 
 bool Intersect::lineIntersectsSphere(const Vector3d &linePt, const Vector3d &lineDir, const Vector3d &sphereCenter, double sphereRadius, double &t0, double &t1)
 {
-  return false; // TODO
+  Vector3d diff = sphereCenter - linePt;
+  double tca = diff.dot(lineDir);
+  double d2 = diff.dot(diff) - (tca * tca);
+
+  const double radius2 = (sphereRadius * sphereRadius);
+  if (d2 > radius2) {
+    return false;
+  }
+
+  double thc = std::sqrt(radius2 - d2);
+  t0 = (tca - thc);
+  t1 = (tca + thc);
+
+  if (t0 > t1) {
+    std::swap(t0, t1);
+  }
+
+  return true;
 }
 
 bool Intersect::lineIntersectsBox(const Vector3d &linePt, const Vector3d &lineDir, const Vector3d &boxMin, const Vector3d &boxMax, double &t0, double &t1)
 {
-  const Vector3d pts[8] = { // Box corners
-    boxMin,                           // ---
-    { boxMin.x, boxMax.y, boxMin.z }, // -+-
-    { boxMax.x, boxMax.y, boxMin.z }, // ++-
-    { boxMax.x, boxMin.y, boxMin.z }, // +--
-    { boxMin.x, boxMin.y, boxMax.z }, // --+
-    { boxMin.x, boxMax.y, boxMax.z }, // -++
-    boxMax,                           // +++
-    { boxMax.x, boxMin.y, boxMax.z }, // +-+
-  };
+  double txn = (boxMin.x - linePt.x) / lineDir.x;
+  double txp = (boxMax.x - linePt.x) / lineDir.x;
+  double tyn = (boxMin.y - linePt.y) / lineDir.y;
+  double typ = (boxMax.y - linePt.y) / lineDir.y;
+  double tzn = (boxMin.z - linePt.z) / lineDir.z;
+  double tzp = (boxMax.z - linePt.z) / lineDir.z;
 
-  const Vector4i quads[6] = { // Box sides (inconsistent winding order, but that's OK)
-    { 3, 2, 6, 7 }, // X+
-    { 1, 0, 4, 5 }, // X-
-    { 1, 2, 6, 5 }, // Y+
-    { 0, 3, 7, 4 }, // Y-
-    { 4, 5, 6, 7 }, // Z+
-    { 0, 1, 2, 3 }, // Z-
-  };
+  t0 = std::max(std::max(std::min(txn, txp), std::min(tyn, typ)), std::min(tzn, tzp));
+  t1 = std::min(std::min(std::max(txn, txp), std::max(tyn, typ)), std::max(tzn, tzp));
 
-  std::vector<double> ts;
-  for (int i = 0; i < 6; i++) {
-    const Vector4i &quad = quads[i];
-    double t;
-    if (lineIntersectsQuad(linePt, lineDir, pts[quad[0]], pts[quad[1]], pts[quad[2]], pts[quad[3]], t)) {
-      ts.emplace_back(t);
-      if (ts.size() == 2) { // Entry point and exit point found
-        if (std::abs(ts[0]) < std::abs(ts[1])) {
-          t0 = ts[0];
-          t1 = ts[1];
-          return true;
-        }
-        else {
-          t0 = ts[1];
-          t1 = ts[0];
-          return true;
-        }
-      }
-    }
-  }
-
-  if (ts.size() == 1) { // Single point (due to limited precision) => edge intersection
-    t0 = ts[0];
-    t1 = ts[0];
-    return true;
-  }
-  else { // No point found
-    t0 = 0;
-    t1 = 0;
+  if (t0 > t1) { // No intersection
     return false;
   }
+
+  return true;
 }
 
 }

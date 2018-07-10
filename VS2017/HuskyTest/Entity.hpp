@@ -81,8 +81,9 @@ private:
   }
 
 public:
-  Entity(const Material &mtl, const Material &lineMtl, const husky::SimpleMesh &mesh)
-    : mtl(mtl)
+  Entity(const std::string &name, const Material &mtl, const Material &lineMtl, const husky::SimpleMesh &mesh)
+    : name(name)
+    , mtl(mtl)
     , lineMtl(lineMtl)
   {
     renderData = mesh.getRenderData();
@@ -122,12 +123,12 @@ public:
     draw(lineMtl, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
   }
 
+  std::string name;
   husky::Matrix44d transform = husky::Matrix44d::identity();
   Material mtl;
   Material lineMtl;
   husky::RenderData renderData;
   husky::BoundingBox bboxLocal;
-  //husky::BoundingBox bboxWorld;
   husky::RenderData bboxRenderData;
 
 private:

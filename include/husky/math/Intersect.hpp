@@ -4,7 +4,7 @@
 
 namespace husky {
 
-class Intersect
+class HUSKY_DLL Intersect
 {
 public:
   static int  lineIntersectsPlane(const Vector3d &linePt, const Vector3d &lineDir, const Vector3d &planePt, const Vector3d &planeNormal, double &t, double tolerance = 1e-4);

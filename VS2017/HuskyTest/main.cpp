@@ -9,6 +9,7 @@
 #include "Entity.hpp"
 #include "UnitTest.hpp"
 #include <husky/image/Image.hpp>
+#include <husky/math/Intersect.hpp>
 
 static const char *lineVertSrc =
 R"(#version 400 core
@@ -189,8 +190,14 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
       for (const Entity &entity : entities) {
-        husky::Vector3d rayDir = viewport.getPickingRayDir(mousePos, cam);
-        husky::Log::debug("rayDir: %f,%f,%f", rayDir.x, rayDir.y, rayDir.z);
+        husky::Matrix44d inv = entity.transform.inverted();
+        husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
+        husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(mousePos, cam);
+
+        double t0, t1;
+        if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity.bboxLocal.min, entity.bboxLocal.max, t0, t1)) {
+          husky::Log::debug("HIT: %s", entity.name.c_str());
+        }
       }
     }
     else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
@@ -310,7 +317,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
     mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-    Entity entity(defaultMaterial, lineMaterial, mesh);
+    Entity entity("Sphere", defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
     entities.emplace_back(entity);
   }
@@ -319,7 +326,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
     mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
-    Entity entity(defaultMaterial, lineMaterial, mesh);
+    Entity entity("Cylinder", defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
     entities.emplace_back(entity);
   }
@@ -328,7 +335,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
     mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
-    Entity entity(defaultMaterial, lineMaterial, mesh);
+    Entity entity("Box", defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
     entities.emplace_back(entity);
   }
@@ -337,7 +344,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
     mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    Entity entity(defaultMaterial, lineMaterial, mesh);
+    Entity entity("Torus", defaultMaterial, lineMaterial, mesh);
     entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(entity);
   }
