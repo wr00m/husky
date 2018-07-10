@@ -111,7 +111,7 @@ public:
     //glBindVertexArray(vaoBbox);
   }
 
-  void draw(const husky::Viewport &viewport, const husky::Camera &cam) const
+  void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
   {
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
@@ -119,8 +119,10 @@ public:
     glEnable(GL_CULL_FACE);
     draw(mtl, renderData, viewport, modelView, projection, vbo, vao);
 
-    glDisable(GL_CULL_FACE);
-    draw(lineMtl, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
+    if (drawBbox) {
+      glDisable(GL_CULL_FACE);
+      draw(lineMtl, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
+    }
   }
 
   std::string name;

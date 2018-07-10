@@ -134,7 +134,8 @@ static husky::Viewport viewport;
 static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
-static std::vector<Entity> entities;
+static std::vector<std::unique_ptr<Entity>> entities;
+static const Entity *selectedEntity = nullptr;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -189,14 +190,21 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 {
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-      for (const Entity &entity : entities) {
-        husky::Matrix44d inv = entity.transform.inverted();
+      const Entity *prevSelectedEntity = selectedEntity;
+      selectedEntity = nullptr;
+      for (const auto &entity : entities) {
+        if (entity.get() == prevSelectedEntity) {
+          continue;
+        }
+
+        husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
         husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(mousePos, cam);
 
         double t0, t1;
-        if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity.bboxLocal.min, entity.bboxLocal.max, t0, t1)) {
-          husky::Log::debug("HIT: %s", entity.name.c_str());
+        if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
+          selectedEntity = entity.get();
+          break;
         }
       }
     }
@@ -317,36 +325,36 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
     mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-    Entity entity("Sphere", defaultMaterial, lineMaterial, mesh);
-    entity.transform = husky::Matrix44d::scale({ 1, 1, 1 });
-    entities.emplace_back(entity);
+    auto entity = std::make_unique<Entity>("Sphere", defaultMaterial, lineMaterial, mesh);
+    entity->transform = husky::Matrix44d::scale({ 1, 1, 1 });
+    entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
     mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
-    Entity entity("Cylinder", defaultMaterial, lineMaterial, mesh);
-    entity.transform = husky::Matrix44d::translate({ 4, 0, 0 });
-    entities.emplace_back(entity);
+    auto entity = std::make_unique<Entity>("Cylinder", defaultMaterial, lineMaterial, mesh);
+    entity->transform = husky::Matrix44d::translate({ 4, 0, 0 });
+    entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
     mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
-    Entity entity("Box", defaultMaterial, lineMaterial, mesh);
-    entity.transform = husky::Matrix44d::translate({ -4, 0, 0 });
-    entities.emplace_back(entity);
+    auto entity = std::make_unique<Entity>("Box", defaultMaterial, lineMaterial, mesh);
+    entity->transform = husky::Matrix44d::translate({ -4, 0, 0 });
+    entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
     mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    Entity entity("Torus", defaultMaterial, lineMaterial, mesh);
-    entity.transform = husky::Matrix44d::translate({ 0, 0, 0 });
-    entities.emplace_back(entity);
+    auto entity = std::make_unique<Entity>("Torus", defaultMaterial, lineMaterial, mesh);
+    entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
+    entities.emplace_back(std::move(entity));
   }
 
   glEnable(GL_DEPTH_TEST);
@@ -369,8 +377,9 @@ int main()
     glClearColor(0.f, 0.f, .5f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    for (const Entity &entity : entities) {
-      entity.draw(viewport, cam);
+    for (const auto &entity : entities) {
+      bool selected = (entity.get() == selectedEntity);
+      entity->draw(viewport, cam, selected);
     }
 
     glfwSwapBuffers(window);
