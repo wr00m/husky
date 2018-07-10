@@ -271,6 +271,13 @@ int main()
 
   husky::Log::debug("OpenGL version: %s", glGetString(GL_VERSION));
 
+  GLint glMajor, glMinor;
+  glGetIntegerv(GL_MAJOR_VERSION, &glMajor);
+  glGetIntegerv(GL_MINOR_VERSION, &glMinor);
+  if (glMajor < 4 || (glMajor == 4 && glMinor < 5)) {
+    husky::Log::error("OpenGL 4.5 or greater required"); // GL 4.5+ required for glClipControl()
+  }
+
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)messageCallback, 0);
 
@@ -357,6 +364,7 @@ int main()
     entities.emplace_back(std::move(entity));
   }
 
+  glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]
   glEnable(GL_DEPTH_TEST);
   //glCullFace(GL_FRONT);
 
