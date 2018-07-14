@@ -105,11 +105,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -164,6 +166,7 @@
     <ClCompile Include="..\..\src\husky\math\Vector3.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Vector4.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Primitive.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Viewport.cpp" />
@@ -185,6 +188,7 @@
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Vector4.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\BoundingBox.hpp" />
+    <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Primitive.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
