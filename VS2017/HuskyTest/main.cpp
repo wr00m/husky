@@ -10,6 +10,9 @@
 #include "UnitTest.hpp"
 #include <husky/image/Image.hpp>
 #include <husky/math/Intersect.hpp>
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 
 static const char *lineVertSrc =
 R"(#version 400 core
@@ -138,6 +141,7 @@ static std::vector<std::unique_ptr<Entity>> entities;
 static const Entity *selectedEntity = nullptr;
 static GLuint fbo = 0;
 static husky::Viewport fboViewport;
+static bool guiHasFocus = false;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -190,6 +194,10 @@ static void mouseMoveCallback(GLFWwindow* win, double x, double y)
 
 static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods)
 {
+  if (guiHasFocus) {
+    return;
+  }
+
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
       const Entity *prevSelectedEntity = selectedEntity;
@@ -300,14 +308,7 @@ int main()
   }
 
   glfwMakeContextCurrent(window);
-  glfwSetWindowSizeCallback(window, windowSizeCallback);
-  glfwSetKeyCallback(window, keyCallback);
-  glfwSetCursorPosCallback(window, mouseMoveCallback);
-  glfwSetMouseButtonCallback(window, mouseButtonCallback);
-  glfwSetScrollCallback(window, scrollCallback);
-
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-  //glfwSwapInterval(1);
 
   husky::Log::debug("OpenGL version: %s", glGetString(GL_VERSION));
 
@@ -317,6 +318,22 @@ int main()
   if (glMajor < 4 || (glMajor == 4 && glMinor < 5)) {
     husky::Log::error("OpenGL 4.5 or greater required"); // GL 4.5+ required for glClipControl()
   }
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO(); //(void)io;
+  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+  ImGui_ImplGlfw_InitForOpenGL(window, false);
+  ImGui_ImplOpenGL3_Init(nullptr);
+  ImGui::StyleColorsDark();
+  //ImGui::StyleColorsClassic();
+
+  glfwSetWindowSizeCallback(window, windowSizeCallback);
+  glfwSetKeyCallback(window, keyCallback);
+  glfwSetCursorPosCallback(window, mouseMoveCallback);
+  glfwSetMouseButtonCallback(window, mouseButtonCallback);
+  glfwSetScrollCallback(window, scrollCallback);
 
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)messageCallback, 0);
@@ -416,7 +433,9 @@ int main()
     prevTime = time;
     //std::cout << frameTime << std::endl;
 
-    handleInput(window);
+    if (!guiHasFocus) {
+      handleInput(window);
+    }
 
     cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
     cam.buildViewMatrix();
@@ -446,6 +465,22 @@ int main()
                            viewport.x,    viewport.y,    viewport.x +    viewport.width,    viewport.y +    viewport.height,
                         GL_COLOR_BUFFER_BIT, GL_NEAREST); // GL_LINEAR
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    { // Render GUI
+      ImGui_ImplOpenGL3_NewFrame();
+      ImGui_ImplGlfw_NewFrame();
+      ImGui::NewFrame();
+
+      ImGui::Begin("Debug");
+
+      guiHasFocus = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
+
+      ImGui::Text("Test...");
+      ImGui::End();
+
+      ImGui::Render();
+      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     glfwSwapBuffers(window);
