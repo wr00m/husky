@@ -137,5 +137,8 @@
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\husky\mesh\Material.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

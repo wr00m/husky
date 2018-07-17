@@ -1,13 +1,29 @@
 #pragma once
 
+#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Material.hpp>
 #include <string>
 
 namespace husky {
 
-class Model
+class HUSKY_DLL Model
 {
 public:
-  static void load(const std::string &filePath);
+  static Model load(const std::string &filePath);
+
+  Model();
+  Model(const SimpleMesh &&mesh);
+
+#pragma warning(suppress: 4251)
+  std::vector<Material> materials;
+#pragma warning(suppress: 4251)
+  std::vector<SimpleMesh> meshes;
+//#pragma warning(suppress: 4251)
+  //std::vector<Matrix44d> meshTransforms;
+#pragma warning(suppress: 4251)
+  std::vector<SimpleMesh> transformedMeshes; // TODO: Remove
+#pragma warning(suppress: 4251)
+  std::vector<int> meshMaterials;
 };
 
 }

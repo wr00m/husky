@@ -10,6 +10,7 @@
 #include "UnitTest.hpp"
 #include <husky/image/Image.hpp>
 #include <husky/math/Intersect.hpp>
+#include <husky/mesh/Model.hpp>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -96,7 +97,7 @@ void main() {
 static const char *defaultFragSrc =
 R"(#version 400 core
 uniform sampler2D tex;
-uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
+uniform vec3 lightDir = normalize(vec3(2.0, -4.0, 10.0));
 uniform vec3 diffuseLightColor = vec3(1.0, 1.0, 1.0);
 uniform vec3 ambientLightColor = vec3(0.05, 0.05, 0.05);
 in vec3 varNormal;
@@ -106,7 +107,7 @@ out vec4 fragColor;
 void main() {
   //vec3 normal = normalize(varNormal);
   float diffuseLightIntensity = clamp(dot(varNormal, lightDir), 0.0, 1.0);
-  vec3 totalLightColor = diffuseLightIntensity * diffuseLightColor + ambientLightColor;
+  vec3 totalLightColor = (diffuseLightIntensity * diffuseLightColor + ambientLightColor);
   vec4 texColor = texture(tex, varTexCoord);
   fragColor = vec4(totalLightColor * varColor.rgb * texColor.rgb, varColor.a * texColor.a);
   //fragColor = texColor;
@@ -392,16 +393,16 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
     mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Sphere", defaultMaterial, lineMaterial, mesh);
+    auto entity = std::make_unique<Entity>("Sphere", defaultMaterial, lineMaterial, std::move(mesh));
     entity->transform = husky::Matrix44d::scale({ 1, 1, 1 });
-    entities.emplace_back(std::move(entity));
+    //entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
     mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
-    auto entity = std::make_unique<Entity>("Cylinder", defaultMaterial, lineMaterial, mesh);
+    auto entity = std::make_unique<Entity>("Cylinder", defaultMaterial, lineMaterial, std::move(mesh));
     entity->transform = husky::Matrix44d::translate({ 4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
@@ -410,7 +411,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
     mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Box", defaultMaterial, lineMaterial, mesh);
+    auto entity = std::make_unique<Entity>("Box", defaultMaterial, lineMaterial, std::move(mesh));
     entity->transform = husky::Matrix44d::translate({ -4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
@@ -419,13 +420,26 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
     mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Torus", defaultMaterial, lineMaterial, mesh);
+    auto entity = std::make_unique<Entity>("Torus", defaultMaterial, lineMaterial, std::move(mesh));
+    entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
+    entities.emplace_back(std::move(entity));
+  }
+
+  {
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.fbx");
+    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
+    //mesh.setAllVertexColors({ 255, 255, 0, 255 });
+
+    auto entity = std::make_unique<Entity>("TestModel", defaultMaterial, lineMaterial, mdl);
     entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]
   glEnable(GL_DEPTH_TEST);
+  //glDisable(GL_CULL_FACE);
   //glCullFace(GL_FRONT);
 
   while (!glfwWindowShouldClose(window)) {

@@ -2,7 +2,7 @@
 
 #include <husky/Log.hpp>
 #include <husky/mesh/Primitive.hpp>
-#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Model.hpp>
 #include <husky/render/Viewport.hpp>
 #include <husky/render/Camera.hpp>
 #include "GLMaterial.hpp"
@@ -81,12 +81,18 @@ private:
   }
 
 public:
-  Entity(const std::string &name, const GLMaterial &mtl, const GLMaterial &lineMtl, const husky::SimpleMesh &mesh)
+  Entity(const std::string &name, const GLMaterial &mtl, const GLMaterial &lineMtl, const husky::Model &mdl)
     : name(name)
     , mtl(mtl)
     , lineMtl(lineMtl)
   {
-    renderData = mesh.getRenderData();
+    // TODO: Preserve meshes and use materials!
+    husky::SimpleMesh combinedMesh;
+    for (const husky::SimpleMesh &mesh : mdl.transformedMeshes) {
+      combinedMesh.addMesh(mesh);
+    }
+
+    renderData = combinedMesh.getRenderData();
 
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -95,8 +101,7 @@ public:
     glGenVertexArrays(1, &vao);
     //glBindVertexArray(vao);
 
-
-    bboxLocal = mesh.getBoundingBox();
+    bboxLocal = combinedMesh.getBoundingBox();
     husky::Vector3d bboxSize = bboxLocal.size();
     husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
     bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
