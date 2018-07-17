@@ -384,16 +384,16 @@ int main()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bytes.data());
   //glGenerateMipmap(GL_TEXTURE_2D);
 
-  GLMaterial defaultMaterial(defaultShaderProg);
-  defaultMaterial.textureHandle = textureHandle;
+  Shader defaultShader(defaultShaderProg);
+  defaultShader.textureHandle = textureHandle;
 
-  GLMaterial lineMaterial(lineShaderProg);
+  Shader lineShader(lineShaderProg);
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
     mesh.setAllVertexColors({ 0, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Sphere", defaultMaterial, lineMaterial, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Sphere", defaultShader, lineShader, std::move(mesh));
     entity->transform = husky::Matrix44d::scale({ 1, 1, 1 });
     //entities.emplace_back(std::move(entity));
   }
@@ -402,7 +402,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
     mesh.setAllVertexColors({ 255, 0, 255, 255 });
 
-    auto entity = std::make_unique<Entity>("Cylinder", defaultMaterial, lineMaterial, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mesh));
     entity->transform = husky::Matrix44d::translate({ 4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
@@ -411,7 +411,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
     mesh.setAllVertexColors({ 255, 0, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Box", defaultMaterial, lineMaterial, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mesh));
     entity->transform = husky::Matrix44d::translate({ -4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
@@ -420,7 +420,7 @@ int main()
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
     mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("Torus", defaultMaterial, lineMaterial, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Torus", defaultShader, lineShader, std::move(mesh));
     entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
@@ -432,7 +432,7 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
     //mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("TestModel", defaultMaterial, lineMaterial, mdl);
+    auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, mdl);
     entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(std::move(entity));
   }

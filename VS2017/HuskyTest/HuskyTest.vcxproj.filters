@@ -42,13 +42,13 @@
     <ClInclude Include="imgui\stb_rect_pack.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="GLMaterial.hpp" />
     <ClInclude Include="glad\glad.h">
       <Filter>glad</Filter>
     </ClInclude>
     <ClInclude Include="KHR\khrplatform.h">
       <Filter>KHR</Filter>
     </ClInclude>
+    <ClInclude Include="Shader.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

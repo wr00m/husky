@@ -183,7 +183,7 @@
     <ClInclude Include="imgui\stb_rect_pack.h" />
     <ClInclude Include="imgui\stb_textedit.h" />
     <ClInclude Include="imgui\stb_truetype.h" />
-    <ClInclude Include="GLMaterial.hpp" />
+    <ClInclude Include="Shader.hpp" />
     <ClInclude Include="KHR\khrplatform.h" />
     <ClInclude Include="UnitTest.hpp" />
   </ItemGroup>
