@@ -11,7 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.hpp" />
-    <ClInclude Include="Material.hpp" />
     <ClInclude Include="UnitTest.hpp" />
     <ClInclude Include="imgui\imgui_internal.h">
       <Filter>imgui</Filter>
@@ -37,6 +36,7 @@
     <ClInclude Include="imgui\stb_rect_pack.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="GLMaterial.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

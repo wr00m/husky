@@ -2,15 +2,15 @@
 
 #include <glad/glad.h>
 
-class Material
+class GLMaterial
 {
 public:
-  Material()
-    : Material(0)
+  GLMaterial()
+    : GLMaterial(0)
   {
   }
 
-  Material(GLuint shaderProgram)
+  GLMaterial(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
     , textureHandle(0)
     , lineWidth(2)

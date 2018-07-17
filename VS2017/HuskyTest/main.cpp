@@ -97,17 +97,18 @@ static const char *defaultFragSrc =
 R"(#version 400 core
 uniform sampler2D tex;
 uniform vec3 lightDir = normalize(vec3(1.0, 4.0, 10.0));
-uniform vec3 ambientColor = vec3(0.05, 0.05, 0.05);
+uniform vec3 diffuseLightColor = vec3(1.0, 1.0, 1.0);
+uniform vec3 ambientLightColor = vec3(0.05, 0.05, 0.05);
 in vec3 varNormal;
 in vec2 varTexCoord;
 in vec4 varColor;
 out vec4 fragColor;
 void main() {
   //vec3 normal = normalize(varNormal);
-  float light = dot(varNormal, lightDir);
-  light = clamp(light, 0.0, 1.0);
+  float diffuseLightIntensity = clamp(dot(varNormal, lightDir), 0.0, 1.0);
+  vec3 totalLightColor = diffuseLightIntensity * diffuseLightColor + ambientLightColor;
   vec4 texColor = texture(tex, varTexCoord);
-  fragColor = vec4(light * varColor.rgb * texColor.rgb + ambientColor, varColor.a * texColor.a);
+  fragColor = vec4(totalLightColor * varColor.rgb * texColor.rgb, varColor.a * texColor.a);
   //fragColor = texColor;
   //fragColor = vec4(varTexCoord, 0.0, 1.0);
 })";
@@ -382,10 +383,10 @@ int main()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bytes.data());
   //glGenerateMipmap(GL_TEXTURE_2D);
 
-  Material defaultMaterial(defaultShaderProg);
+  GLMaterial defaultMaterial(defaultShaderProg);
   defaultMaterial.textureHandle = textureHandle;
 
-  Material lineMaterial(lineShaderProg);
+  GLMaterial lineMaterial(lineShaderProg);
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);

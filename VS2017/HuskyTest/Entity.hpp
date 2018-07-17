@@ -5,12 +5,12 @@
 #include <husky/mesh/SimpleMesh.hpp>
 #include <husky/render/Viewport.hpp>
 #include <husky/render/Camera.hpp>
-#include "Material.hpp"
+#include "GLMaterial.hpp"
 
 class Entity
 {
 private:
-  static void draw(const Material &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
+  static void draw(const GLMaterial &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
   {
     if (mtl.shaderProgram == 0) {
       husky::Log::warning("Invalid shader program");
@@ -81,7 +81,7 @@ private:
   }
 
 public:
-  Entity(const std::string &name, const Material &mtl, const Material &lineMtl, const husky::SimpleMesh &mesh)
+  Entity(const std::string &name, const GLMaterial &mtl, const GLMaterial &lineMtl, const husky::SimpleMesh &mesh)
     : name(name)
     , mtl(mtl)
     , lineMtl(lineMtl)
@@ -127,8 +127,8 @@ public:
 
   std::string name;
   husky::Matrix44d transform = husky::Matrix44d::identity();
-  Material mtl;
-  Material lineMtl;
+  GLMaterial mtl;
+  GLMaterial lineMtl;
   husky::RenderData renderData;
   husky::BoundingBox bboxLocal;
   husky::RenderData bboxRenderData;
