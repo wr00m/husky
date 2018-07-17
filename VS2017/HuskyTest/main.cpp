@@ -206,7 +206,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
       selectedEntity = nullptr;
       for (const auto &entity : entities) {
         if (entity.get() == prevSelectedEntity) {
-          continue;
+          continue; // Don't re-select the previously selected entity
         }
 
         husky::Vector2i windowSize;
@@ -215,7 +215,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
         husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
-        husky::Vector3d rayDir = inv.get3x3() * viewport.getPickingRayDir(windowPos, cam);
+        husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
         rayDir = -rayDir; // Reverse Z
 
         double t0, t1;
@@ -439,13 +439,13 @@ int main()
 
   {
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.fbx");
-    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
+    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
-    //mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
     auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
+    entity->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
     entities.emplace_back(std::move(entity));
   }
 
