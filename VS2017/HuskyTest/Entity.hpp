@@ -10,7 +10,26 @@
 class Entity
 {
 private:
-  static void draw(const Shader &shader, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
+  static void draw(const Shader &shader, const husky::Model &model, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
+  {
+    static const husky::Material fallbackMtl;
+
+    for (int iMesh = 0; iMesh < model.meshRenderDatas.size(); iMesh++) {
+      const husky::Material *mtl = nullptr;
+      if (iMesh < model.meshMaterialIndices.size() && model.meshMaterialIndices[iMesh] >= 0 && model.meshMaterialIndices[iMesh] < model.materials.size()) {
+        mtl = &model.materials[model.meshMaterialIndices[iMesh]];
+      }
+      else {
+        husky::Log::warning("No material");
+        mtl = &fallbackMtl;
+      }
+
+      const husky::RenderData &renderData = model.meshRenderDatas[iMesh];
+      draw(shader, *mtl, renderData, viewport, modelView, projection);
+    }
+  }
+
+  static void draw(const Shader &shader, const husky::Material &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
   {
     if (shader.shaderProgram == 0) {
       husky::Log::warning("Invalid shader program");
@@ -29,6 +48,14 @@ private:
 
     if (shader.texLocation != -1) {
       glUniform1i(shader.texLocation, 0);
+    }
+
+    if (shader.diffuseLightColorLocation != -1) {
+      glUniform3fv(shader.diffuseLightColorLocation, 1, mtl.diffuseColor.val);
+    }
+
+    if (shader.ambientLightColorLocation != -1) {
+      glUniform3fv(shader.ambientLightColorLocation, 1, mtl.ambientColor.val);
     }
 
     if (shader.viewportSizeLocation != -1) {
@@ -109,9 +136,9 @@ public:
     
     husky::Vector3d bboxSize = bboxLocal.size();
     husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
-    bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
+    //bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
     bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
-    bboxModel = { bboxMesh.getRenderDataWireframe() };
+    bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
   }
 
   void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
@@ -120,15 +147,11 @@ public:
     const husky::Matrix44f projection(cam.projection);
 
     glEnable(GL_CULL_FACE); // TODO: Move to Material
-    for (const auto &renderData : model.meshRenderDatas) {
-      draw(shader, renderData, viewport, modelView, projection);
-    }
+    draw(shader, model, viewport, modelView, projection);
 
     if (drawBbox) {
       glDisable(GL_CULL_FACE); // TODO: Move to Material
-      for (const auto &renderData : bboxModel.meshRenderDatas) {
-        draw(lineShader, renderData, viewport, modelView, projection);
-      }
+      draw(lineShader, bboxModel, viewport, modelView, projection);
     }
   }
 

@@ -11,14 +11,19 @@ class HUSKY_DLL Material
 {
 public:
   Material()
+    : Material(Vector3f(1, 1, 1))
+  {
+  }
+
+  Material(const Vector3f &diffuseColor)
     : name()
-    , diffuseColor(255, 255, 255)
-    , specularColor(255, 255, 255)
-    , ambientColor(255, 255, 255)
+    , diffuseColor(diffuseColor)
+    , specularColor(1, 1, 1)
+    , ambientColor(0.05f, 0.05f, 0.05f)
     , emissiveColor(0, 0, 0)
-    , opacity(255)
+    , opacity(1)
     , shininess(0)
-    , shininessStrength(255)
+    , shininessStrength(1)
     , wireframe(false)
     , twoSided(false)
   {
@@ -26,13 +31,13 @@ public:
 
 #pragma warning(suppress: 4251)
   std::string name;
-  Vector3b diffuseColor;
-  Vector3b specularColor;
-  Vector3b ambientColor;
-  Vector3b emissiveColor;
-  std::uint8_t opacity;
-  std::uint8_t shininess;
-  std::uint8_t shininessStrength;
+  Vector3f diffuseColor;
+  Vector3f specularColor;
+  Vector3f ambientColor;
+  Vector3f emissiveColor;
+  float opacity;
+  float shininess;
+  float shininessStrength;
   bool wireframe;
   bool twoSided;
 };

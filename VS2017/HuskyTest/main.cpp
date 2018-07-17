@@ -403,36 +403,36 @@ int main()
 
   {
     husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
-    mesh.setAllVertexColors({ 0, 255, 0, 255 });
+    husky::Model mdl(std::move(mesh), husky::Material({ 0, 1, 0 }));
 
-    auto entity = std::make_unique<Entity>("Sphere", defaultShader, lineShader, std::move(mesh));
-    entity->transform = husky::Matrix44d::scale({ 1, 1, 1 });
-    //entities.emplace_back(std::move(entity));
+    auto entity = std::make_unique<Entity>("Sphere", defaultShader, lineShader, std::move(mdl));
+    entity->transform = husky::Matrix44d::translate({ 3, 3, 0 });
+    entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
-    mesh.setAllVertexColors({ 255, 0, 255, 255 });
+    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
 
-    auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mdl));
     entity->transform = husky::Matrix44d::translate({ 4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
-    mesh.setAllVertexColors({ 255, 0, 0, 255 });
+    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 0 }));
 
-    auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mdl));
     entity->transform = husky::Matrix44d::translate({ -4, 0, 0 });
     entities.emplace_back(std::move(entity));
   }
 
   {
     husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
-    mesh.setAllVertexColors({ 255, 255, 0, 255 });
+    husky::Model mdl(std::move(mesh), husky::Material({ 1, 1, 0 }));
 
-    auto entity = std::make_unique<Entity>("Torus", defaultShader, lineShader, std::move(mesh));
+    auto entity = std::make_unique<Entity>("Torus", defaultShader, lineShader, std::move(mdl));
     entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(std::move(entity));
   }

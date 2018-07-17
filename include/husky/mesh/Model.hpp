@@ -12,8 +12,11 @@ public:
   static Model load(const std::string &filePath);
 
   Model();
-  Model(RenderData &&renderData);
-  Model(const SimpleMesh &mesh);
+  Model(const RenderData &&renderData, const Material &mtl);
+  Model(const SimpleMesh &mesh, const Material &mtl);
+
+  void addRenderData(const RenderData &&renderData, int mtlIndex);
+  void addRenderData(const RenderData &&renderData, const Material &mtl);
 
 #pragma warning(suppress: 4251)
   std::vector<Material> materials;

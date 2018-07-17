@@ -6,7 +6,7 @@
 
 namespace husky {
 
-static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, const std::vector<SimpleMesh> &meshes, Model &mdl)
+static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, const std::vector<SimpleMesh> &meshes, const std::vector<unsigned int> &meshMaterialIndices, Model &mdl)
 {
   const aiMatrix4x4 &t = node->mTransformation;
   Matrix44d mat(
@@ -23,11 +23,11 @@ static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParen
   for (unsigned int iMesh = 0; iMesh < node->mNumMeshes; iMesh++) {
     SimpleMesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
     m.transform(mat);
-    mdl.meshRenderDatas.emplace_back(m.getRenderData());
+    mdl.addRenderData(m.getRenderData(), meshMaterialIndices[iMesh]);
   }
 
   for (unsigned int iChild = 0; iChild < node->mNumChildren; iChild++) {
-    getNodeMeshesRecursive(node->mChildren[iChild], &mat, meshes, mdl);
+    getNodeMeshesRecursive(node->mChildren[iChild], &mat, meshes, meshMaterialIndices, mdl);
   }
 }
 
@@ -45,50 +45,50 @@ static Material getMaterial(const aiMaterial *material)
   {
     aiColor4D diffuseColor(1.f, 1.f, 1.f, 1.f);
     aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuseColor);
-    mtl.diffuseColor.set(std::uint8_t(diffuseColor.r * 255), std::uint8_t(diffuseColor.g * 255), std::uint8_t(diffuseColor.b * 255));
-    //Log::info("mtl.diffuseColor: %d %d %d", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
+    mtl.diffuseColor.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
+    //Log::info("mtl.diffuseColor: %f %f %f", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
   }
 
   {
     aiColor4D specularColor(1.f, 1.f, 1.f, 1.f);
     aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specularColor);
-    mtl.specularColor.set(std::uint8_t(specularColor.r * 255), std::uint8_t(specularColor.g * 255), std::uint8_t(specularColor.b * 255));
-    //Log::info("mtl.specularColor: %d %d %d", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
+    mtl.specularColor.set(specularColor.r, specularColor.g, specularColor.b);
+    //Log::info("mtl.specularColor: %f %f %f", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
   }
 
   {
     aiColor4D ambientColor(1.f, 1.f, 1.f, 1.f);
     aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambientColor);
-    mtl.ambientColor.set(std::uint8_t(ambientColor.r * 255), std::uint8_t(ambientColor.g * 255), std::uint8_t(ambientColor.b * 255));
-    //Log::info("mtl.ambientColor: %d %d %d", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
+    mtl.ambientColor.set(ambientColor.r, ambientColor.g, ambientColor.b);
+    //Log::info("mtl.ambientColor: %f %f %f", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
   }
 
   {
     aiColor4D emissiveColor(0.f, 0.f, 0.f, 1.f);
     aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &emissiveColor);
-    mtl.emissiveColor.set(std::uint8_t(emissiveColor.r * 255), std::uint8_t(emissiveColor.g * 255), std::uint8_t(emissiveColor.b * 255));
-    //Log::info("mtl.emissiveColor: %d %d %d", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
+    mtl.emissiveColor.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
+    //Log::info("mtl.emissiveColor: %f %f %f", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
   }
 
   {
     float opacity = 1.f;
     aiGetMaterialFloat(material, AI_MATKEY_OPACITY, &opacity);
-    mtl.opacity = std::uint8_t(opacity * 255);
-    //Log::info("mtl.opacity: %d", mtl.opacity);
+    mtl.opacity = opacity;
+    //Log::info("mtl.opacity: %f", mtl.opacity);
   }
 
   {
-    float shininess = 1.f;
+    float shininess = 0.f;
     aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess);
-    mtl.shininess = std::uint8_t(shininess * 255);
-    //Log::info("mtl.shininess: %d", mtl.shininess);
+    mtl.shininess = shininess;
+    //Log::info("mtl.shininess: %f", mtl.shininess);
   }
 
   {
     float shininessStrength = 1.f;
     aiGetMaterialFloat(material, AI_MATKEY_SHININESS_STRENGTH, &shininessStrength);
-    mtl.shininessStrength = std::uint8_t(shininessStrength * 255);
-    //Log::info("mtl.shininessStrength: %d", mtl.shininessStrength);
+    mtl.shininessStrength = shininessStrength;
+    //Log::info("mtl.shininessStrength: %f", mtl.shininessStrength);
   }
 
   {
@@ -174,9 +174,11 @@ Model Model::load(const std::string &filePath)
   }
 
   std::vector<SimpleMesh> meshes;
+  std::vector<unsigned int> meshMaterialIndices;
   meshes.reserve(scene->mNumMeshes);
   for (unsigned int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
     meshes.emplace_back(getMesh(scene->mMeshes[iMesh]));
+    meshMaterialIndices.emplace_back(scene->mMeshes[iMesh]->mMaterialIndex);
   }
 
   //for (unsigned int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
@@ -184,7 +186,7 @@ Model Model::load(const std::string &filePath)
   //  Log::info("Animation: %s", anim->mName.C_Str());
   //}
 
-  getNodeMeshesRecursive(scene->mRootNode, nullptr, meshes, mdl);
+  getNodeMeshesRecursive(scene->mRootNode, nullptr, meshes, meshMaterialIndices, mdl);
   return mdl;
 }
 
@@ -192,15 +194,27 @@ Model::Model()
 {
 }
 
-Model::Model(RenderData &&renderData)
+Model::Model(const RenderData &&renderData, const Material &mtl)
 {
-  meshRenderDatas.emplace_back(renderData);
-  meshMaterialIndices.emplace_back(-1);
+  addRenderData(std::move(renderData), mtl);
 }
 
-Model::Model(const SimpleMesh &mesh)
-  : Model(mesh.getRenderData())
+Model::Model(const SimpleMesh &mesh, const Material &mtl)
+  : Model(std::move(mesh.getRenderData()), mtl)
 {
+}
+
+void Model::addRenderData(const RenderData &&renderData, int mtlIndex)
+{
+  meshRenderDatas.emplace_back(renderData);
+  meshMaterialIndices.emplace_back(mtlIndex);
+}
+
+void Model::addRenderData(const RenderData &&renderData, const Material &mtl)
+{
+  int mtlIndex = (int)materials.size();
+  materials.emplace_back(mtl);
+  addRenderData(std::move(renderData), mtlIndex);
 }
 
 }
