@@ -8,6 +8,12 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{e0227c8b-6bc2-47c2-bcc6-58b3c2d35926}</UniqueIdentifier>
     </Filter>
+    <Filter Include="glad">
+      <UniqueIdentifier>{00e4c100-6387-4527-87e1-24de57f97df7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KHR">
+      <UniqueIdentifier>{c88dbe1c-0d0b-43c4-8bdb-86b54ac41699}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.hpp" />
@@ -37,6 +43,12 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="GLMaterial.hpp" />
+    <ClInclude Include="glad\glad.h">
+      <Filter>glad</Filter>
+    </ClInclude>
+    <ClInclude Include="KHR\khrplatform.h">
+      <Filter>KHR</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -54,6 +66,9 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_impl_glfw.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="glad\glad.c">
+      <Filter>glad</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
