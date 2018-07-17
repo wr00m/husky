@@ -44,4 +44,10 @@ Vector3d BoundingBox::center() const
   return (min + max) * 0.5;
 }
 
+double BoundingBox::volume() const
+{
+  const Vector3d s = size();
+  return s.x * s.y * s.z;
+}
+
 }

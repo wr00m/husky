@@ -14,6 +14,7 @@ public:
   void expand(const Vector3d &pt);
   Vector3d size() const;
   Vector3d center() const;
+  double volume() const;
 
   Vector3d min, max;
   bool initialized;

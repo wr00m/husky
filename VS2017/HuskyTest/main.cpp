@@ -1,9 +1,7 @@
 #include <cstdio>
 #include <vector>
 #include <string>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
+#include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Entity.hpp"
@@ -202,17 +200,14 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-      const Entity *prevSelectedEntity = selectedEntity;
-      selectedEntity = nullptr;
-      for (const auto &entity : entities) {
-        if (entity.get() == prevSelectedEntity) {
-          continue; // Don't re-select the previously selected entity
-        }
+      std::multimap<double, const Entity*> clickedEntities; // Sorted by key (tMean)
 
+      for (const auto &entity : entities) {
         husky::Vector2i windowSize;
         glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
         husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
 
+        // TODO: Each entity should provide its bounding box in world coordinates (better performance than inverting the picking ray for each entity)
         husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
         husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
@@ -220,8 +215,23 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
-          selectedEntity = entity.get();
-          break;
+          double tMean = (t0 + t1) * 0.5; // Picking priority feels more intuitive with tMean than t0
+          clickedEntities.insert({ tMean, entity.get() });
+        }
+      }
+
+      if (clickedEntities.empty()) { // Nothing clicked => Deselect
+        selectedEntity = nullptr;
+      }
+      else if (clickedEntities.size() == 1) { // One entity clicked => Select the entity
+        selectedEntity = clickedEntities.begin()->second;
+      }
+      else { // Multiple entities clicked => Select first unselected entity
+        for (const auto &pair : clickedEntities) {
+          if (pair.second != selectedEntity) {
+            selectedEntity = pair.second;
+            break;
+          }
         }
       }
     }
