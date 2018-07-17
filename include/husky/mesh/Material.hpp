@@ -24,6 +24,7 @@ public:
     , opacity(1)
     , shininess(0)
     , shininessStrength(1)
+    , lineWidth(2)
     , wireframe(false)
     , twoSided(false)
   {
@@ -38,6 +39,7 @@ public:
   float opacity;
   float shininess;
   float shininessStrength;
+  float lineWidth;
   bool wireframe;
   bool twoSided;
 };

@@ -13,7 +13,6 @@ public:
   Shader(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
     , textureHandle(0)
-    , lineWidth(2)
   {
     modelViewLocation         = glGetUniformLocation(shaderProgram, "modelView");
     projectionLocation        = glGetUniformLocation(shaderProgram, "projection");
@@ -41,6 +40,5 @@ public:
   GLint vertNormalLocation;
   GLint vertTexCoordLocation;
   GLint vertColorLocation;
-  GLuint textureHandle;
-  float lineWidth;
+  GLuint textureHandle; // TODO: Move to Material
 };

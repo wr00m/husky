@@ -63,10 +63,8 @@ private:
     }
 
     if (shader.lineWidthLocation != -1) {
-      glUniform1f(shader.lineWidthLocation, shader.lineWidth);
+      glUniform1f(shader.lineWidthLocation, mtl.lineWidth);
     }
-
-    //glLineWidth(2.f);
 
     if (shader.textureHandle != 0) {
       glActiveTexture(GL_TEXTURE0 + 0);
@@ -124,8 +122,6 @@ public:
     , lineShader(lineShader)
     , model(mdl)
   {
-    //bboxLocal = combinedMesh.getBoundingBox();
-    
     for (const auto &renderData : mdl.meshRenderDatas) {
       for (int iVert = 0; iVert < renderData.vertCount; iVert++) {
         husky::Vector3f pos = renderData.getValue<husky::Vector3f>(iVert, husky::RenderData::Attribute::POSITION);
@@ -136,7 +132,6 @@ public:
     
     husky::Vector3d bboxSize = bboxLocal.size();
     husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
-    //bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
     bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
     bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
   }
