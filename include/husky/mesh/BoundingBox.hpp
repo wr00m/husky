@@ -16,6 +16,7 @@ public:
   Vector3d center() const;
 
   Vector3d min, max;
+  bool initialized;
 };
 
 class HUSKY_DLL BoundingSphere

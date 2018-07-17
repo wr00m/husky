@@ -4,6 +4,9 @@
 namespace husky {
 
 BoundingBox::BoundingBox()
+  : initialized(false)
+  , min(0, 0, 0)
+  , max(0, 0, 0)
 {
 }
 
@@ -11,10 +14,16 @@ void BoundingBox::init(const Vector3d &pt)
 {
   min = pt;
   max = pt;
+  initialized = true;
 }
 
 void BoundingBox::expand(const Vector3d &pt)
 {
+  if (!initialized) {
+    init(pt);
+    return;
+  }
+
   if      (pt.x < min.x) min.x = pt.x;
   else if (pt.x > max.x) max.x = pt.x;
 

@@ -12,18 +12,15 @@ public:
   static Model load(const std::string &filePath);
 
   Model();
-  Model(const SimpleMesh &&mesh);
+  Model(RenderData &&renderData);
+  Model(const SimpleMesh &mesh);
 
 #pragma warning(suppress: 4251)
   std::vector<Material> materials;
 #pragma warning(suppress: 4251)
-  std::vector<SimpleMesh> meshes;
-//#pragma warning(suppress: 4251)
-  //std::vector<Matrix44d> meshTransforms;
+  std::vector<RenderData> meshRenderDatas;
 #pragma warning(suppress: 4251)
-  std::vector<SimpleMesh> transformedMeshes; // TODO: Remove
-#pragma warning(suppress: 4251)
-  std::vector<int> meshMaterials;
+  std::vector<int> meshMaterialIndices;
 };
 
 }

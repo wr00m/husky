@@ -10,7 +10,7 @@
 class Entity
 {
 private:
-  static void draw(const Shader &shader, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection, GLuint vbo, GLuint vao)
+  static void draw(const Shader &shader, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
   {
     if (shader.shaderProgram == 0) {
       husky::Log::warning("Invalid shader program");
@@ -46,8 +46,18 @@ private:
       glBindTexture(GL_TEXTURE_2D, shader.textureHandle);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindVertexArray(vao);
+    if (renderData.vbo == 0) {
+      husky::Log::warning("renderData.vbo is 0");
+      return;
+    }
+
+    if (renderData.vao == 0) {
+      husky::Log::warning("renderData.vao is 0");
+      return;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderData.vbo);
+    glBindVertexArray(renderData.vao);
 
     if (shader.vertPositionLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::POSITION)) {
       glEnableVertexAttribArray(shader.vertPositionLocation);
@@ -69,51 +79,39 @@ private:
       glVertexAttribPointer(shader.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
     }
 
-    GLenum mode = GL_POINTS; // Default fallback;
+    GLenum mode = GL_POINTS; // Default fallback
     switch (renderData.mode) {
-    case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;    break;
-    case     husky::RenderData::Mode::LINES:     mode = GL_LINES;     break;
-    case     husky::RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES; break;
-    default: husky::Log::warning("Unsupported RenderData::Mode");     break;
+    case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;          break;
+    case     husky::RenderData::Mode::LINES:     mode = GL_LINES;           break;
+    case     husky::RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES;       break;
+    default: husky::Log::warning("Unsupported RenderData::Mode: %d", mode); break;
     }
 
     glDrawElements(mode, (int)renderData.indices.size(), GL_UNSIGNED_SHORT, renderData.indices.data());
   }
 
 public:
-  Entity(const std::string &name, const Shader &shader, const Shader &lineShader, const husky::Model &mdl)
+  Entity(const std::string &name, const Shader &shader, const Shader &lineShader, const husky::Model &&mdl)
     : name(name)
     , shader(shader)
     , lineShader(lineShader)
+    , model(mdl)
   {
-    // TODO: Preserve meshes and use materials!
-    husky::SimpleMesh combinedMesh;
-    for (const husky::SimpleMesh &mesh : mdl.transformedMeshes) {
-      combinedMesh.addMesh(mesh);
+    //bboxLocal = combinedMesh.getBoundingBox();
+    
+    for (const auto &renderData : mdl.meshRenderDatas) {
+      for (int iVert = 0; iVert < renderData.vertCount; iVert++) {
+        husky::Vector3f pos = renderData.getValue<husky::Vector3f>(iVert, husky::RenderData::Attribute::POSITION);
+        pos += renderData.anchor;
+        bboxLocal.expand(pos);
+      }
     }
-
-    renderData = combinedMesh.getRenderData();
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, renderData.bytes.size(), renderData.bytes.data(), GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &vao);
-    //glBindVertexArray(vao);
-
-    bboxLocal = combinedMesh.getBoundingBox();
+    
     husky::Vector3d bboxSize = bboxLocal.size();
     husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
     bboxMesh.setAllVertexColors({ 255, 255, 255, 255 });
     bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
-    bboxRenderData = bboxMesh.getRenderDataWireframe();
-
-    glGenBuffers(1, &vboBbox);
-    glBindBuffer(GL_ARRAY_BUFFER, vboBbox);
-    glBufferData(GL_ARRAY_BUFFER, bboxRenderData.bytes.size(), bboxRenderData.bytes.data(), GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &vaoBbox);
-    //glBindVertexArray(vaoBbox);
+    bboxModel = { bboxMesh.getRenderDataWireframe() };
   }
 
   void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
@@ -121,12 +119,16 @@ public:
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
 
-    glEnable(GL_CULL_FACE);
-    draw(shader, renderData, viewport, modelView, projection, vbo, vao);
+    glEnable(GL_CULL_FACE); // TODO: Move to Material
+    for (const auto &renderData : model.meshRenderDatas) {
+      draw(shader, renderData, viewport, modelView, projection);
+    }
 
     if (drawBbox) {
-      glDisable(GL_CULL_FACE);
-      draw(lineShader, bboxRenderData, viewport, modelView, projection, vboBbox, vaoBbox);
+      glDisable(GL_CULL_FACE); // TODO: Move to Material
+      for (const auto &renderData : bboxModel.meshRenderDatas) {
+        draw(lineShader, renderData, viewport, modelView, projection);
+      }
     }
   }
 
@@ -134,13 +136,7 @@ public:
   husky::Matrix44d transform = husky::Matrix44d::identity();
   Shader shader;
   Shader lineShader;
-  husky::RenderData renderData;
+  husky::Model model;
   husky::BoundingBox bboxLocal;
-  husky::RenderData bboxRenderData;
-
-private:
-  GLuint vbo;
-  GLuint vao;
-  GLuint vboBbox;
-  GLuint vaoBbox;
+  husky::Model bboxModel;
 };

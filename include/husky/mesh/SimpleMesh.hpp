@@ -219,20 +219,16 @@ public:
     return r;
   }
 
-  BoundingBox getBoundingBox() const
-  {
-    BoundingBox box;
-    if (verts.empty()) {
-      return box;
-    }
+  //BoundingBox getBoundingBox() const
+  //{
+  //  BoundingBox bbox;
 
-    box.init(verts.front().pos);
-    for (const Vertex &vert : verts) {
-      box.expand(vert.pos);
-    }
+  //  for (const Vertex &vert : verts) {
+  //    bbox.expand(vert.pos);
+  //  }
 
-    return box;
-  }
+  //  return bbox;
+  //}
 
 private:
   Vertices verts;

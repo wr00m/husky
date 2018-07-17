@@ -31,6 +31,8 @@ public:
   std::vector<std::uint8_t> bytes;
   std::vector<int> attrByteOffsets;
   std::vector<std::uint16_t> indices;
+  unsigned int vbo = 0; // TODO: Remove
+  unsigned int vao = 0; // TODO: Remove
 
   RenderData()
     : RenderData(Mode::POINTS)
@@ -98,6 +100,18 @@ public:
     
     const int byteStartIndex = (vertIndex * vertByteCount + attrByteOffset);
     std::copy(b, b + sizeof(T), bytes.begin() + byteStartIndex);
+  }
+
+  template<typename T>
+  T getValue(int vertIndex, Attribute attr) const
+  {
+    const int attrByteOffset = attrByteOffsets[(int)attr];
+    assert(attrByteOffset >= 0);
+
+    const int byteStartIndex = (vertIndex * vertByteCount + attrByteOffset);
+    const T *t = reinterpret_cast<const T*>(&bytes[byteStartIndex]);
+
+    return *t;
   }
 };
 

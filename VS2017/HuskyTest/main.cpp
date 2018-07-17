@@ -292,6 +292,18 @@ static void windowSizeCallback(GLFWwindow *win, int width, int height)
   updateViewportAndRebuildFbo();
 }
 
+static void initRenderDataGPU(husky::Model &mdl)
+{
+  for (husky::RenderData &renderData : mdl.meshRenderDatas) {
+    glGenBuffers(1, &renderData.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, renderData.vbo);
+    glBufferData(GL_ARRAY_BUFFER, renderData.bytes.size(), renderData.bytes.data(), GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &renderData.vao);
+    //glBindVertexArray(renderData.vao);
+  }
+}
+
 int main()
 {
   runUnitTests();
@@ -432,9 +444,14 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
     //mesh.setAllVertexColors({ 255, 255, 0, 255 });
 
-    auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, mdl);
+    auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, std::move(mdl));
     entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
     entities.emplace_back(std::move(entity));
+  }
+
+  for (auto &entity : entities) {
+    initRenderDataGPU(entity->model); // TODO: Remove
+    initRenderDataGPU(entity->bboxModel); // TODO: Remove
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]

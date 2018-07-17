@@ -6,7 +6,7 @@
 
 namespace husky {
 
-static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, Model &mdl)
+static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, const std::vector<SimpleMesh> &meshes, Model &mdl)
 {
   const aiMatrix4x4 &t = node->mTransformation;
   Matrix44d mat(
@@ -21,13 +21,13 @@ static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParen
   }
 
   for (unsigned int iMesh = 0; iMesh < node->mNumMeshes; iMesh++) {
-    SimpleMesh m = mdl.meshes[node->mMeshes[iMesh]]; // Copy before applying transform
+    SimpleMesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
     m.transform(mat);
-    mdl.transformedMeshes.emplace_back(m);
+    mdl.meshRenderDatas.emplace_back(m.getRenderData());
   }
 
   for (unsigned int iChild = 0; iChild < node->mNumChildren; iChild++) {
-    getNodeMeshesRecursive(node->mChildren[iChild], &mat, mdl);
+    getNodeMeshesRecursive(node->mChildren[iChild], &mat, meshes, mdl);
   }
 }
 
@@ -169,14 +169,14 @@ Model Model::load(const std::string &filePath)
 
   Model mdl;
   mdl.materials.reserve(scene->mNumMaterials);
-  mdl.meshes.reserve(scene->mNumMeshes);
-
   for (unsigned int iMtl = 0; iMtl < scene->mNumMaterials; iMtl++) {
     mdl.materials.emplace_back(getMaterial(scene->mMaterials[iMtl]));
   }
 
+  std::vector<SimpleMesh> meshes;
+  meshes.reserve(scene->mNumMeshes);
   for (unsigned int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
-    mdl.meshes.emplace_back(getMesh(scene->mMeshes[iMesh]));
+    meshes.emplace_back(getMesh(scene->mMeshes[iMesh]));
   }
 
   //for (unsigned int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
@@ -184,7 +184,7 @@ Model Model::load(const std::string &filePath)
   //  Log::info("Animation: %s", anim->mName.C_Str());
   //}
 
-  getNodeMeshesRecursive(scene->mRootNode, nullptr, mdl);
+  getNodeMeshesRecursive(scene->mRootNode, nullptr, meshes, mdl);
   return mdl;
 }
 
@@ -192,10 +192,15 @@ Model::Model()
 {
 }
 
-Model::Model(const SimpleMesh &&mesh)
+Model::Model(RenderData &&renderData)
 {
-  meshes.emplace_back(mesh);
-  transformedMeshes.emplace_back(meshes.back());
+  meshRenderDatas.emplace_back(renderData);
+  meshMaterialIndices.emplace_back(-1);
+}
+
+Model::Model(const SimpleMesh &mesh)
+  : Model(mesh.getRenderData())
+{
 }
 
 }
