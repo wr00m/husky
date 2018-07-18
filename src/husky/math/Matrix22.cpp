@@ -143,7 +143,7 @@ Vector2<T> Matrix22<T>::operator*(const Vector2<T> &v) const
   Vector2<T> res;
   res[0] = row(0).dot(v);
   res[1] = row(1).dot(v);
-  return v;
+  return res;
 }
 
 template class Matrix22<double>;

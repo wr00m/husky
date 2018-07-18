@@ -171,7 +171,7 @@ Vector3<T> Matrix33<T>::operator*(const Vector3<T> &v) const
   res[0] = row(0).dot(v);
   res[1] = row(1).dot(v);
   res[2] = row(2).dot(v);
-  return v;
+  return res;
 }
 
 template class Matrix33<double>;
