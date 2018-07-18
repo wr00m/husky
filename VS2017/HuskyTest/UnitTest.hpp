@@ -5,7 +5,6 @@
 #include <husky/math/Math.hpp>
 #include <husky/math/Matrix44.hpp>
 #include <husky/math/Quaternion.hpp>
-#include <husky/util/PathUtil.hpp>
 #include <husky/util/StringUtil.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -145,35 +144,4 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   assert(husky::StringUtil::endsWith("abcd", "bcd"));
   assert(husky::StringUtil::endsWith("bcd", "bcd"));
   assert(husky::StringUtil::endsWith("bcd", "abcd") == false);
-
-  assert(husky::PathUtil::getFilename("C:/dir/file.xml") == "file.xml");
-  assert(husky::PathUtil::getFilename("C:/dir/file") == "file");
-  assert(husky::PathUtil::getFilename("file") == "file");
-  assert(husky::PathUtil::getFilename("") == "");
-  assert(husky::PathUtil::getExtension("C:/dir/file.xml") == ".xml");
-  assert(husky::PathUtil::getExtension("C:/dir.ext/file.abc.xml") == ".abc.xml");
-  assert(husky::PathUtil::getExtension("C:/dir/file.") == ".");
-  assert(husky::PathUtil::getExtension("C:/dir/file.a.") == ".a.");
-  assert(husky::PathUtil::getExtension("C:/dir/file") == "");
-  assert(husky::PathUtil::getExtension("") == "");
-  assert(husky::PathUtil::removeExtension("C:/dir/file.xml") == "C:/dir/file");
-  assert(husky::PathUtil::removeExtension("file.xml") == "file");
-  assert(husky::PathUtil::removeExtension("file") == "file");
-  assert(husky::PathUtil::removeExtension("") == "");
-  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file.xml") == "file");
-  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file") == "file");
-  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file/") == "");
-  assert(husky::PathUtil::getFilenameWithoutExtension("") == "");
-  assert(husky::PathUtil::getDirectory("C:/dir/file") == "C:/dir");
-  assert(husky::PathUtil::getDirectory("C:/dir/") == "C:/dir");
-  assert(husky::PathUtil::getDirectory("C:/dir") == "C:/");
-  assert(husky::PathUtil::getDirectory("C:\\dir") == "C:\\");
-  assert(husky::PathUtil::getDirectory("C:\\dir\\file") == "C:\\dir");
-  assert(husky::PathUtil::getDirectory("C:") == "");
-  assert(husky::PathUtil::getDirectory("C:/") == "");
-  assert(husky::PathUtil::getDirectory("") == "");
-  assert(husky::PathUtil::combine("C:\\dir", "file.xml") == std::string("C:\\dir") + husky::PathUtil::separator + "file.xml");
-  assert(husky::PathUtil::combine("C:/dir/", "file.xml") == "C:/dir/file.xml");
-  assert(husky::PathUtil::combine("C:/", "dir/file.xml") == "C:/dir/file.xml");
-  assert(husky::PathUtil::combine("C:", "dir/file.xml") == std::string("C:") + husky::PathUtil::separator + "dir/file.xml");
 }
