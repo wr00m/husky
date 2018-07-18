@@ -14,6 +14,7 @@ public:
   Image(int width, int height, int bytesPerPixel);
   virtual ~Image();
 
+  bool save(const std::string &filePath) const;
   bool valid() const;
   const std::uint8_t* data() const;
 
