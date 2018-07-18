@@ -135,16 +135,15 @@ SimpleMesh Primitive::torus(double innerRadius, double outerRadius, int uSegment
     const double u = iu / double(uSegmentCount); // [0,1]
     const double theta = u * 2.0 * Math::pi; // [0,2*pi]
 
-    const Matrix44d translate = Matrix44d::translate({ std::cos(theta) * innerRadius, std::sin(theta) * innerRadius, 0.0 });
     const Matrix33d rotate = Matrix33d::rotate(theta, { 0, 0, 1 });
-    const Matrix44d transform = translate * Matrix44d(rotate);
+    const Vector3d radCenter = rotate * Vector3d(innerRadius, 0, 0);
 
     for (int iv = 0; iv <= vSegmentCount; iv++) {
       const double v = iv / double(vSegmentCount); // [0,1]
       const double phi = v * 2.0 * Math::pi; // [0,2*pi]
 
       const Vector3d vertNormal = rotate * Vector3d(std::cos(phi), 0.0, std::sin(-phi));
-      const Vector3d vertPosition = (transform * Vector4d(vertNormal * outerRadius, 1.0)).xyz;
+      const Vector3d vertPosition = (radCenter + vertNormal * outerRadius);
       m.addVertex(vertPosition, vertNormal, { u, v });
 
       if (iu > 0 && iv > 0) {
