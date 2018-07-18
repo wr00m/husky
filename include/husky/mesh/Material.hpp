@@ -15,12 +15,12 @@ public:
   {
   }
 
-  Material(const Vector3f &diffuseColor)
+  Material(const Vector3f &diffuse)
     : name()
-    , diffuseColor(diffuseColor)
-    , specularColor(1, 1, 1)
-    , ambientColor(0.05f, 0.05f, 0.05f)
-    , emissiveColor(0, 0, 0)
+    , diffuse(diffuse)
+    , specular(1, 1, 1)
+    , ambient(0.05f, 0.05f, 0.05f)
+    , emissive(0, 0, 0)
     , opacity(1)
     , shininess(0)
     , shininessStrength(1)
@@ -32,10 +32,10 @@ public:
 
 #pragma warning(suppress: 4251)
   std::string name;
-  Vector3f diffuseColor;
-  Vector3f specularColor;
-  Vector3f ambientColor;
-  Vector3f emissiveColor;
+  Vector3f diffuse;
+  Vector3f specular;
+  Vector3f ambient;
+  Vector3f emissive;
   float opacity;
   float shininess;
   float shininessStrength;

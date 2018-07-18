@@ -46,7 +46,7 @@ static Material getMaterial(const aiMaterial *material)
   {
     aiColor3D diffuseColor;
     if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == aiReturn_SUCCESS) {
-      mtl.diffuseColor.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
+      mtl.diffuse.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
       //Log::info("mtl.diffuseColor: %f %f %f", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
     }
   }
@@ -54,7 +54,7 @@ static Material getMaterial(const aiMaterial *material)
   {
     aiColor3D specularColor;
     if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == aiReturn_SUCCESS) {
-      mtl.specularColor.set(specularColor.r, specularColor.g, specularColor.b);
+      mtl.specular.set(specularColor.r, specularColor.g, specularColor.b);
       //Log::info("mtl.specularColor: %f %f %f", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
     }
   }
@@ -62,7 +62,7 @@ static Material getMaterial(const aiMaterial *material)
   {
     aiColor3D ambientColor;
     if (material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == aiReturn_SUCCESS) {
-      mtl.ambientColor.set(ambientColor.r, ambientColor.g, ambientColor.b);
+      mtl.ambient.set(ambientColor.r, ambientColor.g, ambientColor.b);
       //Log::info("mtl.ambientColor: %f %f %f", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
     }
   }
@@ -70,7 +70,7 @@ static Material getMaterial(const aiMaterial *material)
   {
     aiColor3D emissiveColor;
     if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor) == aiReturn_SUCCESS) {
-      mtl.emissiveColor.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
+      mtl.emissive.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
       //Log::info("mtl.emissiveColor: %f %f %f", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
     }
   }

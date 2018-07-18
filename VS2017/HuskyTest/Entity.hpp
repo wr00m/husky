@@ -45,24 +45,52 @@ private:
 
     glUseProgram(shader.shaderProgram);
 
-    if (shader.modelViewLocation != -1) {
-      glUniformMatrix4fv(shader.modelViewLocation, 1, GL_FALSE, modelView.m);
+    if (shader.mtxModelViewLocation != -1) {
+      glUniformMatrix4fv(shader.mtxModelViewLocation, 1, GL_FALSE, modelView.m);
     }
 
-    if (shader.projectionLocation != -1) {
-      glUniformMatrix4fv(shader.projectionLocation, 1, GL_FALSE, projection.m);
+    const husky::Matrix33f normalMatrix = modelView.get3x3();
+    //const husky::Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
+    //const husky::Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
+    if (shader.mtxNormalLocation != -1) {
+      glUniformMatrix3fv(shader.mtxNormalLocation, 1, GL_FALSE, normalMatrix.m);
+    }
+
+    if (shader.mtxProjectionLocation != -1) {
+      glUniformMatrix4fv(shader.mtxProjectionLocation, 1, GL_FALSE, projection.m);
     }
 
     if (shader.texLocation != -1) {
       glUniform1i(shader.texLocation, 0);
     }
 
-    if (shader.diffuseLightColorLocation != -1) {
-      glUniform3fv(shader.diffuseLightColorLocation, 1, mtl.diffuseColor.val);
+    if (shader.lightDirLocation != -1) {
+      const husky::Vector3f lightDir = (normalMatrix * husky::Vector3f(20, -40, 100)).normalized(); // TODO
+      glUniform3fv(shader.lightDirLocation, 1, lightDir.val);
     }
 
-    if (shader.ambientLightColorLocation != -1) {
-      glUniform3fv(shader.ambientLightColorLocation, 1, mtl.ambientColor.val);
+    if (shader.mtlAmbientLocation != -1) {
+      glUniform3fv(shader.mtlAmbientLocation, 1, mtl.ambient.val);
+    }
+
+    if (shader.mtlDiffuseLocation != -1) {
+      glUniform3fv(shader.mtlDiffuseLocation, 1, mtl.diffuse.val);
+    }
+
+    if (shader.mtlSpecularLocation != -1) {
+      glUniform3fv(shader.mtlSpecularLocation, 1, mtl.specular.val);
+    }
+
+    if (shader.mtlEmissiveLocation != -1) {
+      glUniform3fv(shader.mtlEmissiveLocation, 1, mtl.emissive.val);
+    }
+
+    if (shader.mtlShininessLocation != -1) {
+      glUniform1f(shader.mtlShininessLocation, mtl.shininess);
+    }
+
+    if (shader.mtlShininessStrengthLocation != -1) {
+      glUniform1f(shader.mtlShininessStrengthLocation, mtl.shininessStrength);
     }
 
     if (shader.viewportSizeLocation != -1) {

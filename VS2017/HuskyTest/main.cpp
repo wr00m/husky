@@ -15,15 +15,15 @@
 
 static const char *lineVertSrc =
 R"(#version 400 core
-uniform mat4 modelView;
-uniform mat4 projection;
+uniform mat4 mtxModelView;
+uniform mat4 mtxProjection;
 in vec3 vPosition;
 in vec4 vColor;
 out vec4 vsColor;
 void main()
 {
   vsColor = vColor;
-  gl_Position = projection * (modelView * vec4(vPosition, 1.0));
+  gl_Position = mtxProjection * (mtxModelView * vec4(vPosition, 1.0));
 })";
 
 static const char *lineGeomSrc =
@@ -76,40 +76,57 @@ void main()
 
 static const char *defaultVertSrc =
 R"(#version 400 core
-uniform mat4 modelView;
-uniform mat4 projection;
+uniform mat4 mtxModelView;
+uniform mat3 mtxNormal;
+uniform mat4 mtxProjection;
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
 in vec4 vColor;
+out vec4 varPos;
 out vec3 varNormal;
 out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
-  varNormal = vNormal;
+  varPos = mtxModelView * vec4(vPosition, 1.0);
+  varNormal = mtxNormal * vNormal;
   varTexCoord = vTexCoord;
   varColor = vColor;
-  gl_Position = projection * (modelView * vec4(vPosition, 1.0));
+  gl_Position = mtxProjection * varPos;
 })";
 
 static const char *defaultFragSrc =
 R"(#version 400 core
 uniform sampler2D tex;
-uniform vec3 lightDir = normalize(vec3(2.0, -4.0, 10.0));
-uniform vec3 diffuseLightColor = vec3(1.0, 1.0, 1.0);
-uniform vec3 ambientLightColor = vec3(0.05, 0.05, 0.05);
+uniform vec3 lightDir = vec3(20.0, -40.0, 100.0);
+uniform vec3 lightAmbient = vec3(0.05, 0.05, 0.05);
+uniform vec3 lightDiffuse = vec3(1.0, 1.0, 1.0);
+uniform vec3 lightSpecular = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlAmbient = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlSpecular = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlEmissive = vec3(0.0, 0.0, 0.0);
+uniform float mtlShininess = 0.0;
+uniform float mtlShininessStrength = 1.0; // TODO: Use or remove
+in vec4 varPos;
 in vec3 varNormal;
 in vec2 varTexCoord;
 in vec4 varColor;
 out vec4 fragColor;
 void main() {
-  //vec3 normal = normalize(varNormal);
-  float diffuseLightIntensity = clamp(dot(varNormal, lightDir), 0.0, 1.0);
-  vec3 totalLightColor = (diffuseLightIntensity * diffuseLightColor + ambientLightColor);
+  vec3 v = varPos.xyz;
+  vec3 N = varNormal;
+  vec3 L = lightDir;
+  vec3 E = normalize(-v);
+  vec3 R = normalize(-reflect(L, N));
+  vec3 ambientColor = (lightAmbient * mtlAmbient);
+  float diffuseIntensity = clamp(dot(N, L), 0.0, 1.0);
+  vec3 diffuseColor = diffuseIntensity * lightDiffuse * mtlDiffuse;
+  float specularIntensity = clamp(pow(max(dot(R, E), 0.0), 0.3 * mtlShininess), 0.0, 1.0);
+  vec3 specularColor = specularIntensity * lightSpecular * mtlSpecular;
   vec4 texColor = texture(tex, varTexCoord);
-  fragColor = vec4(totalLightColor * varColor.rgb * texColor.rgb, varColor.a * texColor.a);
-  //fragColor = texColor;
-  //fragColor = vec4(varTexCoord, 0.0, 1.0);
+  fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb); // + specularColor + mtlEmissive;
+  fragColor.a = varColor.a * texColor.a;
 })";
 
 static void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
@@ -536,7 +553,7 @@ int main()
 
       guiHasFocus = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 
-      ImGui::Text("Test...");
+      ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
       ImGui::End();
 
       ImGui::Render();
