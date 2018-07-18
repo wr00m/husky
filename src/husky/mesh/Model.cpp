@@ -37,72 +37,82 @@ static Material getMaterial(const aiMaterial *material)
 
   {
     aiString name;
-    aiGetMaterialString(material, AI_MATKEY_NAME, &name);
-    mtl.name = name.C_Str();
-    //Log::info("mtl.name: %s", mtl.name.c_str());
+    if (material->Get(AI_MATKEY_NAME, name) == aiReturn_SUCCESS) {
+      mtl.name = name.C_Str();
+      //Log::info("mtl.name: %s", mtl.name.c_str());
+    }
   }
 
   {
-    aiColor4D diffuseColor(1.f, 1.f, 1.f, 1.f);
-    aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuseColor);
-    mtl.diffuseColor.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
-    //Log::info("mtl.diffuseColor: %f %f %f", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
+    aiColor3D diffuseColor;
+    if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == aiReturn_SUCCESS) {
+      mtl.diffuseColor.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
+      //Log::info("mtl.diffuseColor: %f %f %f", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
+    }
   }
 
   {
-    aiColor4D specularColor(1.f, 1.f, 1.f, 1.f);
-    aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specularColor);
-    mtl.specularColor.set(specularColor.r, specularColor.g, specularColor.b);
-    //Log::info("mtl.specularColor: %f %f %f", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
+    aiColor3D specularColor;
+    if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == aiReturn_SUCCESS) {
+      mtl.specularColor.set(specularColor.r, specularColor.g, specularColor.b);
+      //Log::info("mtl.specularColor: %f %f %f", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
+    }
   }
 
   {
-    aiColor4D ambientColor(1.f, 1.f, 1.f, 1.f);
-    aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambientColor);
-    mtl.ambientColor.set(ambientColor.r, ambientColor.g, ambientColor.b);
-    //Log::info("mtl.ambientColor: %f %f %f", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
+    aiColor3D ambientColor;
+    if (material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == aiReturn_SUCCESS) {
+      mtl.ambientColor.set(ambientColor.r, ambientColor.g, ambientColor.b);
+      //Log::info("mtl.ambientColor: %f %f %f", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
+    }
   }
 
   {
-    aiColor4D emissiveColor(0.f, 0.f, 0.f, 1.f);
-    aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &emissiveColor);
-    mtl.emissiveColor.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
-    //Log::info("mtl.emissiveColor: %f %f %f", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
+    aiColor3D emissiveColor;
+    if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor) == aiReturn_SUCCESS) {
+      mtl.emissiveColor.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
+      //Log::info("mtl.emissiveColor: %f %f %f", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
+    }
   }
 
   {
-    float opacity = 1.f;
-    aiGetMaterialFloat(material, AI_MATKEY_OPACITY, &opacity);
-    mtl.opacity = opacity;
-    //Log::info("mtl.opacity: %f", mtl.opacity);
+    float opacity;
+    if (material->Get(AI_MATKEY_OPACITY, opacity) == aiReturn_SUCCESS) {
+      mtl.opacity = opacity;
+      //Log::info("mtl.opacity: %f", mtl.opacity);
+    }
   }
 
   {
-    float shininess = 0.f;
-    aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess);
-    mtl.shininess = shininess;
-    //Log::info("mtl.shininess: %f", mtl.shininess);
+    float shininess;
+    if (material->Get(AI_MATKEY_SHININESS, shininess) == aiReturn_SUCCESS) {
+      mtl.shininess = shininess;
+      //Log::info("mtl.shininess: %f", mtl.shininess);
+    }
   }
 
   {
-    float shininessStrength = 1.f;
-    aiGetMaterialFloat(material, AI_MATKEY_SHININESS_STRENGTH, &shininessStrength);
-    mtl.shininessStrength = shininessStrength;
-    //Log::info("mtl.shininessStrength: %f", mtl.shininessStrength);
+    float shininessStrength;
+    if (material->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength) == aiReturn_SUCCESS) {
+      mtl.shininessStrength = shininessStrength;
+      //Log::info("mtl.shininessStrength: %f", mtl.shininessStrength);
+    }
   }
 
   {
-    int wireframe = 0;
-    aiGetMaterialInteger(material, AI_MATKEY_ENABLE_WIREFRAME, &wireframe);
-    mtl.wireframe = (bool)wireframe;
-    //Log::info("mtl.wireframe: %d", mtl.wireframe);
+    int wireframe;
+    if (material->Get(AI_MATKEY_ENABLE_WIREFRAME, wireframe) == aiReturn_SUCCESS) {
+      mtl.wireframe = (bool)wireframe;
+      //Log::info("mtl.wireframe: %d", mtl.wireframe);
+    }
   }
 
   {
-    int twoSided = 0;
-    aiGetMaterialInteger(material, AI_MATKEY_TWOSIDED, &twoSided);
-    mtl.twoSided = (bool)twoSided;
-    //Log::info("mtl.twoSided: %d", mtl.twoSided);
+    int twoSided;
+    if (material->Get(AI_MATKEY_TWOSIDED, twoSided) == aiReturn_SUCCESS) {
+      mtl.twoSided = (bool)twoSided;
+      //Log::info("mtl.twoSided: %d", mtl.twoSided);
+    }
   }
 
   return mtl;
@@ -139,7 +149,7 @@ static SimpleMesh getMesh(const aiMesh *mesh)
 
   for (unsigned int iFace = 0; iFace < mesh->mNumFaces; iFace++) {
     const aiFace &face = mesh->mFaces[iFace];
-    assert(face.mNumIndices == 3); // aiProcess_Triangulate
+    assert(face.mNumIndices == 3); // We have requested triangulated faces
     m.addTriangle(face.mIndices[0], face.mIndices[1], face.mIndices[2]);
     //m.addTriangle(face.mIndices[0], face.mIndices[2], face.mIndices[1]);
   }
