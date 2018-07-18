@@ -36,6 +36,13 @@ private:
       return;
     }
 
+    if (mtl.twoSided) {
+      glDisable(GL_CULL_FACE);
+    }
+    else {
+      glEnable(GL_CULL_FACE);
+    }
+
     glUseProgram(shader.shaderProgram);
 
     if (shader.modelViewLocation != -1) {
@@ -141,11 +148,9 @@ public:
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
 
-    glEnable(GL_CULL_FACE); // TODO: Move to Material
     draw(shader, model, viewport, modelView, projection);
 
     if (drawBbox) {
-      glDisable(GL_CULL_FACE); // TODO: Move to Material
       draw(lineShader, bboxModel, viewport, modelView, projection);
     }
   }
