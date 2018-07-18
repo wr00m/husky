@@ -400,7 +400,8 @@ int main()
   //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
   //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
 
-  //husky::Image image = husky::Image::load("C:/tmp/test.jpg");
+  //husky::Image image2 = husky::Image::load("C:/tmp/test.jpg");
+  //image2.save("C:/tmp/imgout/test.png");
 
   GLuint textureHandle;
   glGenTextures(1, &textureHandle);

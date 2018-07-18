@@ -1,5 +1,6 @@
 #include <husky/image/Image.hpp>
 #include <husky/Log.hpp>
+#include <husky/util/StringUtil.hpp>
 #include <filesystem>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -61,8 +62,7 @@ bool Image::save(const std::string &filePath) const
     return false;
   }
 
-  std::string ext = f.extension().string();
-  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  const std::string ext = StringUtil::toLower(f.extension().string());
 
   bool ok = true;
 
