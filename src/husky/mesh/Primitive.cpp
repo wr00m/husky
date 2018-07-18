@@ -96,12 +96,12 @@ SimpleMesh Primitive::sphere(double radius, int uSegmentCount, int vSegmentCount
   SimpleMesh m;
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
-    const double u = iu / double(uSegmentCount); // [0,1]
-    const double theta = u * 2.0 * Math::pi; // Azimuthal angle [0,2*pi]
+    const double u = iu / double(uSegmentCount); // [0:1]
+    const double theta = u * 2.0 * Math::pi; // Azimuthal angle [0:2*pi]
     
     for (int iv = 0; iv <= vSegmentCount; iv++) {
-      const double v = iv / double(vSegmentCount); // [0,1]
-      const double phi = v * Math::pi; // Polar angle [0,pi]
+      const double v = iv / double(vSegmentCount); // [0:1]
+      const double phi = (1.0 - v) * Math::pi; // Polar angle [pi:0]
 
       Vector3d n;
       n.x = std::cos(theta) * std::sin(phi);
@@ -115,9 +115,9 @@ SimpleMesh Primitive::sphere(double radius, int uSegmentCount, int vSegmentCount
 
         SimpleMesh::Quad q;
         q[0] = m.getVertexCount() - 1;
-        q[1] = q[0] - 1; 
+        q[1] = q[0] - (vSegmentCount + 1);
         q[2] = q[0] - (vSegmentCount + 2);
-        q[3] = q[0] - (vSegmentCount + 1);
+        q[3] = q[0] - 1;
 
         m.addQuad(q);
       }
