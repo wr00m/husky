@@ -395,6 +395,12 @@ int main()
   image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
+  //image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
+  //image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
+  //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
+  //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
+
+  //husky::Image image = husky::Image::load("C:/tmp/test.jpg");
 
   GLuint textureHandle;
   glGenTextures(1, &textureHandle);
@@ -403,7 +409,18 @@ int main()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bytes.data());
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+  if (image.bytesPerPixel == 3) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+  }
+  else if (image.bytesPerPixel == 4) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+  }
+  else {
+    husky::Log::warning("Unsupported image format");
+  }
   //glGenerateMipmap(GL_TEXTURE_2D);
 
   Shader defaultShader(defaultShaderProg);
