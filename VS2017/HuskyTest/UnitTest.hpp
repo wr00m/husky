@@ -5,6 +5,8 @@
 #include <husky/math/Math.hpp>
 #include <husky/math/Matrix44.hpp>
 #include <husky/math/Quaternion.hpp>
+#include <husky/util/PathUtil.hpp>
+#include <husky/util/StringUtil.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -126,4 +128,52 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   //double quatAngleGlm = ;
   //double quatAngleDiff = std::abs(quatAngle - quatAngleGlm);
   //assert(quatAngleDiff < 1e-9);
+
+  assert(husky::StringUtil::ltrim("abcd", "ad") == "bcd");
+  assert(husky::StringUtil::rtrim("abcd", "ad") == "abc");
+  assert(husky::StringUtil::trim("abcd", "ad") == "bc");
+  assert(husky::StringUtil::trim("abcd", "efgh") == "abcd");
+  assert(husky::StringUtil::toLower("abc") == "abc");
+  assert(husky::StringUtil::toLower("ABC") == "abc");
+  assert(husky::StringUtil::toLower("Abc") == "abc");
+  assert(husky::StringUtil::toUpper("abc") == "ABC");
+  assert(husky::StringUtil::toUpper("ABC") == "ABC");
+  assert(husky::StringUtil::toUpper("Abc") == "ABC");
+  assert(husky::StringUtil::startsWith("abcd", "abc"));
+  assert(husky::StringUtil::startsWith("abc", "abc"));
+  assert(husky::StringUtil::startsWith("abc", "abcd") == false);
+  assert(husky::StringUtil::endsWith("abcd", "bcd"));
+  assert(husky::StringUtil::endsWith("bcd", "bcd"));
+  assert(husky::StringUtil::endsWith("bcd", "abcd") == false);
+
+  assert(husky::PathUtil::getFilename("C:/dir/file.xml") == "file.xml");
+  assert(husky::PathUtil::getFilename("C:/dir/file") == "file");
+  assert(husky::PathUtil::getFilename("file") == "file");
+  assert(husky::PathUtil::getFilename("") == "");
+  assert(husky::PathUtil::getExtension("C:/dir/file.xml") == ".xml");
+  assert(husky::PathUtil::getExtension("C:/dir.ext/file.abc.xml") == ".abc.xml");
+  assert(husky::PathUtil::getExtension("C:/dir/file.") == ".");
+  assert(husky::PathUtil::getExtension("C:/dir/file.a.") == ".a.");
+  assert(husky::PathUtil::getExtension("C:/dir/file") == "");
+  assert(husky::PathUtil::getExtension("") == "");
+  assert(husky::PathUtil::removeExtension("C:/dir/file.xml") == "C:/dir/file");
+  assert(husky::PathUtil::removeExtension("file.xml") == "file");
+  assert(husky::PathUtil::removeExtension("file") == "file");
+  assert(husky::PathUtil::removeExtension("") == "");
+  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file.xml") == "file");
+  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file") == "file");
+  assert(husky::PathUtil::getFilenameWithoutExtension("C:/dir/file/") == "");
+  assert(husky::PathUtil::getFilenameWithoutExtension("") == "");
+  assert(husky::PathUtil::getDirectory("C:/dir/file") == "C:/dir");
+  assert(husky::PathUtil::getDirectory("C:/dir/") == "C:/dir");
+  assert(husky::PathUtil::getDirectory("C:/dir") == "C:/");
+  assert(husky::PathUtil::getDirectory("C:\\dir") == "C:\\");
+  assert(husky::PathUtil::getDirectory("C:\\dir\\file") == "C:\\dir");
+  assert(husky::PathUtil::getDirectory("C:") == "");
+  assert(husky::PathUtil::getDirectory("C:/") == "");
+  assert(husky::PathUtil::getDirectory("") == "");
+  assert(husky::PathUtil::combine("C:\\dir", "file.xml") == std::string("C:\\dir") + husky::PathUtil::separator + "file.xml");
+  assert(husky::PathUtil::combine("C:/dir/", "file.xml") == "C:/dir/file.xml");
+  assert(husky::PathUtil::combine("C:/", "dir/file.xml") == "C:/dir/file.xml");
+  assert(husky::PathUtil::combine("C:", "dir/file.xml") == std::string("C:") + husky::PathUtil::separator + "dir/file.xml");
 }
