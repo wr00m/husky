@@ -106,8 +106,8 @@ uniform vec3 mtlAmbient = vec3(1.0, 1.0, 1.0);
 uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
 uniform vec3 mtlSpecular = vec3(1.0, 1.0, 1.0);
 uniform vec3 mtlEmissive = vec3(0.0, 0.0, 0.0);
-uniform float mtlShininess = 0.0;
-uniform float mtlShininessStrength = 1.0; // TODO: Use or remove
+uniform float mtlShininess = 100.0;
+uniform float mtlShininessStrength = 1.0;
 in vec4 varPos;
 in vec3 varNormal;
 in vec2 varTexCoord;
@@ -122,10 +122,10 @@ void main() {
   vec3 ambientColor = (lightAmbient * mtlAmbient);
   float diffuseIntensity = clamp(dot(N, L), 0.0, 1.0);
   vec3 diffuseColor = diffuseIntensity * lightDiffuse * mtlDiffuse;
-  float specularIntensity = clamp(pow(max(dot(R, E), 0.0), 0.3 * mtlShininess), 0.0, 1.0);
+  float specularIntensity = clamp(pow(max(dot(R, E), 0.0), mtlShininess) * mtlShininessStrength, 0.0, 1.0);
   vec3 specularColor = specularIntensity * lightSpecular * mtlSpecular;
   vec4 texColor = texture(tex, varTexCoord);
-  fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb); // + specularColor + mtlEmissive;
+  fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb) + specularColor + mtlEmissive;
   fragColor.a = varColor.a * texColor.a;
 })";
 
