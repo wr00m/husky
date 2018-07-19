@@ -1,4 +1,5 @@
 #include <husky/math/Quaternion.hpp>
+#include <husky/math/Vector4.hpp>
 #include <husky/math/Math.hpp>
 #include <algorithm>
 #include <cmath>
@@ -12,41 +13,31 @@ Quaternion<T> Quaternion<T>::identity()
 }
 
 template<typename T>
-Quaternion<T> Quaternion<T>::fromRotationMatrix(const Matrix33<T> &a)
+Quaternion<T> Quaternion<T>::fromRotationMatrix(const Matrix33<T> &m)
 {
-  Quaternion<T> q;
+  Vector4<T> tr;
+  tr.x = m[0][0] - m[1][1] - m[2][2];
+  tr.y = m[1][1] - m[0][0] - m[2][2];
+  tr.z = m[2][2] - m[0][0] - m[1][1];
+  tr.w = m[0][0] + m[1][1] + m[2][2];
 
-  T trace = a[0][0] + a[1][1] + a[2][2];
-  if (trace > 0) {
-    T s = T(0.5) / std::sqrt(trace + T(1));
-    q.x = (a[2][1] - a[1][2]) * s;
-    q.y = (a[0][2] - a[2][0]) * s;
-    q.z = (a[1][0] - a[0][1]) * s;
-    q.w = T(0.25) / s;
-  }
-  else if (a[0][0] > a[1][1] && a[0][0] > a[2][2]) {
-    T s = T(2) * std::sqrt(T(1) + a[0][0] - a[1][1] - a[2][2]);
-    q.x = T(0.25) * s;
-    q.y = (a[0][1] + a[1][0]) / s;
-    q.z = (a[0][2] + a[2][0]) / s;
-    q.w = (a[2][1] - a[1][2]) / s;
-  }
-  else if (a[1][1] > a[2][2]) {
-    T s = T(2) * std::sqrt(T(1) + a[1][1] - a[0][0] - a[2][2]);
-    q.x = (a[0][1] + a[1][0]) / s;
-    q.y = T(0.25) * s;
-    q.z = (a[1][2] + a[2][1]) / s;
-    q.w = (a[0][2] - a[2][0]) / s;
-  }
-  else {
-    T s = T(2) * std::sqrt(T(1) + a[2][2] - a[0][0] - a[1][1]);
-    q.x = (a[0][2] + a[2][0]) / s;
-    q.y = (a[1][2] + a[2][1]) / s;
-    q.z = T(0.25) * s;
-    q.w = (a[1][0] - a[0][1]) / s;
+  int iGreatest = 3; // Greatest diagonal element index
+  for (int i = 0; i < 3; i++) {
+    if (tr[i] > tr[iGreatest]) {
+      iGreatest = i;
+    }
   }
 
-  return q;
+  T b = std::sqrt(tr[iGreatest] + T(1)) * T(0.5);
+  T s = T(0.25) / b;
+
+  switch (iGreatest) {
+  case 0:  return {                       b, (m[0][1] + m[1][0]) * s, (m[2][0] + m[0][2]) * s, (m[1][2] - m[2][1]) * s };
+  case 1:  return { (m[0][1] + m[1][0]) * s,                       b, (m[1][2] + m[2][1]) * s, (m[2][0] - m[0][2]) * s };
+  case 2:  return { (m[2][0] + m[0][2]) * s, (m[1][2] + m[2][1]) * s,                       b, (m[0][1] - m[1][0]) * s };
+  case 3:  return { (m[1][2] - m[2][1]) * s, (m[2][0] - m[0][2]) * s, (m[0][1] - m[1][0]) * s,                       b };
+  default: return {}; // This shouldn't happen...
+  }
 }
 
 template<typename T>
@@ -92,7 +83,7 @@ Quaternion<T> Quaternion<T>::fromAxisAngle(T rad, Vector3<T> axis)
 
 template<typename T>
 Quaternion<T>::Quaternion()
-  : x(0), y(0), z(0), w(1)
+  : x(0), y(0), z(0), w(1) // Identity
 {
 }
 

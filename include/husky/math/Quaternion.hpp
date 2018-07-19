@@ -12,7 +12,6 @@ public:
   static Quaternion<T> fromRotationMatrix(const Matrix33<T> &rotationMatrix);
   static Quaternion<T> fromDirections(const Vector3<T> &from, const Vector3<T> &to);
   static Quaternion<T> fromAxisAngle(T rad, Vector3<T> axis);
-  //static Quaternion<T> fromEulerAngles(T yawRad, T pitchRad, T rollRad);
   
   union {
     struct { T x, y, z, w; };
@@ -39,7 +38,6 @@ public:
   T             dot(const Quaternion<T> &other) const;
   Matrix33<T>   toMatrix() const;
   T             toAxisAngle(Vector3<T> &axis) const;
-  //Vector3<T> toEulerAngles() const;
   T             angleAbs(const Quaternion<T> &target) const;
   
   Quaternion<T> nlerp(const Quaternion<T> &target, T t) const;
