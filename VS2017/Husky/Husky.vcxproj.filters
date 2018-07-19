@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\src\husky\util\StringUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp">

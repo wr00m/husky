@@ -2,6 +2,7 @@
 
 #include <husky/Log.hpp>
 #include <husky/mesh/Primitive.hpp>
+#include <husky/mesh/BoundingBox.hpp>
 #include <husky/mesh/Model.hpp>
 #include <husky/render/Viewport.hpp>
 #include <husky/render/Camera.hpp>

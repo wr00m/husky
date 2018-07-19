@@ -167,6 +167,7 @@
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Primitive.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Viewport.cpp" />
     <ClCompile Include="..\..\src\husky\util\StringUtil.cpp" />
