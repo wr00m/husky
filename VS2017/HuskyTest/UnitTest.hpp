@@ -3,14 +3,14 @@
 #include <iomanip>
 #include <husky/Log.hpp>
 #include <husky/math/Math.hpp>
-#include <husky/math/Matrix44.hpp>
-#include <husky/math/Quaternion.hpp>
+#include <husky/math/EulerAngles.hpp>
 #include <husky/util/StringUtil.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
@@ -99,8 +99,6 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double quatDirsDiff = quatDiff(quatDirs, quatDirsGlm);
   assert(quatDirsDiff < 1e-9);
 
-  // TODO: Investigate why Quaternion::fromRotationMatrix() differs from GLM
-
   husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1);
   glm::dmat4x4 perspInfGlm = glm::infinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1);
   double perspInfDiff = matDiff(perspInf, perspInfGlm);
@@ -123,10 +121,28 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double vec2AngleDiff = std::abs(vec2Angle - vec2AngleGlm);
   assert(vec2AngleDiff < 1e-9);
 
-  //double quatAngle = ;
-  //double quatAngleGlm = ;
-  //double quatAngleDiff = std::abs(quatAngle - quatAngleGlm);
-  //assert(quatAngleDiff < 1e-9);
+  // TODO: Test Quaternion::fromRotationMatrix()
+
+  husky::Matrix44d eulerAnglesMtx = husky::Matrix44d::rotate(3.0, husky::Vector3d(3, 2, 1).normalized());
+  glm::dmat4 eulerAnglesMtxGlm = glm::rotate(3.0, glm::normalize(glm::dvec3(3, 2, 1)));
+  double eulerAnglesMtxDiff = matDiff(eulerAnglesMtx, eulerAnglesMtxGlm);
+  assert(eulerAnglesMtxDiff < 1e-9);
+  husky::Quaterniond eulerAnglesQuat = husky::Quaterniond::fromRotationMatrix(eulerAnglesMtx.get3x3());
+  glm::dquat eulerAnglesQuatGlm(eulerAnglesMtxGlm);
+  double eulerAnglesQuatDiff = quatDiff(eulerAnglesQuat, eulerAnglesQuatGlm);
+  assert(eulerAnglesQuatDiff < 1e-9);
+  husky::EulerAnglesd eulerAngles(husky::RotationOrder::YXZ, eulerAnglesMtx);
+  double yawGlm, pitchGlm, rollGlm;
+  glm::extractEulerAngleYXZ(eulerAnglesMtxGlm, yawGlm, pitchGlm, rollGlm);
+  double eulerAngleDiff = std::abs(eulerAngles.yaw - yawGlm) + std::abs(eulerAngles.pitch - pitchGlm) + std::abs(eulerAngles.roll - rollGlm);
+  assert(eulerAngleDiff < 1e-9);
+  husky::Matrix44d eulerAnglesMtxRev = // TODO: eulerAngles.toMatrix()
+    husky::Matrix44d::rotate(eulerAngles.yaw,   { 0, 1, 0 }) *
+    husky::Matrix44d::rotate(eulerAngles.pitch, { 1, 0, 0 }) *
+    husky::Matrix44d::rotate(eulerAngles.roll,  { 0, 0, 1 });
+  glm::dmat4 eulerAnglesMtxRevGlm = glm::eulerAngleYXZ(yawGlm, pitchGlm, rollGlm);
+  double eulerAnglesMtxRevDiff = matDiff(eulerAnglesMtxRev, eulerAnglesMtxRevGlm);
+  assert(eulerAnglesMtxRevDiff < 1e-9);
 
   assert(husky::StringUtil::ltrim("abcd", "ad") == "bcd");
   assert(husky::StringUtil::rtrim("abcd", "ad") == "abc");

@@ -13,12 +13,12 @@ class HUSKY_DLL EulerAngles
 public:
   RotationOrder rotationOrder;
 
-  union {
-    struct { T angle0Rad, angle1Rad, angle2Rad; };
-    Vector3<T> anglesRad;
+  union { // Radians
+    struct { T yaw, pitch, roll; }; // These terms are useful for Tait-Bryan angles (not proper Euler angles)
+    Vector3<T> angles;
   };
 
-  EulerAngles(RotationOrder rotationOrder, T angle0Rad, T angle1Rad, T angle2Rad);
+  EulerAngles(RotationOrder rotationOrder, T yaw, T pitch, T roll);
   EulerAngles(RotationOrder rotationOrder, const Quaternion<T> &q);
   EulerAngles(RotationOrder rotationOrder, const Matrix33<T> &m);
   EulerAngles(RotationOrder rotationOrder, const Matrix44<T> &m);

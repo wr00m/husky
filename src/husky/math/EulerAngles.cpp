@@ -4,20 +4,22 @@
 namespace husky {
 
 template<typename T>
-static Vector3<T> rot2Axes(T r11, T r12, T r21, T r31, T r32) {
+static Vector3<T> rot2Axes(T r11, T r12, T r21, T r31, T r32) // Proper Euler angles
+{
   return {
-    std::atan2(r11, r12),
+    std::atan2(r31, r32),
     std::acos(r21),
-    std::atan2(r31, r32)
+    std::atan2(r11, r12)
   };
 }
 
 template<typename T>
-static Vector3<T> rot3Axes(T r11, T r12, T r21, T r31, T r32) {
+static Vector3<T> rot3Axes(T r11, T r12, T r21, T r31, T r32) // Tait-Bryan angles
+{
   return {
-    std::atan2(r31, r32),
-    std::asin(r21),
-    std::atan2(r11, r12)
+    std::atan2(r11, r12), // Yaw
+    std::asin(r21),       // Pitch
+    std::atan2(r31, r32)  // Roll
   };
 }
 
@@ -115,16 +117,16 @@ static Vector3<T> quaternionToEuler(RotationOrder rotationOrder, const Quaternio
 }
 
 template<typename T>
-EulerAngles<T>::EulerAngles(RotationOrder rotationOrder, T angle0Rad, T angle1Rad, T angle2Rad)
+EulerAngles<T>::EulerAngles(RotationOrder rotationOrder, T yaw, T pitch, T roll)
   : rotationOrder(rotationOrder)
-  , anglesRad(angle0Rad, angle1Rad, angle2Rad)
+  , angles(yaw, pitch, roll)
 {
 }
 
 template<typename T>
 EulerAngles<T>::EulerAngles(RotationOrder rotationOrder, const Quaternion<T> &q)
   : rotationOrder(rotationOrder)
-  , anglesRad(quaternionToEuler(rotationOrder, q))
+  , angles(quaternionToEuler(rotationOrder, q.normalized())) // Normalize, just in case
 {
 }
 
