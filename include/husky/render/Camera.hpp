@@ -1,7 +1,7 @@
 #pragma once
 
 #include <husky/math/Quaternion.hpp>
-#include <husky/math/Matrix44.hpp>
+#include <husky/math/Frustum.hpp>
 
 namespace husky {
 
@@ -20,6 +20,7 @@ public:
   Vector3d right() const;
   Vector3d forward() const;
   Vector3d up() const;
+  Frustum frustum() const;
   void buildViewMatrix();
 };
 

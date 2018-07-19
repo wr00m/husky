@@ -517,6 +517,8 @@ int main()
     cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
     cam.buildViewMatrix();
 
+    std::vector<const Entity*> viewEntities;
+
     { // Render scene to FBO
       glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -527,9 +529,16 @@ int main()
       glEnable(GL_DEPTH_CLAMP); // http://www.terathon.com/gdc07_lengyel.pdf
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+      const husky::Frustum frustum = cam.frustum();
+
       for (const auto &entity : entities) {
         bool selected = (entity.get() == selectedEntity);
         entity->draw(viewport, cam, selected);
+
+        // TODO: Don't test frustum intersection with *local* bounding box!
+        if ((bool)frustum.touches(entity->bboxLocal.min, entity->bboxLocal.max)) {
+          viewEntities.emplace_back(entity.get());
+        }
       }
 
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -553,7 +562,19 @@ int main()
 
       guiHasFocus = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 
+      std::string entitiesDebugText;
+      {
+        std::ostringstream oss;
+        oss << "Entities in view: " << viewEntities.size();
+        for (const auto e : viewEntities) {
+          oss << "\n  " << e->name;
+        }
+        entitiesDebugText = oss.str();
+      }
+
       ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
+      ImGui::Text(entitiesDebugText.c_str());
+
       ImGui::End();
 
       ImGui::Render();

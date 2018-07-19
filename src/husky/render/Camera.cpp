@@ -29,6 +29,11 @@ Vector3d Camera::up() const
   return attitude * Vector3d(0, 0, 1);
 }
 
+Frustum Camera::frustum() const
+{
+  return Frustum(projection, view);
+}
+
 void Camera::buildViewMatrix()
 {
   view = Matrix44d::lookAt(position, position + forward(), up());

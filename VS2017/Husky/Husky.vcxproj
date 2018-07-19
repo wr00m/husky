@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\Log.cpp" />
+    <ClCompile Include="..\..\src\husky\math\Frustum.cpp" />
     <ClCompile Include="..\..\src\husky\math\Intersect.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix22.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Matrix33.cpp" />
@@ -167,6 +168,7 @@
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
+    <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Viewport.cpp" />
     <ClCompile Include="..\..\src\husky\util\StringUtil.cpp" />
@@ -176,6 +178,7 @@
     <ClInclude Include="..\..\include\husky\Common.hpp" />
     <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\Log.hpp" />
+    <ClInclude Include="..\..\include\husky\math\Frustum.hpp" />
     <ClInclude Include="..\..\include\husky\math\Intersect.hpp" />
     <ClInclude Include="..\..\include\husky\math\Math.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Matrix22.hpp" />
@@ -190,6 +193,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
+    <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
     <ClInclude Include="..\..\include\husky\render\RenderData.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Viewport.hpp" />
