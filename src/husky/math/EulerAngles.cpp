@@ -112,7 +112,7 @@ static Vector3<T> quaternionToEuler(RotationOrder rotationOrder, const Quaternio
       -2 * (q.x*q.y - q.w*q.z));
   }
   else {
-    return {};
+    return {}; // This shouldn't happen...
   }
 }
 
@@ -145,13 +145,44 @@ EulerAngles<T>::EulerAngles(RotationOrder rotationOrder, const Matrix44<T> &m)
 template<typename T>
 Quaternion<T> EulerAngles<T>::toQuaternion() const
 {
-  return {}; // TODO
+  // Note: This could be optimized
+  return Quaternion<T>::fromRotationMatrix(toMatrix());
+}
+
+static Vector3i getAxisIndices(RotationOrder rotationOrder)
+{
+  switch (rotationOrder) {
+  case RotationOrder::ZYX: return { 2, 1, 0 };
+  case RotationOrder::ZYZ: return { 2, 1, 2 };
+  case RotationOrder::ZXY: return { 2, 0, 1 };
+  case RotationOrder::ZXZ: return { 2, 0, 2 };
+  case RotationOrder::YXZ: return { 1, 0, 2 };
+  case RotationOrder::YXY: return { 1, 0, 1 };
+  case RotationOrder::YZX: return { 1, 2, 0 };
+  case RotationOrder::YZY: return { 1, 2, 1 };
+  case RotationOrder::XYZ: return { 0, 1, 2 };
+  case RotationOrder::XYX: return { 0, 1, 0 };
+  case RotationOrder::XZY: return { 0, 2, 1 };
+  case RotationOrder::XZX: return { 0, 2, 0 };
+  default: return {}; // This shouldn't happen...
+  }
 }
 
 template<typename T>
 Matrix33<T> EulerAngles<T>::toMatrix() const
 {
-  return {}; // TODO
+  static const Vector3<T> axes[3] = {
+    { 1, 0, 0 },  // X
+    { 0, 1, 0 },  // Y
+    { 0, 0, 1 },  // Z
+  };
+
+  const Vector3i inds = getAxisIndices(rotationOrder);
+
+  // Note: This could be optimized
+  return Matrix33<T>::rotate(  yaw, axes[inds[0]])
+       * Matrix33<T>::rotate(pitch, axes[inds[1]])
+       * Matrix33<T>::rotate( roll, axes[inds[2]]);
 }
 
 template class EulerAngles<double>;

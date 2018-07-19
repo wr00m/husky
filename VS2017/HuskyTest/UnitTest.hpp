@@ -136,10 +136,7 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   glm::extractEulerAngleYXZ(eulerAnglesMtxGlm, yawGlm, pitchGlm, rollGlm);
   double eulerAngleDiff = std::abs(eulerAngles.yaw - yawGlm) + std::abs(eulerAngles.pitch - pitchGlm) + std::abs(eulerAngles.roll - rollGlm);
   assert(eulerAngleDiff < 1e-9);
-  husky::Matrix44d eulerAnglesMtxRev = // TODO: eulerAngles.toMatrix()
-    husky::Matrix44d::rotate(eulerAngles.yaw,   { 0, 1, 0 }) *
-    husky::Matrix44d::rotate(eulerAngles.pitch, { 1, 0, 0 }) *
-    husky::Matrix44d::rotate(eulerAngles.roll,  { 0, 0, 1 });
+  husky::Matrix44d eulerAnglesMtxRev = eulerAngles.toMatrix();
   glm::dmat4 eulerAnglesMtxRevGlm = glm::eulerAngleYXZ(yawGlm, pitchGlm, rollGlm);
   double eulerAnglesMtxRevDiff = matDiff(eulerAnglesMtxRev, eulerAnglesMtxRevGlm);
   assert(eulerAnglesMtxRevDiff < 1e-9);
