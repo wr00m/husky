@@ -166,7 +166,6 @@
     <ClCompile Include="..\..\src\Husky\Math\Vector4.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
-    <ClCompile Include="..\..\src\husky\mesh\Primitive.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Viewport.cpp" />
@@ -190,7 +189,6 @@
     <ClInclude Include="..\..\include\husky\mesh\BoundingBox.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
-    <ClInclude Include="..\..\include\husky\mesh\Primitive.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
     <ClInclude Include="..\..\include\husky\render\RenderData.hpp" />

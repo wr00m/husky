@@ -1,7 +1,7 @@
 #pragma once
 
 #include <husky/Log.hpp>
-#include <husky/mesh/Primitive.hpp>
+#include <husky/mesh/SimpleMesh.hpp>
 #include <husky/mesh/BoundingBox.hpp>
 #include <husky/mesh/Model.hpp>
 #include <husky/render/Viewport.hpp>
@@ -167,7 +167,7 @@ public:
     }
     
     husky::Vector3d bboxSize = bboxLocal.size();
-    husky::SimpleMesh bboxMesh = husky::Primitive::box(bboxSize.x, bboxSize.y, bboxSize.z);
+    husky::SimpleMesh bboxMesh = husky::SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
     bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
     bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
   }

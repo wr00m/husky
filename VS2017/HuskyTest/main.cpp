@@ -447,7 +447,7 @@ int main()
   Shader lineShader(lineShaderProg);
 
   {
-    husky::SimpleMesh mesh = husky::Primitive::sphere(1.0);
+    husky::SimpleMesh mesh = husky::SimpleMesh::sphere(1.0);
     husky::Model mdl(std::move(mesh), husky::Material({ 0, 1, 0 }));
 
     auto entity = std::make_unique<Entity>("Sphere", defaultShader, lineShader, std::move(mdl));
@@ -456,7 +456,7 @@ int main()
   }
 
   {
-    husky::SimpleMesh mesh = husky::Primitive::cylinder(0.5, 2.0, true);
+    husky::SimpleMesh mesh = husky::SimpleMesh::cylinder(0.5, 2.0, true);
     husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
 
     auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mdl));
@@ -465,7 +465,7 @@ int main()
   }
 
   {
-    husky::SimpleMesh mesh = husky::Primitive::box(2.0, 3.0, 1.0);
+    husky::SimpleMesh mesh = husky::SimpleMesh::box(2.0, 3.0, 1.0);
     husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 0 }));
 
     auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mdl));
@@ -474,7 +474,7 @@ int main()
   }
 
   {
-    husky::SimpleMesh mesh = husky::Primitive::torus(8.0, 1.0);
+    husky::SimpleMesh mesh = husky::SimpleMesh::torus(8.0, 1.0);
     husky::Model mdl(std::move(mesh), husky::Material({ 1, 1, 0 }));
 
     auto entity = std::make_unique<Entity>("Torus", defaultShader, lineShader, std::move(mdl));
