@@ -3,8 +3,7 @@
 #include <husky/math/Matrix44.hpp>
 #include <vector>
 
-namespace husky
-{
+namespace husky {
 
 class HUSKY_DLL Frustum
 {

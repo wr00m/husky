@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\src\husky\math\Frustum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\husky\math\EulerAngles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\husky\math\Frustum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\husky\math\EulerAngles.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

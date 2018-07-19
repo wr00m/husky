@@ -165,6 +165,7 @@
     <ClCompile Include="..\..\src\Husky\Math\Vector2.cpp" />
     <ClCompile Include="..\..\src\husky\math\Vector3.cpp" />
     <ClCompile Include="..\..\src\Husky\Math\Vector4.cpp" />
+    <ClCompile Include="..\..\src\husky\math\EulerAngles.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="..\..\include\Husky\Math\Vector2.hpp" />
     <ClInclude Include="..\..\include\husky\math\Vector3.hpp" />
     <ClInclude Include="..\..\include\Husky\Math\Vector4.hpp" />
+    <ClInclude Include="..\..\include\husky\math\EulerAngles.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\BoundingBox.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
