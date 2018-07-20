@@ -16,10 +16,10 @@ template<typename T>
 Quaternion<T> Quaternion<T>::fromRotationMatrix(const Matrix33<T> &m)
 {
   Vector4<T> tr;
-  tr.x = m[0][0] - m[1][1] - m[2][2];
-  tr.y = m[1][1] - m[0][0] - m[2][2];
-  tr.z = m[2][2] - m[0][0] - m[1][1];
-  tr.w = m[0][0] + m[1][1] + m[2][2];
+  tr[0] = m[0][0] - m[1][1] - m[2][2];
+  tr[1] = m[1][1] - m[0][0] - m[2][2];
+  tr[2] = m[2][2] - m[0][0] - m[1][1];
+  tr[3] = m[0][0] + m[1][1] + m[2][2];
 
   int iGreatest = 3; // Greatest diagonal element index
   for (int i = 0; i < 3; i++) {

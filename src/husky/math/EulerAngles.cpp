@@ -1,4 +1,5 @@
 #include <husky/math/EulerAngles.hpp>
+#include <husky/math/Math.hpp>
 #include <cmath>
 
 namespace husky {
@@ -8,7 +9,7 @@ static Vector3<T> rot2Axes(T r11, T r12, T r21, T r31, T r32) // Proper Euler an
 {
   return {
     std::atan2(r31, r32),
-    std::acos(r21),
+    std::acos(Math::clamp(r21, T(-1), T(1))), // Clamp to avoid precision issues
     std::atan2(r11, r12)
   };
 }
@@ -17,9 +18,9 @@ template<typename T>
 static Vector3<T> rot3Axes(T r11, T r12, T r21, T r31, T r32) // Tait-Bryan angles
 {
   return {
-    std::atan2(r11, r12), // Yaw
-    std::asin(r21),       // Pitch
-    std::atan2(r31, r32)  // Roll
+    std::atan2(r11, r12),                     // Yaw
+    std::asin(Math::clamp(r21, T(-1), T(1))), // Pitch: Clamp to avoid precision issues
+    std::atan2(r31, r32)                      // Roll
   };
 }
 
