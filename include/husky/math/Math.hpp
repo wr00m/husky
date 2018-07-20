@@ -11,12 +11,14 @@ public:
   static constexpr double deg2rad = pi / 180.0;
   static constexpr double rad2deg = 180.0 / pi;
 
-  static double lerp(double v0, double v1, double t)
+  template<typename T>
+  static T lerp(T v0, T v1, T t)
   {
-    return (1 - t) * v0 + t * v1;
+    return (T(1) - t) * v0 + t * v1;
   }
 
-  static double clamp(double v, double min, double max)
+  template<typename T>
+  static T clamp(T v, T min, T max)
   {
     if (v > max) {
       return max;
@@ -29,16 +31,17 @@ public:
     }
   }
 
-  static double sign(double x)
+  template<typename T>
+  static T sign(T x)
   {
-    if (x > 0) {
-      return 1;
+    if (x > T(0)) {
+      return T(1);
     }
-    else if (x < 0) {
-      return -1;
+    else if (x < T(0)) {
+      return T(-1);
     }
     else {
-      return 0;
+      return T(0);
     }
   }
 };
