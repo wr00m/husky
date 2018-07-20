@@ -29,88 +29,100 @@ static Vector3<T> quaternionToEuler(RotationOrder rotationOrder, const Quaternio
 {
   // http://bediyap.com/programming/convert-quaternion-to-euler-rotations/
   if (rotationOrder == RotationOrder::ZYX) {
-    return rot3Axes<T>(2 * (q.x*q.y + q.w*q.z),
+    return rot3Axes<T>(
+      T( 2) * (q.x*q.y + q.w*q.z),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z,
-      -2 * (q.x*q.z - q.w*q.y),
-      2 * (q.y*q.z + q.w*q.x),
+      T(-2) * (q.x*q.z - q.w*q.y),
+      T( 2) * (q.y*q.z + q.w*q.x),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::ZYZ) {
-    return rot2Axes<T>(2 * (q.y*q.z - q.w*q.x),
-      2 * (q.x*q.z + q.w*q.y),
+    return rot2Axes<T>(
+      T( 2) * (q.y*q.z - q.w*q.x),
+      T( 2) * (q.x*q.z + q.w*q.y),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z,
-      2 * (q.y*q.z + q.w*q.x),
-      -2 * (q.x*q.z - q.w*q.y));
+      T( 2) * (q.y*q.z + q.w*q.x),
+      T(-2) * (q.x*q.z - q.w*q.y));
   }
   else if (rotationOrder == RotationOrder::ZXY) {
-    return rot3Axes<T>(-2 * (q.x*q.y - q.w*q.z),
+    return rot3Axes<T>(
+      T(-2) * (q.x*q.y - q.w*q.z),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z,
-      2 * (q.y*q.z + q.w*q.x),
-      -2 * (q.x*q.z - q.w*q.y),
+      T( 2) * (q.y*q.z + q.w*q.x),
+      T(-2) * (q.x*q.z - q.w*q.y),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::ZXZ) {
-    return rot2Axes<T>(2 * (q.x*q.z + q.w*q.y),
-      -2 * (q.y*q.z - q.w*q.x),
+    return rot2Axes<T>(
+      T( 2) * (q.x*q.z + q.w*q.y),
+      T(-2) * (q.y*q.z - q.w*q.x),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z,
-      2 * (q.x*q.z - q.w*q.y),
-      2 * (q.y*q.z + q.w*q.x));
+      T( 2) * (q.x*q.z - q.w*q.y),
+      T( 2) * (q.y*q.z + q.w*q.x));
   }
   else if (rotationOrder == RotationOrder::YXZ) {
-    return rot3Axes<T>(2 * (q.x*q.z + q.w*q.y),
+    return rot3Axes<T>(
+      T( 2) * (q.x*q.z + q.w*q.y),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z,
-      -2 * (q.y*q.z - q.w*q.x),
-      2 * (q.x*q.y + q.w*q.z),
+      T(-2) * (q.y*q.z - q.w*q.x),
+      T( 2) * (q.x*q.y + q.w*q.z),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::YXY) {
-    return rot2Axes<T>(2 * (q.x*q.y - q.w*q.z),
-      2 * (q.y*q.z + q.w*q.x),
+    return rot2Axes<T>(
+      T( 2) * (q.x*q.y - q.w*q.z),
+      T( 2) * (q.y*q.z + q.w*q.x),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z,
-      2 * (q.x*q.y + q.w*q.z),
-      -2 * (q.y*q.z - q.w*q.x));
+      T( 2) * (q.x*q.y + q.w*q.z),
+      T(-2) * (q.y*q.z - q.w*q.x));
   }
   else if (rotationOrder == RotationOrder::YZX) {
-    return rot3Axes<T>(-2 * (q.x*q.z - q.w*q.y),
+    return rot3Axes<T>(
+      T(-2) * (q.x*q.z - q.w*q.y),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z,
-      2 * (q.x*q.y + q.w*q.z),
-      -2 * (q.y*q.z - q.w*q.x),
+      T( 2) * (q.x*q.y + q.w*q.z),
+      T(-2) * (q.y*q.z - q.w*q.x),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::YZY) {
-    return rot2Axes<T>(2 * (q.y*q.z + q.w*q.x),
-      -2 * (q.x*q.y - q.w*q.z),
+    return rot2Axes<T>(
+      T( 2) * (q.y*q.z + q.w*q.x),
+      T(-2) * (q.x*q.y - q.w*q.z),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z,
-      2 * (q.y*q.z - q.w*q.x),
-      2 * (q.x*q.y + q.w*q.z));
+      T( 2) * (q.y*q.z - q.w*q.x),
+      T( 2) * (q.x*q.y + q.w*q.z));
   }
   else if (rotationOrder == RotationOrder::XYZ) {
-    return rot3Axes<T>(-2 * (q.y*q.z - q.w*q.x),
+    return rot3Axes<T>(
+      T(-2) * (q.y*q.z - q.w*q.x),
       q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z,
-      2 * (q.x*q.z + q.w*q.y),
-      -2 * (q.x*q.y - q.w*q.z),
+      T( 2) * (q.x*q.z + q.w*q.y),
+      T(-2) * (q.x*q.y - q.w*q.z),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::XYX) {
-    return rot2Axes<T>(2 * (q.x*q.y + q.w*q.z),
-      -2 * (q.x*q.z - q.w*q.y),
+    return rot2Axes<T>(
+      T( 2) * (q.x*q.y + q.w*q.z),
+      T(-2) * (q.x*q.z - q.w*q.y),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z,
-      2 * (q.x*q.y - q.w*q.z),
-      2 * (q.x*q.z + q.w*q.y));
+      T( 2) * (q.x*q.y - q.w*q.z),
+      T( 2) * (q.x*q.z + q.w*q.y));
   }
   else if (rotationOrder == RotationOrder::XZY) {
-    return rot3Axes<T>(2 * (q.y*q.z + q.w*q.x),
+    return rot3Axes<T>(
+      T( 2) * (q.y*q.z + q.w*q.x),
       q.w*q.w - q.x*q.x + q.y*q.y - q.z*q.z,
-      -2 * (q.x*q.y - q.w*q.z),
-      2 * (q.x*q.z + q.w*q.y),
+      T(-2) * (q.x*q.y - q.w*q.z),
+      T( 2) * (q.x*q.z + q.w*q.y),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z);
   }
   else if (rotationOrder == RotationOrder::XZX) {
-    return rot2Axes<T>(2 * (q.x*q.z - q.w*q.y),
-      2 * (q.x*q.y + q.w*q.z),
+    return rot2Axes<T>(
+      T( 2) * (q.x*q.z - q.w*q.y),
+      T( 2) * (q.x*q.y + q.w*q.z),
       q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z,
-      2 * (q.x*q.z + q.w*q.y),
-      -2 * (q.x*q.y - q.w*q.z));
+      T( 2) * (q.x*q.z + q.w*q.y),
+      T(-2) * (q.x*q.y - q.w*q.z));
   }
   else {
     return {}; // This shouldn't happen...
