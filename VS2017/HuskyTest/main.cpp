@@ -417,10 +417,10 @@ int main()
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
 #elif 0
   husky::Image image(2, 2, sizeof(husky::Vector4b));
-  //image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
-  //image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
-  //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
-  //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
+  image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
+  image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
+  image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
+  image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
 #else
   husky::Image image = husky::Image::load("C:/tmp/test.jpg");
   image.save("C:/tmp/imgout/test.png");
@@ -514,7 +514,7 @@ int main()
     double time = glfwGetTime();
     frameTime = (time - prevTime);
     prevTime = time;
-    //std::cout << frameTime << std::endl;
+    double fps = (frameTime != 0 ? (1.0 / frameTime) : 0.0);
 
     if (!io->WantCaptureKeyboard) {
       handleKeyInput(window);
@@ -576,6 +576,7 @@ int main()
         entitiesDebugText = oss.str();
       }
 
+      ImGui::Text("fps: %d", (int)std::round(fps));
       ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
       ImGui::Text(entitiesDebugText.c_str());
 
@@ -597,6 +598,8 @@ int main()
 
         selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
       }
+
+      ImGui::Image(((std::uint8_t*)nullptr) + textureHandle, { 100, 100 });
 
       ImGui::End();
 
