@@ -533,8 +533,8 @@ int main()
       const husky::Frustum frustum = cam.frustum();
 
       for (const auto &entity : entities) {
-        bool selected = (entity.get() == selectedEntity);
-        entity->draw(viewport, cam, selected);
+        bool isSelected = (entity.get() == selectedEntity);
+        entity->draw(viewport, cam, isSelected);
 
         // TODO: Don't test frustum intersection with *local* bounding box!
         if ((bool)frustum.touches(entity->bboxLocal.min, entity->bboxLocal.max)) {

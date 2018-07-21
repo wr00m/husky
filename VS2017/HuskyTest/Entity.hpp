@@ -11,7 +11,13 @@
 class Entity
 {
 private:
-  static void draw(const Shader &shader, const husky::Model &model, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
+  static void draw(
+    const Shader &shader,
+    const husky::Model &model,
+    const husky::Viewport &viewport,
+    const husky::Matrix44f &view,
+    const husky::Matrix44f &modelView,
+    const husky::Matrix44f &projection)
   {
     static const husky::Material fallbackMtl;
 
@@ -26,11 +32,18 @@ private:
       }
 
       const husky::RenderData &renderData = model.meshRenderDatas[iMesh];
-      draw(shader, *mtl, renderData, viewport, modelView, projection);
+      draw(shader, *mtl, renderData, viewport, view, modelView, projection);
     }
   }
 
-  static void draw(const Shader &shader, const husky::Material &mtl, const husky::RenderData &renderData, const husky::Viewport &viewport, const husky::Matrix44f &modelView, const husky::Matrix44f &projection)
+  static void draw(
+    const Shader &shader,
+    const husky::Material &mtl,
+    const husky::RenderData &renderData,
+    const husky::Viewport &viewport,
+    const husky::Matrix44f &view,
+    const husky::Matrix44f &modelView,
+    const husky::Matrix44f &projection)
   {
     if (shader.shaderProgram == 0) {
       husky::Log::warning("Invalid shader program");
@@ -66,7 +79,8 @@ private:
     }
 
     if (shader.lightDirLocation != -1) {
-      const husky::Vector3f lightDir = (normalMatrix * husky::Vector3f(20, -40, 100)).normalized(); // TODO
+      husky::Vector3f lightDir(20, -40, 100); // TODO
+      lightDir = (view * husky::Vector4f(lightDir, 0.0)).xyz.normalized();
       glUniform3fv(shader.lightDirLocation, 1, lightDir.val);
     }
 
@@ -174,13 +188,14 @@ public:
 
   void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
   {
+    const husky::Matrix44f view(cam.view);
     const husky::Matrix44f modelView(cam.view * transform);
     const husky::Matrix44f projection(cam.projection);
 
-    draw(shader, model, viewport, modelView, projection);
+    draw(shader, model, viewport, view, modelView, projection);
 
     if (drawBbox) {
-      draw(lineShader, bboxModel, viewport, modelView, projection);
+      draw(lineShader, bboxModel, viewport, view, modelView, projection);
     }
   }
 
