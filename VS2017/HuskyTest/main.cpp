@@ -159,7 +159,7 @@ static std::vector<std::unique_ptr<Entity>> entities;
 static Entity *selectedEntity = nullptr;
 static GLuint fbo = 0;
 static husky::Viewport fboViewport;
-static bool guiHasFocus = false;
+static ImGuiIO *io = nullptr;
 
 static void toggleFullscreen(GLFWwindow *win)
 {
@@ -212,7 +212,7 @@ static void mouseMoveCallback(GLFWwindow* win, double x, double y)
 
 static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods)
 {
-  if (guiHasFocus) {
+  if (io->WantCaptureMouse) {
     return;
   }
 
@@ -272,7 +272,7 @@ static void scrollCallback(GLFWwindow *win, double deltaX, double deltaY)
   cam.position += cam.forward() * zoomSpeed * deltaY;
 }
 
-static void handleInput(GLFWwindow *win)
+static void handleKeyInput(GLFWwindow *win)
 {
   husky::Vector3d input;
   input.x = glfwGetKey(win, GLFW_KEY_D)     - glfwGetKey(win, GLFW_KEY_A);
@@ -363,9 +363,9 @@ int main()
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO(); //(void)io;
-  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+  io = &ImGui::GetIO(); //(void)io;
+  //io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  //io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
   ImGui_ImplGlfw_InitForOpenGL(window, false);
   ImGui_ImplOpenGL3_Init(nullptr);
   ImGui::StyleColorsDark();
@@ -511,8 +511,8 @@ int main()
     prevTime = time;
     //std::cout << frameTime << std::endl;
 
-    if (!guiHasFocus) {
-      handleInput(window);
+    if (!io->WantCaptureKeyboard) {
+      handleKeyInput(window);
     }
 
     cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
@@ -561,8 +561,6 @@ int main()
 
       ImGui::Begin("Debug");
 
-      guiHasFocus = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
-
       std::string entitiesDebugText;
       {
         std::ostringstream oss;
@@ -592,8 +590,7 @@ int main()
 
         eulerAngles.angles.set(yaw, pitch, roll);
 
-        // TODO
-        //selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
+        selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
       }
 
       ImGui::End();
@@ -606,6 +603,12 @@ int main()
     glfwPollEvents();
   }
 
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
+  glfwDestroyWindow(window);
   glfwTerminate();
+
   return 0;
 }
