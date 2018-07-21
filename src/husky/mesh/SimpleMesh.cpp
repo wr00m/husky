@@ -10,10 +10,10 @@ SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
   SimpleMesh m;
 
   m.addQuad( // X+
-    m.addVertex({ h.x, -h.y, -h.z }, { 1,  0,  0 }, { 0, 0 }),
-    m.addVertex({ h.x,  h.y, -h.z }, { 1,  0,  0 }, { 1, 0 }),
-    m.addVertex({ h.x,  h.y,  h.z }, { 1,  0,  0 }, { 1, 1 }),
-    m.addVertex({ h.x, -h.y,  h.z }, { 1,  0,  0 }, { 0, 1 }));
+    m.addVertex({  h.x, -h.y, -h.z }, {  1,  0,  0 }, { 0, 0 }),
+    m.addVertex({  h.x,  h.y, -h.z }, {  1,  0,  0 }, { 1, 0 }),
+    m.addVertex({  h.x,  h.y,  h.z }, {  1,  0,  0 }, { 1, 1 }),
+    m.addVertex({  h.x, -h.y,  h.z }, {  1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // X-
     m.addVertex({ -h.x,  h.y, -h.z }, { -1,  0,  0 }, { 0, 0 }),
@@ -22,28 +22,28 @@ SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
     m.addVertex({ -h.x,  h.y,  h.z }, { -1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // Y+
-    m.addVertex({ h.x,  h.y, -h.z }, { 0,  1,  0 }, { 0, 0 }),
-    m.addVertex({ -h.x,  h.y, -h.z }, { 0,  1,  0 }, { 1, 0 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, { 0,  1,  0 }, { 1, 1 }),
-    m.addVertex({ h.x,  h.y,  h.z }, { 0,  1,  0 }, { 0, 1 }));
+    m.addVertex({  h.x,  h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
+    m.addVertex({ -h.x,  h.y, -h.z }, {  0,  1,  0 }, { 1, 0 }),
+    m.addVertex({ -h.x,  h.y,  h.z }, {  0,  1,  0 }, { 1, 1 }),
+    m.addVertex({  h.x,  h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }));
 
   m.addQuad( // Y-
-    m.addVertex({ -h.x, -h.y, -h.z }, { 0, -1,  0 }, { 0, 0 }),
-    m.addVertex({ h.x, -h.y, -h.z }, { 0, -1,  0 }, { 1, 0 }),
-    m.addVertex({ h.x, -h.y,  h.z }, { 0, -1,  0 }, { 1, 1 }),
-    m.addVertex({ -h.x, -h.y,  h.z }, { 0, -1,  0 }, { 0, 1 }));
+    m.addVertex({ -h.x, -h.y, -h.z }, {  0, -1,  0 }, { 0, 0 }),
+    m.addVertex({  h.x, -h.y, -h.z }, {  0, -1,  0 }, { 1, 0 }),
+    m.addVertex({  h.x, -h.y,  h.z }, {  0, -1,  0 }, { 1, 1 }),
+    m.addVertex({ -h.x, -h.y,  h.z }, {  0, -1,  0 }, { 0, 1 }));
 
   m.addQuad( // Z+
-    m.addVertex({ -h.x, -h.y,  h.z }, { 0,  0,  1 }, { 0, 0 }),
-    m.addVertex({ h.x, -h.y,  h.z }, { 0,  0,  1 }, { 1, 0 }),
-    m.addVertex({ h.x,  h.y,  h.z }, { 0,  0,  1 }, { 1, 1 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, { 0,  0,  1 }, { 0, 1 }));
+    m.addVertex({ -h.x, -h.y,  h.z }, {  0,  0,  1 }, { 0, 0 }),
+    m.addVertex({  h.x, -h.y,  h.z }, {  0,  0,  1 }, { 1, 0 }),
+    m.addVertex({  h.x,  h.y,  h.z }, {  0,  0,  1 }, { 1, 1 }),
+    m.addVertex({ -h.x,  h.y,  h.z }, {  0,  0,  1 }, { 0, 1 }));
 
   m.addQuad( // Z-
-    m.addVertex({ h.x, -h.y, -h.z }, { 0,  0, -1 }, { 1, 0 }),
-    m.addVertex({ -h.x, -h.y, -h.z }, { 0,  0, -1 }, { 0, 0 }),
-    m.addVertex({ -h.x,  h.y, -h.z }, { 0,  0, -1 }, { 0, 1 }),
-    m.addVertex({ h.x,  h.y, -h.z }, { 0,  0, -1 }, { 1, 1 }));
+    m.addVertex({  h.x, -h.y, -h.z }, {  0,  0, -1 }, { 1, 0 }),
+    m.addVertex({ -h.x, -h.y, -h.z }, {  0,  0, -1 }, { 0, 0 }),
+    m.addVertex({ -h.x,  h.y, -h.z }, {  0,  0, -1 }, { 0, 1 }),
+    m.addVertex({  h.x,  h.y, -h.z }, {  0,  0, -1 }, { 1, 1 }));
 
   return m;
 }
@@ -127,7 +127,7 @@ SimpleMesh SimpleMesh::sphere(double radius, int uSegmentCount, int vSegmentCoun
   return m;
 }
 
-SimpleMesh SimpleMesh::torus(double innerRadius, double outerRadius, int uSegmentCount, int vSegmentCount)
+SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmentCount, int vSegmentCount)
 {
   SimpleMesh m;
 
@@ -136,14 +136,14 @@ SimpleMesh SimpleMesh::torus(double innerRadius, double outerRadius, int uSegmen
     const double theta = u * 2.0 * Math::pi; // [0,2*pi]
 
     const Matrix33d rotate = Matrix33d::rotate(theta, { 0, 0, 1 });
-    const Vector3d radCenter = rotate * Vector3d(innerRadius, 0, 0);
+    const Vector3d radCenter = rotate * Vector3d(circleRadius, 0, 0);
 
     for (int iv = 0; iv <= vSegmentCount; iv++) {
       const double v = iv / double(vSegmentCount); // [0,1]
       const double phi = v * 2.0 * Math::pi; // [0,2*pi]
 
       const Vector3d vertNormal = rotate * Vector3d(std::cos(phi), 0.0, std::sin(-phi));
-      const Vector3d vertPosition = (radCenter + vertNormal * outerRadius);
+      const Vector3d vertPosition = (radCenter + vertNormal * tubeRadius);
       m.addVertex(vertPosition, vertNormal, { u, v });
 
       if (iu > 0 && iv > 0) {
