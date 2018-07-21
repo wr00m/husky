@@ -80,6 +80,7 @@ R"(#version 400 core
 uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
+uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
@@ -91,7 +92,7 @@ out vec4 varColor;
 void main() {
   varPos = mtxModelView * vec4(vPosition, 1.0);
   varNormal = mtxNormal * vNormal;
-  varTexCoord = vTexCoord;
+  varTexCoord = vTexCoord * texCoordScale;
   varColor = vColor;
   gl_Position = mtxProjection * varPos;
 })";
@@ -408,18 +409,22 @@ int main()
   glAttachShader(lineShaderProg, lineFragShader);
   glLinkProgram(lineShaderProg);
 
+#if 1
   husky::Image image(2, 2, sizeof(husky::Vector4b));
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
   image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
+#elif 0
+  husky::Image image(2, 2, sizeof(husky::Vector4b));
   //image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
   //image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
   //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
   //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
-
-  //husky::Image image2 = husky::Image::load("C:/tmp/test.jpg");
-  //image2.save("C:/tmp/imgout/test.png");
+#else
+  husky::Image image = husky::Image::load("C:/tmp/test.jpg");
+  image.save("C:/tmp/imgout/test.png");
+#endif
 
   GLuint textureHandle;
   glGenTextures(1, &textureHandle);

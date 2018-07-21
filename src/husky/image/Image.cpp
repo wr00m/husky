@@ -14,8 +14,6 @@ namespace husky {
 
 Image Image::load(const std::string &filePath)
 {
-  stbi_set_flip_vertically_on_load(true); // Match texture coordinates
-
   int width, height, bytesPerPixel;
   if (stbi_uc *bytes = stbi_load(filePath.c_str(), &width, &height, &bytesPerPixel, STBI_default)) {
     return { width, height, bytesPerPixel, bytes };
@@ -52,9 +50,6 @@ Image::Image(int width, int height, int bytesPerPixel, std::uint8_t *stbBytes)
 
 bool Image::save(const std::string &filePath) const
 {
-  // Note: This causes an exception for JPEG (594x594 RGB)
-  //stbi_flip_vertically_on_write(true); // Match texture coordinates
-
   const auto f = fs::u8path(filePath);
   const auto p = f.parent_path();
   if (!fs::is_directory(p) && !fs::create_directories(p)) {
