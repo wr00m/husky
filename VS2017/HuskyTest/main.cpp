@@ -81,15 +81,22 @@ uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
 uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
+uniform mat4 mtxBones[100];
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
+in ivec4 boneInds;
+in vec4 boneWeights;
 in vec4 vColor;
 out vec4 varPos;
 out vec3 varNormal;
 out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
+  mat4 mtxBone = mtxBones[boneInds[0]] * boneWeights[0]
+               + mtxBones[boneInds[1]] * boneWeights[1]
+               + mtxBones[boneInds[2]] * boneWeights[2]
+               + mtxBones[boneInds[3]] * boneWeights[3]; // TODO
   varPos = mtxModelView * vec4(vPosition, 1.0);
   varNormal = mtxNormal * vNormal;
   varTexCoord = vTexCoord * texCoordScale;
