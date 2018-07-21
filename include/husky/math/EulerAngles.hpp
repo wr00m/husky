@@ -23,6 +23,12 @@ public:
   EulerAngles(RotationOrder rotationOrder, const Matrix33<T> &m);
   EulerAngles(RotationOrder rotationOrder, const Matrix44<T> &m);
 
+  template<typename T2>
+  explicit EulerAngles(const EulerAngles<T2> &e) : EulerAngles(e.rotationOrder, T(e.yaw), T(e.pitch), T(e.roll)) {}
+
+  template<typename T2>
+  operator EulerAngles<T2>() const { return EulerAngles<T2>(rotationOrder, yaw, pitch, roll); }
+
   Quaternion<T> toQuaternion() const;
   Matrix33<T> toMatrix() const;
 };

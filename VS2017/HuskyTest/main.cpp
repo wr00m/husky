@@ -581,7 +581,7 @@ int main()
         husky::Matrix33d rot;
         selectedEntity->transform.decompose(scale, rot, trans);
 
-        husky::EulerAnglesd eulerAngles(husky::RotationOrder::ZXY, rot);
+        husky::EulerAnglesf eulerAngles = (husky::EulerAnglesf)husky::EulerAnglesd(husky::RotationOrder::ZXY, rot);
         float yaw   = (float)eulerAngles.yaw;
         float pitch = (float)eulerAngles.pitch;
         float roll  = (float)eulerAngles.roll;
@@ -593,7 +593,7 @@ int main()
         eulerAngles.angles.set(yaw, pitch, roll);
 
         // TODO
-        //selectedEntity->transform = husky::Matrix44d::compose(scale, eulerAngles.toMatrix(), trans);
+        //selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
       }
 
       ImGui::End();
