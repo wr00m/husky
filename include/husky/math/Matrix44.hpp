@@ -26,6 +26,7 @@ public:
   static Matrix44<T> perspectiveInfRevZ(T yFovRad, T aspectRatio, T near);
   static Matrix44<T> frustum(T left, T right, T bottom, T top, T near, T far);
   static Matrix44<T> lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, Vector3<T> upDir);
+  static Matrix44<T> compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans);
 
   Matrix44();
   Matrix44(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33);
@@ -46,6 +47,7 @@ public:
   void        invert();
   Matrix44<T> inverted() const;
   //T           determinant() const;
+  void        decompose(Vector3<T> &scale, Matrix33<T> &rot, Vector3<T> &trans) const;
 
   Vector4<T> operator*(const Vector4<T> &v) const;
 

@@ -170,7 +170,7 @@ Model Model::load(const std::string &filePath)
     aiProcess_CalcTangentSpace |
     aiProcess_Triangulate |
     aiProcess_JoinIdenticalVertices |
-    aiProcess_SortByPType);
+    aiProcess_SortByPType); // TODO: aiProcess_FlipUVs?
 
   if (scene == nullptr) {
     Log::warning("Failed to load model: %s", filePath.c_str());

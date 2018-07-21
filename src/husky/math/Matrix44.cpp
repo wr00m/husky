@@ -146,6 +146,34 @@ Matrix44<T> Matrix44<T>::lookAt(const Vector3<T> &camPos, const Vector3<T> &look
 }
 
 template<typename T>
+Matrix44<T> Matrix44<T>::compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans)
+{
+  Matrix44<T> m;
+  m.col[0].xyz = rot.col[0] * scale[0];
+  m.col[1].xyz = rot.col[1] * scale[1];
+  m.col[2].xyz = rot.col[2] * scale[2];
+  m.col[3] = { trans, T(1) };
+  return m;
+}
+
+template<typename T>
+void Matrix44<T>::decompose(Vector3<T> &scale, Matrix33<T> &rot, Vector3<T> &trans) const
+{
+  // Note: We assume scale >= 0
+  scale[0] = col[0].xyz.length();
+  scale[1] = col[1].xyz.length();
+  scale[2] = col[2].xyz.length();
+
+  // Note: This "rotation" matrix can also have shear
+  rot = get3x3();
+  if (scale[0] != T(0)) { rot.col[0] /= scale[0]; }
+  if (scale[1] != T(0)) { rot.col[1] /= scale[1]; }
+  if (scale[2] != T(0)) { rot.col[2] /= scale[2]; }
+
+  trans = col[3].xyz;
+}
+
+template<typename T>
 Matrix44<T>::Matrix44()
   : m{} // Zero
 {

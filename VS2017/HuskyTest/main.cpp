@@ -9,6 +9,7 @@
 #include <husky/image/Image.hpp>
 #include <husky/math/Intersect.hpp>
 #include <husky/mesh/Model.hpp>
+#include <husky/math/EulerAngles.hpp>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -155,7 +156,7 @@ static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
 static std::vector<std::unique_ptr<Entity>> entities;
-static const Entity *selectedEntity = nullptr;
+static Entity *selectedEntity = nullptr;
 static GLuint fbo = 0;
 static husky::Viewport fboViewport;
 static bool guiHasFocus = false;
@@ -217,7 +218,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-      std::multimap<double, const Entity*> clickedEntities; // Sorted by key (tMean)
+      std::multimap<double, Entity*> clickedEntities; // Sorted by key (tMean)
 
       for (const auto &entity : entities) {
         husky::Vector2i windowSize;
@@ -469,7 +470,7 @@ int main()
     husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 0 }));
 
     auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ -4, 0, 0 });
+    entity->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
     entities.emplace_back(std::move(entity));
   }
 
@@ -574,6 +575,26 @@ int main()
 
       ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
       ImGui::Text(entitiesDebugText.c_str());
+
+      if (selectedEntity != nullptr) {
+        husky::Vector3d scale, trans;
+        husky::Matrix33d rot;
+        selectedEntity->transform.decompose(scale, rot, trans);
+
+        husky::EulerAnglesd eulerAngles(husky::RotationOrder::ZXY, rot);
+        float yaw   = (float)eulerAngles.yaw;
+        float pitch = (float)eulerAngles.pitch;
+        float roll  = (float)eulerAngles.roll;
+
+        ImGui::SliderAngle("Yaw",   &yaw,   -180.f, 180.f);
+        ImGui::SliderAngle("Pitch", &pitch, -180.f, 180.f);
+        ImGui::SliderAngle("Roll",  &roll,  -180.f, 180.f);
+
+        eulerAngles.angles.set(yaw, pitch, roll);
+
+        // TODO
+        //selectedEntity->transform = husky::Matrix44d::compose(scale, eulerAngles.toMatrix(), trans);
+      }
 
       ImGui::End();
 
