@@ -15,6 +15,9 @@ public:
     NORMAL,
     TEXCOORD,
     COLOR,
+    //BONE_INDICES, // TODO
+    //BONE_WEIGHTS, // TODO
+    //TANGENTS, // TODO: Pack vertex attributes according to http://www.humus.name/Articles/Persson_CreatingVastGameWorlds.pdf#page=22
   };
 
   enum class Mode

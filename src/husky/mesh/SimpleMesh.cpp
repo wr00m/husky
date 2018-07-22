@@ -48,44 +48,98 @@ SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
   return m;
 }
 
-SimpleMesh SimpleMesh::cylinder(double radius, double height, bool cap, int segmentCount)
+SimpleMesh SimpleMesh::cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount)
 {
   SimpleMesh m;
 
-  const double h0 = -height * 0.5;
-  const double h1 = height * 0.5;
+  double coneAngle = std::atan2(radiusBottom - radiusTop, height); // Slope
+  Vector2d nCone(std::cos(coneAngle), std::sin(coneAngle));
 
-  int v0Prev, v1Prev;
-  Vector3d nPrev;
-  Vector2d pPrev;
-  for (int i = 0; i <= segmentCount; i++) {
-    double u = i / double(segmentCount); // [0.0,1.0]
-    Vector3d n(std::cos(u * Math::twoPi), std::sin(u * Math::twoPi), 0.0);
-    Vector2d p = n.xy * radius;
+  for (int iu = 0; iu <= uSegmentCount; iu++) {
+    double u = iu / double(uSegmentCount); // [0:1]
+    double circleAngle = (u * Math::twoPi); // [0:2*pi]
+    Vector2d dir(std::cos(circleAngle), std::sin(circleAngle));
+    Vector3d n(dir * nCone.x, nCone.y); // Normal
 
-    int v0 = m.addVertex({ p, h0 }, n, { u, 0.0 });
-    int v1 = m.addVertex({ p, h1 }, n, { u, 1.0 });
+    for (int iv = 0; iv <= vSegmentCount; iv++) {
+      double v = iv / double(vSegmentCount); // [0:1]
+      double radius = Math::lerp(radiusBottom, radiusTop, v); // [radiusBottom:radiusTop]
 
-    if (i > 0) {
-      m.addQuad(v0, v1, v1Prev, v0Prev); // Wall
+      int iVert = m.addVertex({ dir * radius, v * height }, n, { u, v });
 
-      if (cap) {
-        m.addTriangle( // Floor
-          m.addVertex(m.getVertex(v0Prev).pos, { 0,  0, -1 }, nPrev.xy * 0.5 + 0.5),
-          m.addVertex({ 0, 0, h0 }, { 0,  0, -1 }, { 0.5, 0.5 }),
-          m.addVertex(m.getVertex(v0).pos, { 0,  0, -1 }, n.xy * 0.5 + 0.5));
-
-        m.addTriangle( // Roof
-          m.addVertex(m.getVertex(v1).pos, { 0,  0,  1 }, n.xy * 0.5 + 0.5),
-          m.addVertex({ 0, 0, h1 }, { 0,  0,  1 }, { 0.5, 0.5 }),
-          m.addVertex(m.getVertex(v1Prev).pos, { 0,  0,  1 }, nPrev.xy * 0.5 + 0.5));
+      if (iu > 0 && iv > 0) {
+        m.addQuad(iVert - 1, iVert, iVert - vSegmentCount - 1, iVert - vSegmentCount - 2);
       }
     }
+  }
 
-    nPrev = n;
-    pPrev = p;
-    v0Prev = v0;
-    v1Prev = v1;
+  if (capBottom) {
+    SimpleMesh mDisk = disk(radiusBottom, uSegmentCount);
+    mDisk.transform(Matrix44d::rotate(Math::pi, { 1, 0, 0 }));
+    m.addMesh(mDisk);
+  }
+
+  if (capTop) {
+    SimpleMesh mDisk = disk(radiusTop, uSegmentCount);
+    mDisk.transform(Matrix44d::translate({ 0, 0, height }));
+    m.addMesh(mDisk);
+  }
+
+  return m;
+}
+
+SimpleMesh SimpleMesh::cylinder(double radius, double height, bool capBottom, bool capTop, int uSegmentCount)
+{
+  return cylinder(radius, radius, height, capBottom, capTop, uSegmentCount, 1);
+}
+
+SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, int uSegmentCount)
+{
+  SimpleMesh m;
+
+  int iVertCenter = m.addVertex({ 0, 0, height }, { 0, 0, 1 }, { 0.5, 1 });
+
+  double coneAngle = std::atan2(radiusBottom, height); // Slope
+  Vector2d nCone(std::cos(coneAngle), std::sin(coneAngle));
+
+  for (int iu = 0; iu <= uSegmentCount; iu++) {
+    double u = iu / double(uSegmentCount); // [0:1]
+    double circleAngle = (u * Math::twoPi); // [0:2*pi]
+    Vector2d dir(std::cos(circleAngle), std::sin(circleAngle));
+    Vector3d n(dir * nCone.x, nCone.y);
+
+    int iVert = m.addVertex({ dir * radiusBottom, 0 }, n, { u, 0 });
+
+    if (iu > 0) {
+      m.addTriangle(iVert, iVertCenter, iVert - 1);
+    }
+  }
+
+  if (capBottom) {
+    SimpleMesh mDisk = disk(radiusBottom, uSegmentCount);
+    mDisk.transform(Matrix44d::rotate(Math::pi, { 1, 0, 0 }));
+    m.addMesh(mDisk);
+  }
+
+  return m;
+}
+
+SimpleMesh SimpleMesh::disk(double radius, int uSegmentCount)
+{
+  SimpleMesh m;
+
+  int iVertCenter = m.addVertex({ 0, 0, 0 }, { 0, 0, 1 }, { 0.5, 0.5 });
+
+  for (int iu = 0; iu <= uSegmentCount; iu++) {
+    double u = iu / double(uSegmentCount); // [0:1]
+    double circleAngle = (u * Math::twoPi); // [0:2*pi]
+    Vector2d dir(std::cos(circleAngle), std::sin(circleAngle));
+
+    int iVert = m.addVertex({ dir * radius, 0 }, { 0, 0, 1 }, dir * 0.5 + 0.5);
+
+    if (iu > 0) {
+      m.addTriangle(iVert, iVertCenter, iVert - 1);
+    }
   }
 
   return m;

@@ -77,26 +77,29 @@ void main()
 
 static const char *defaultVertSrc =
 R"(#version 400 core
+#ifndef MAX_BONES
+#define MAX_BONES 256 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
+#endif
 uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
 uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
-uniform mat4 mtxBones[100];
+uniform mat4 mtxBones[MAX_BONES];
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTexCoord;
-in ivec4 boneInds;
-in vec4 boneWeights;
 in vec4 vColor;
+in ivec4 vBoneIndices;
+in vec4 vBoneWeights;
 out vec4 varPos;
 out vec3 varNormal;
 out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
-  mat4 mtxBone = mtxBones[boneInds[0]] * boneWeights[0]
-               + mtxBones[boneInds[1]] * boneWeights[1]
-               + mtxBones[boneInds[2]] * boneWeights[2]
-               + mtxBones[boneInds[3]] * boneWeights[3]; // TODO
+  mat4 mtxBone = mtxBones[vBoneIndices[0]] * vBoneWeights[0]
+               + mtxBones[vBoneIndices[1]] * vBoneWeights[1]
+               + mtxBones[vBoneIndices[2]] * vBoneWeights[2]
+               + mtxBones[vBoneIndices[3]] * vBoneWeights[3]; // TODO
   varPos = mtxModelView * vec4(vPosition, 1.0);
   varNormal = mtxNormal * vNormal;
   varTexCoord = vTexCoord * texCoordScale;
@@ -469,11 +472,20 @@ int main()
   }
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::cylinder(0.5, 2.0, true);
+    husky::SimpleMesh mesh = husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1);
     husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
 
     auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 4, 0, 0 });
+    entity->transform = husky::Matrix44d::translate({ 4, -2, 0 });
+    entities.emplace_back(std::move(entity));
+  }
+
+  {
+    husky::SimpleMesh mesh = husky::SimpleMesh::cone(0.5, 1.0, true, 8);
+    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
+
+    auto entity = std::make_unique<Entity>("Cone", defaultShader, lineShader, std::move(mdl));
+    entity->transform = husky::Matrix44d::translate({ 4, -2, 2 });
     entities.emplace_back(std::move(entity));
   }
 

@@ -10,7 +10,10 @@ class HUSKY_DLL SimpleMesh
 {
 public:
   static SimpleMesh box(double sizeX, double sizeY, double sizeZ);
-  static SimpleMesh cylinder(double radius, double height, bool cap = false, int segmentCount = 16);
+  static SimpleMesh cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount);
+  static SimpleMesh cylinder(double radius, double height, bool capBottom = true, bool capTop = true, int uSegmentCount = 16);
+  static SimpleMesh cone(double radiusBottom, double height, bool capBottom = true, int uSegmentCount = 16);
+  static SimpleMesh disk(double radius, int uSegmentCount = 16);
   static SimpleMesh sphere(double radius, int uSegmentCount = 32, int vSegmentCount = 16);
   static SimpleMesh torus(double circleRadius, double tubeRadius, int uSegmentCount = 32, int vSegmentCount = 16);
   //static SimpleMesh capsule();
@@ -27,6 +30,8 @@ public:
       , normal(0.0, 0.0, 0.0)
       , texCoord(0.0, 0.0)
       , color(255, 255, 255, 255)
+      //, boneIndices(0, 0, 0, 0)
+      //, boneWeights(0.f, 0.f, 0.f, 0.f)
     {
     }
 
@@ -34,6 +39,8 @@ public:
     Normal normal;
     TexCoord texCoord;
     Color color;
+    //Vector4b boneIndices;
+    //Vector4f boneWeights;
   };
 
   typedef Vector3i Triangle;
