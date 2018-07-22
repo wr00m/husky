@@ -59,61 +59,63 @@ private:
 
     glUseProgram(shader.shaderProgram);
 
-    if (shader.mtxModelViewLocation != -1) {
-      glUniformMatrix4fv(shader.mtxModelViewLocation, 1, GL_FALSE, modelView.m);
+    int varLocation;
+
+    if (shader.getUniformLocation("mtxModelView", varLocation)) {
+      glUniformMatrix4fv(varLocation, 1, GL_FALSE, modelView.m);
     }
 
     const husky::Matrix33f normalMatrix = modelView.get3x3();
     //const husky::Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
     //const husky::Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
-    if (shader.mtxNormalLocation != -1) {
-      glUniformMatrix3fv(shader.mtxNormalLocation, 1, GL_FALSE, normalMatrix.m);
+    if (shader.getUniformLocation("mtxNormal", varLocation)) {
+      glUniformMatrix3fv(varLocation, 1, GL_FALSE, normalMatrix.m);
     }
 
-    if (shader.mtxProjectionLocation != -1) {
-      glUniformMatrix4fv(shader.mtxProjectionLocation, 1, GL_FALSE, projection.m);
+    if (shader.getUniformLocation("mtxProjection", varLocation)) {
+      glUniformMatrix4fv(varLocation, 1, GL_FALSE, projection.m);
     }
 
-    if (shader.texLocation != -1) {
-      glUniform1i(shader.texLocation, 0);
+    if (shader.getUniformLocation("tex", varLocation)) {
+      glUniform1i(varLocation, 0);
     }
 
-    if (shader.lightDirLocation != -1) {
+    if (shader.getUniformLocation("lightDir", varLocation)) {
       husky::Vector3f lightDir(20, -40, 100); // TODO
       lightDir = (view * husky::Vector4f(lightDir, 0.0)).xyz.normalized();
-      glUniform3fv(shader.lightDirLocation, 1, lightDir.val);
+      glUniform3fv(varLocation, 1, lightDir.val);
     }
 
-    if (shader.mtlAmbientLocation != -1) {
-      glUniform3fv(shader.mtlAmbientLocation, 1, mtl.ambient.val);
+    if (shader.getUniformLocation("mtlAmbient", varLocation)) {
+      glUniform3fv(varLocation, 1, mtl.ambient.val);
     }
 
-    if (shader.mtlDiffuseLocation != -1) {
-      glUniform3fv(shader.mtlDiffuseLocation, 1, mtl.diffuse.val);
+    if (shader.getUniformLocation("mtlDiffuse", varLocation)) {
+      glUniform3fv(varLocation, 1, mtl.diffuse.val);
     }
 
-    if (shader.mtlSpecularLocation != -1) {
-      glUniform3fv(shader.mtlSpecularLocation, 1, mtl.specular.val);
+    if (shader.getUniformLocation("mtlSpecular", varLocation)) {
+      glUniform3fv(varLocation, 1, mtl.specular.val);
     }
 
-    if (shader.mtlEmissiveLocation != -1) {
-      glUniform3fv(shader.mtlEmissiveLocation, 1, mtl.emissive.val);
+    if (shader.getUniformLocation("mtlEmissive", varLocation)) {
+      glUniform3fv(varLocation, 1, mtl.emissive.val);
     }
 
-    if (shader.mtlShininessLocation != -1) {
-      glUniform1f(shader.mtlShininessLocation, mtl.shininess);
+    if (shader.getUniformLocation("mtlShininess", varLocation)) {
+      glUniform1f(varLocation, mtl.shininess);
     }
 
-    if (shader.mtlShininessStrengthLocation != -1) {
-      glUniform1f(shader.mtlShininessStrengthLocation, mtl.shininessStrength);
+    if (shader.getUniformLocation("mtlShininessStrength", varLocation)) {
+      glUniform1f(varLocation, mtl.shininessStrength);
     }
 
-    if (shader.viewportSizeLocation != -1) {
-      glUniform2f(shader.viewportSizeLocation, (float)viewport.width, (float)viewport.height);
+    if (shader.getUniformLocation("viewportSize", varLocation)) {
+      glUniform2f(varLocation, (float)viewport.width, (float)viewport.height);
     }
 
-    if (shader.lineWidthLocation != -1) {
-      glUniform1f(shader.lineWidthLocation, mtl.lineWidth);
+    if (shader.getUniformLocation("lineWidth", varLocation)) {
+      glUniform1f(varLocation, mtl.lineWidth);
     }
 
     if (shader.textureHandle != 0) {
@@ -134,24 +136,26 @@ private:
     glBindBuffer(GL_ARRAY_BUFFER, renderData.vbo);
     glBindVertexArray(renderData.vao);
 
-    if (shader.vertPositionLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::POSITION)) {
-      glEnableVertexAttribArray(shader.vertPositionLocation);
-      glVertexAttribPointer(shader.vertPositionLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::POSITION));
+    const void *attrPtr = nullptr;
+
+    if (shader.getAttributeLocation("vertPosition", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::POSITION, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
     }
 
-    if (shader.vertNormalLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::NORMAL)) {
-      glEnableVertexAttribArray(shader.vertNormalLocation);
-      glVertexAttribPointer(shader.vertNormalLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::NORMAL));
+    if (shader.getAttributeLocation("vertNormal", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::NORMAL, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
     }
 
-    if (shader.vertTexCoordLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::TEXCOORD)) {
-      glEnableVertexAttribArray(shader.vertTexCoordLocation);
-      glVertexAttribPointer(shader.vertTexCoordLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::TEXCOORD));
+    if (shader.getAttributeLocation("vertTexCoord", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::TEXCOORD, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
     }
 
-    if (shader.vertColorLocation != -1 && renderData.hasAttrib(husky::RenderData::Attribute::COLOR)) {
-      glEnableVertexAttribArray(shader.vertColorLocation);
-      glVertexAttribPointer(shader.vertColorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, renderData.attribPointer(husky::RenderData::Attribute::COLOR));
+    if (shader.getAttributeLocation("vertColor", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::COLOR, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, attrPtr);
     }
 
     GLenum mode = GL_POINTS; // Default fallback

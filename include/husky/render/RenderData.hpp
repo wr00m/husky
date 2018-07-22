@@ -83,14 +83,17 @@ public:
     //return attrByteOffsets[(int)attr];
   }
 
-  bool hasAttrib(Attribute attr) const
+  bool getAttribPointer(Attribute attr, const void *&ptr) const
   {
-    return (attrByteOffsets[(int)attr] != -1);
-  }
-
-  const void* attribPointer(Attribute attr) const
-  {
-    return ((const std::uint8_t*)NULL) + attrByteOffsets[(int)attr];
+    int offset = attrByteOffsets[(int)attr];
+    if (offset >= 0) {
+      ptr = ((const std::uint8_t*)nullptr) + offset;
+      return true;
+    }
+    else {
+      ptr = nullptr;
+      return false;
+    }
   }
 
   template<typename T>

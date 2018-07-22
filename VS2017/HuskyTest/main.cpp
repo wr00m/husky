@@ -18,13 +18,13 @@ static const char *lineVertSrc =
 R"(#version 400 core
 uniform mat4 mtxModelView;
 uniform mat4 mtxProjection;
-in vec3 vPosition;
-in vec4 vColor;
+in vec3 vertPosition;
+in vec4 vertColor;
 out vec4 vsColor;
 void main()
 {
-  vsColor = vColor;
-  gl_Position = mtxProjection * (mtxModelView * vec4(vPosition, 1.0));
+  vsColor = vertColor;
+  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
 })";
 
 static const char *lineGeomSrc =
@@ -77,33 +77,38 @@ void main()
 
 static const char *defaultVertSrc =
 R"(#version 400 core
+#define USE_BONES // TODO: Remove
+#ifdef USE_BONES
 #ifndef MAX_BONES
 #define MAX_BONES 256 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
+#endif
+uniform mat4 mtxBones[MAX_BONES];
+in ivec4 vertBoneIndices;
+in vec4 vertBoneWeights;
 #endif
 uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
 uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
-uniform mat4 mtxBones[MAX_BONES];
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vTexCoord;
-in vec4 vColor;
-in ivec4 vBoneIndices;
-in vec4 vBoneWeights;
+in vec3 vertPosition;
+in vec3 vertNormal;
+in vec2 vertTexCoord;
+in vec4 vertColor;
 out vec4 varPos;
 out vec3 varNormal;
 out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
-  mat4 mtxBone = mtxBones[vBoneIndices[0]] * vBoneWeights[0]
-               + mtxBones[vBoneIndices[1]] * vBoneWeights[1]
-               + mtxBones[vBoneIndices[2]] * vBoneWeights[2]
-               + mtxBones[vBoneIndices[3]] * vBoneWeights[3]; // TODO
-  varPos = mtxModelView * vec4(vPosition, 1.0);
-  varNormal = mtxNormal * vNormal;
-  varTexCoord = vTexCoord * texCoordScale;
-  varColor = vColor;
+#ifdef USE_BONES
+  mat4 mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
+               + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
+               + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
+               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3]; // TODO
+#endif
+  varPos = mtxModelView * vec4(vertPosition, 1.0);
+  varNormal = mtxNormal * vertNormal;
+  varTexCoord = vertTexCoord * texCoordScale;
+  varColor = vertColor;
   gl_Position = mtxProjection * varPos;
 })";
 

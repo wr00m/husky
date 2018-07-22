@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <map>
 
 class Shader
 {
@@ -14,43 +15,57 @@ public:
     : shaderProgram(shaderProgram)
     , textureHandle(0)
   {
-    mtxModelViewLocation          = glGetUniformLocation(shaderProgram, "mtxModelView");
-    mtxNormalLocation             = glGetUniformLocation(shaderProgram, "mtxNormal");
-    mtxProjectionLocation         = glGetUniformLocation(shaderProgram, "mtxProjection");
-    texLocation                   = glGetUniformLocation(shaderProgram, "tex");
-    lightDirLocation              = glGetUniformLocation(shaderProgram, "lightDir");
-    mtlAmbientLocation            = glGetUniformLocation(shaderProgram, "mtlAmbient");
-    mtlDiffuseLocation            = glGetUniformLocation(shaderProgram, "mtlDiffuse");
-    mtlSpecularLocation           = glGetUniformLocation(shaderProgram, "mtlSpecular");
-    mtlEmissiveLocation           = glGetUniformLocation(shaderProgram, "mtlEmissive");
-    mtlShininessLocation          = glGetUniformLocation(shaderProgram, "mtlShininess");
-    mtlShininessStrengthLocation  = glGetUniformLocation(shaderProgram, "mtlShininessStrength");
-    viewportSizeLocation          = glGetUniformLocation(shaderProgram, "viewportSize");
-    lineWidthLocation             = glGetUniformLocation(shaderProgram, "lineWidth");
+    GLint varSize;
+    GLenum varType;
+    static constexpr GLsizei varNameLengthMax = 128;
+    GLchar varName[varNameLengthMax];
+    GLsizei varNameLength;
 
-    vertPositionLocation          = glGetAttribLocation(shaderProgram, "vPosition");
-    vertNormalLocation            = glGetAttribLocation(shaderProgram, "vNormal");
-    vertTexCoordLocation          = glGetAttribLocation(shaderProgram, "vTexCoord");
-    vertColorLocation             = glGetAttribLocation(shaderProgram, "vColor");
+    // Get active uniforms
+    int uniformCount;
+    glGetProgramiv(shaderProgram, GL_ACTIVE_UNIFORMS, &uniformCount);
+    for (int iUniform = 0; iUniform < uniformCount; iUniform++) {
+      glGetActiveUniform(shaderProgram, (GLuint)iUniform, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
+      uniformLocations[varName] = glGetUniformLocation(shaderProgram, varName);
+    }
+
+    // Get active (vertex) attributes
+    int attrCount;
+    glGetProgramiv(shaderProgram, GL_ACTIVE_ATTRIBUTES, &attrCount);
+    for (int iAttr = 0; iAttr < attrCount; iAttr++) {
+      glGetActiveAttrib(shaderProgram, (GLuint)iAttr, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
+      attrLocations[varName] = glGetAttribLocation(shaderProgram, varName);
+    }
+  }
+
+  bool getUniformLocation(const std::string &uniformName, int &location) const
+  {
+    auto it = uniformLocations.find(uniformName);
+    if (it != uniformLocations.end()) {
+      location = it->second;
+      return true;
+    }
+    else {
+      location = -1;
+      return false;
+    }
+  }
+
+  bool getAttributeLocation(const std::string &attrName, int &location) const
+  {
+    auto it = attrLocations.find(attrName);
+    if (it != attrLocations.end()) {
+      location = it->second;
+      return true;
+    }
+    else {
+      location = -1;
+      return false;
+    }
   }
 
   GLuint shaderProgram;
-  GLint mtxModelViewLocation;
-  GLint mtxNormalLocation;
-  GLint mtxProjectionLocation;
-  GLint texLocation;
-  GLint lightDirLocation;
-  GLint mtlAmbientLocation;
-  GLint mtlDiffuseLocation;
-  GLint mtlSpecularLocation;
-  GLint mtlEmissiveLocation;
-  GLint mtlShininessLocation;
-  GLint mtlShininessStrengthLocation;
-  GLint viewportSizeLocation;
-  GLint lineWidthLocation;
-  GLint vertPositionLocation;
-  GLint vertNormalLocation;
-  GLint vertTexCoordLocation;
-  GLint vertColorLocation;
+  std::map<const std::string, GLint> uniformLocations;
+  std::map<const std::string, GLint> attrLocations;
   GLuint textureHandle; // TODO: Move to Material
 };
