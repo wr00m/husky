@@ -12,7 +12,6 @@ public:
   Bone(const std::string &name, int parent);
   Bone(const std::string &name, int parent, const husky::Matrix44f &mtx);
 
-#pragma warning(suppress: 4251)
   std::string name;
   //int index;
   int parent;

@@ -3,6 +3,8 @@
 #include <cstdint>
 //#include <memory>
 
+#pragma warning( disable : 4251 )
+
 namespace husky {
 
 #if defined(__linux__)

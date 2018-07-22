@@ -18,11 +18,8 @@ public:
   void addRenderData(const RenderData &&renderData, int mtlIndex);
   void addRenderData(const RenderData &&renderData, const Material &mtl);
 
-#pragma warning(suppress: 4251)
   std::vector<Material> materials;
-#pragma warning(suppress: 4251)
   std::vector<RenderData> meshRenderDatas;
-#pragma warning(suppress: 4251)
   std::vector<int> meshMaterialIndices;
 };
 

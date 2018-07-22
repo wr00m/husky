@@ -30,7 +30,6 @@ public:
   {
   }
 
-#pragma warning(suppress: 4251)
   std::string name;
   Vector3f diffuse;
   Vector3f specular;

@@ -78,11 +78,8 @@ public:
   RenderData getRenderDataWireframe() const;
 
 private:
-#pragma warning(suppress: 4251)
   std::vector<Vertex> verts;
-#pragma warning(suppress: 4251)
   std::vector<Triangle> tris;
-#pragma warning(suppress: 4251)
   std::vector<Quad> quads;
 };
 
