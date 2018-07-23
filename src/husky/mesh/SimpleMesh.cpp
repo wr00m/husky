@@ -1,5 +1,6 @@
 #include <husky/mesh/SimpleMesh.hpp>
 #include <husky/math/Math.hpp>
+#include <husky/Log.hpp>
 
 namespace husky {
 
@@ -220,41 +221,28 @@ SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmen
 int SimpleMesh::numVerts() const { return int(vertPosition.size()); }
 int SimpleMesh::numTriangles() const { return int(tris.size()); }
 int SimpleMesh::numQuads() const { return int(quads.size()); }
-
-int SimpleMesh::addVert(const Vector3d &pos)
-{
-  int iVert = (int)vertPosition.size();
-  vertPosition.emplace_back(pos);
-  return iVert;
-}
-
-int SimpleMesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord)
-{
-  int iVert = addVert(pos);
-  setNormal(iVert, nor);
-  setTexCoord(iVert, texCoord);
-  return iVert;
-}
-
+int SimpleMesh::numBones() const { return int(bones.size()); }
+int SimpleMesh::addVert(const Vector3d &pos) { vertPosition.emplace_back(pos); return int(vertPosition.size() - 1); }
+int SimpleMesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord) { int iVert = addVert(pos); setNormal(iVert, nor); setTexCoord(iVert, texCoord); return iVert; }
 void SimpleMesh::addTriangle(const Triangle &t) { tris.emplace_back(t); }
 void SimpleMesh::addTriangle(int v0, int v1, int v2) { addTriangle({ v0, v1, v2 }); }
 const SimpleMesh::Triangle& SimpleMesh::addTriangle(const Position &p0, const Position &p1, const Position &p2) { addTriangle({ addVert(p0), addVert(p1), addVert(p2) }); return tris.back(); }
 void SimpleMesh::addQuad(const Quad &q) { quads.emplace_back(q); }
 void SimpleMesh::addQuad(int v0, int v1, int v2, int v3) { addQuad({ v0, v1, v2, v3 }); }
 const SimpleMesh::Quad& SimpleMesh::addQuad(const Position &p0, const Position &p1, const Position &p2, const Position &p3) { addQuad({ addVert(p0), addVert(p1), addVert(p2), addVert(p3) }); return quads.back(); }
+int SimpleMesh::addBone(const Bone &bone) { bones.emplace_back(bone); return int(bones.size() - 1); }
 bool SimpleMesh::hasNormals() const { return !vertNormal.empty(); }
 bool SimpleMesh::hasTangents() const { return !vertTangent.empty(); }
 bool SimpleMesh::hasTexCoord() const { return !vertTexCoord.empty(); }
 bool SimpleMesh::hasColors() const { return !vertColor.empty(); }
-bool SimpleMesh::hasBoneIndices() const { return !vertBoneIndices.empty(); }
 bool SimpleMesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
 void SimpleMesh::setPosition(int iVert, const Position &pos) { vertPosition[iVert] = pos; }
 void SimpleMesh::setNormal(int iVert, const Normal &nor) { vertNormal.resize(vertPosition.size()); vertNormal[iVert] = nor; }
 void SimpleMesh::setTangent(int iVert, const Tangent &tangent) { vertTangent.resize(vertPosition.size()); vertTangent[iVert] = tangent; }
 void SimpleMesh::setTexCoord(int iVert, const TexCoord &texCoord) { vertTexCoord.resize(vertPosition.size()); vertTexCoord[iVert] = texCoord; }
 void SimpleMesh::setColor(int iVert, const Color &color) { vertColor.resize(vertPosition.size(), Color(255)); vertColor[iVert] = color; }
-void SimpleMesh::setBoneIndices(int iVert, const BoneIndices &inds) { vertBoneIndices.resize(vertPosition.size()); vertBoneIndices[iVert] = inds; }
-void SimpleMesh::setBoneWeights(int iVert, const BoneWeights &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
+void SimpleMesh::setBoneWeights(int iVert, const std::vector<BoneWeight> &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
+void SimpleMesh::addBoneWeight(int iVert, const BoneWeight &weight) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert].emplace_back(weight); }
 const SimpleMesh::Triangle& SimpleMesh::getTriangle(int iTri) const { return tris[iTri]; }
 const SimpleMesh::Quad& SimpleMesh::getQuad(int iQuad) const { return quads[iQuad]; }
 void SimpleMesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
@@ -266,30 +254,47 @@ void SimpleMesh::addMesh(const SimpleMesh &m)
   if (hasTangents() || m.hasTangents()) { vertTangent.reserve(vertPosition.capacity()); }
   if (hasTexCoord() || m.hasTexCoord()) { vertTexCoord.reserve(vertPosition.capacity()); }
   if (hasColors() || m.hasColors()) { vertColor.reserve(vertPosition.capacity()); }
-  if (hasBoneIndices() || m.hasBoneIndices()) { vertBoneIndices.reserve(vertPosition.capacity()); }
   if (hasBoneWeights() || m.hasBoneWeights()) { vertBoneWeights.reserve(vertPosition.capacity()); }
   //lineStrips.reserve(numLineStrips() + m.numLineStrips());
   tris.reserve(numTriangles() + m.numTriangles());
   quads.reserve(numQuads() + m.numQuads());
+  bones.reserve(numBones() + m.numBones());
 
-  const int indexOffset = numVerts();
+  const int vertOffset = numVerts();
+  const int boneOffset = numBones();
 
   for (int i = 0; i < m.numVerts(); i++) {
     int iVert = addVert(m.vertPosition[i]);
+    assert(iVert == i + vertOffset);
+
     if (m.hasNormals()) { setNormal(iVert, m.vertNormal[i]); }
     if (m.hasTangents()) { setTangent(iVert, m.vertTangent[i]); }
     if (m.hasTexCoord()) { setTexCoord(iVert, m.vertTexCoord[i]); }
     if (m.hasColors()) { setColor(iVert, m.vertColor[i]); }
-    if (m.hasBoneIndices()) { setBoneIndices(iVert, m.vertBoneIndices[i]); }
-    if (m.hasBoneWeights()) { setBoneWeights(iVert, m.vertBoneWeights[i]); }
+
+    if (m.hasBoneWeights()) {
+      for (const auto &boneWeights : m.vertBoneWeights) {
+        for (const BoneWeight &boneWeight : boneWeights) {
+          addBoneWeight(iVert, { boneWeight.boneIndex + boneOffset, boneWeight.weight });
+        }
+      }
+    }
   }
 
   for (const Triangle &tri : m.tris) {
-    tris.emplace_back(tri + indexOffset);
+    addTriangle(tri + vertOffset);
   }
 
   for (const Quad &quad : m.quads) {
-    quads.emplace_back(quad + indexOffset);
+    addQuad(quad + vertOffset);
+  }
+
+  for (const Bone &bone : m.bones) {
+    addBone(bone);
+
+    if (bones.back().parent != -1) {
+      bones.back().parent += boneOffset;
+    }
   }
 }
 
@@ -345,13 +350,20 @@ void SimpleMesh::recalculateVertexNormals()
   }
 }
 
+void SimpleMesh::normalizeBoneWeights()
+{
+  // TODO
+}
+
 void SimpleMesh::transform(const Matrix44d &m)
 {
-  const Matrix33d nm = m.get3x3(); // Normal matrix
+  if (numVerts() > 0) {
+    const Matrix33d nm = m.get3x3(); // Normal matrix
 
-  for (int i = 0; i < numVerts(); i++) {
-    vertPosition[i] = (m * Vector4d(vertPosition[i], 1.0)).xyz;
-    if (hasNormals()) { vertNormal[i] = nm * vertNormal[i]; }
+    for (int i = 0; i < numVerts(); i++) {
+      vertPosition[i] = (m * Vector4d(vertPosition[i], 1.0)).xyz;
+      if (hasNormals()) { vertNormal[i] = nm * vertNormal[i]; }
+    }
   }
 }
 
@@ -362,6 +374,10 @@ RenderData SimpleMesh::getRenderData() const
   r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
   r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
   r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+  if (hasBoneWeights()) {
+    r.addAttr(RenderData::Attribute::BONE_INDICES, sizeof(Vector4b));
+    r.addAttr(RenderData::Attribute::BONE_WEIGHTS, sizeof(Vector4b));
+  }
   r.init(numVerts());
 
   if (numVerts() > 0) {
@@ -372,6 +388,23 @@ RenderData SimpleMesh::getRenderData() const
       if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
       if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
       r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+      if (hasBoneWeights()) {
+        const auto &boneWeights = vertBoneWeights[i];
+        Vector4b inds, weights;
+
+        for (int j = 0; j < vertBoneWeights[i].size(); j++) {
+          if (j > 3) {
+            Log::warning("Too many bone weights, should be normalized");
+            break;
+          }
+
+          inds[j] = (std::uint8_t)vertBoneWeights[i][j].boneIndex;
+          weights[j] = (std::uint8_t)(vertBoneWeights[i][j].weight * 255); // Check/clamp value?
+        }
+
+        r.setValue(i, RenderData::Attribute::BONE_INDICES, inds);
+        r.setValue(i, RenderData::Attribute::BONE_WEIGHTS, weights);
+      }
     }
 
     for (const Triangle &t : tris) {

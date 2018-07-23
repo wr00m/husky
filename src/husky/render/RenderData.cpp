@@ -13,7 +13,7 @@ RenderData::RenderData(Mode mode)
   , vertCount(0)
   , vertByteCount(0)
   , bytes{}
-  , attrByteOffsets((int)Attribute::COLOR + 1, -1)
+  , attrByteOffsets((int)Attribute::BONE_WEIGHTS + 1, -1)
 {
 }
 

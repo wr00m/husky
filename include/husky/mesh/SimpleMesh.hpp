@@ -1,6 +1,7 @@
 #pragma once
 
 #include <husky/math/Matrix44.hpp>
+#include <husky/mesh/Bone.hpp>
 #include <husky/render/RenderData.hpp>
 #include <vector>
 
@@ -23,15 +24,20 @@ public:
   typedef Vector3d Tangent;
   typedef Vector2d TexCoord;
   typedef Vector4b Color;
-  typedef Vector4b BoneIndices;
-  typedef Vector4f BoneWeights;
   //typedef std::vector<int> LineStrip;
   typedef Vector3i Triangle;
   typedef Vector4i Quad;
 
+  struct BoneWeight
+  {
+    int boneIndex;
+    double weight;
+  };
+
   int numVerts() const;
   int numTriangles() const;
   int numQuads() const;
+  int numBones() const;
   int addVert(const Vector3d &pos);
   int addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord);
   void addTriangle(const Triangle &t);
@@ -40,25 +46,26 @@ public:
   void addQuad(const Quad &q);
   void addQuad(int v0, int v1, int v2, int v3);
   const Quad& addQuad(const Position &p0, const Position &p1, const Position &p2, const Position &p3);
+  int addBone(const Bone &bone);
   bool hasNormals() const;
   bool hasTangents() const;
   bool hasTexCoord() const;
   bool hasColors() const;
-  bool hasBoneIndices() const;
   bool hasBoneWeights() const;
   void setPosition(int iVert, const Position &pos);
   void setNormal(int iVert, const Normal &nor);
   void setTangent(int iVert, const Tangent &tangent);
   void setTexCoord(int iVert, const TexCoord &texCoord);
   void setColor(int iVert, const Color &color);
-  void setBoneIndices(int iVert, const BoneIndices &inds);
-  void setBoneWeights(int iVert, const BoneWeights &weights);
+  void setBoneWeights(int iVert, const std::vector<BoneWeight> &weights);
+  void addBoneWeight(int iVert, const BoneWeight &weight);
   const Triangle& getTriangle(int iTri) const;
   const Quad& getQuad(int iQuad) const;
   void setAllColors(const Color &color);
   void addMesh(const SimpleMesh &otherMesh);
   void triangulateQuads();
   void recalculateVertexNormals();
+  void normalizeBoneWeights();
   void transform(const Matrix44d &m);
   RenderData getRenderData() const;
   RenderData getRenderDataWireframe() const;
@@ -69,11 +76,11 @@ private:
   std::vector<Vector3d> vertTangent;
   std::vector<Vector2d> vertTexCoord;
   std::vector<Vector4b> vertColor;
-  std::vector<Vector4b> vertBoneIndices;
-  std::vector<Vector4f> vertBoneWeights;
+  std::vector<std::vector<BoneWeight>> vertBoneWeights;
   //std::vector<LineStrip> lineStrips;
   std::vector<Vector3i> tris;
   std::vector<Vector4i> quads;
+  std::vector<Bone> bones;
 };
 
 }

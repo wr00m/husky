@@ -2,6 +2,7 @@
 
 #include <husky/mesh/SimpleMesh.hpp>
 #include <husky/mesh/Material.hpp>
+#include <husky/mesh/Animation.hpp>
 #include <string>
 
 namespace husky {

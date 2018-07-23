@@ -153,7 +153,12 @@ static SimpleMesh getMesh(const aiMesh *mesh)
 
   for (unsigned int iBone = 0; iBone < mesh->mNumBones; iBone++) {
     const aiBone *bone = mesh->mBones[iBone];
-    Log::info("Bone: %s", bone->mName.C_Str());
+    int i = m.addBone({ bone->mName.C_Str(), -1, Matrix44f::identity() });
+
+    for (unsigned int iBoneWeight = 0; iBoneWeight < bone->mNumWeights; iBoneWeight++) {
+      const aiVertexWeight &boneWeight = bone->mWeights[iBoneWeight];
+      m.addBoneWeight((int)boneWeight.mVertexId, { i, boneWeight.mWeight });
+    }
   }
 
   return m;
