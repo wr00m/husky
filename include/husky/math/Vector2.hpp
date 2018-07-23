@@ -17,7 +17,7 @@ public:
   };
 
   Vector2();
-  Vector2(T xy);
+  explicit Vector2(T xy);
   Vector2(T x, T y);
 
   template<typename T2>
@@ -39,13 +39,21 @@ public:
 
   Vector2<T>  operator- () const;
   Vector2<T>  operator+ (const Vector2<T> &other) const;
-  Vector2<T>& operator+=(const Vector2<T> &other);
   Vector2<T>  operator- (const Vector2<T> &other) const;
-  Vector2<T>& operator-=(const Vector2<T> &other);
   Vector2<T>  operator* (const Vector2<T> &other) const;
-  Vector2<T>& operator*=(const Vector2<T> &other);
   Vector2<T>  operator/ (const Vector2<T> &other) const;
+  Vector2<T>& operator+=(const Vector2<T> &other);
+  Vector2<T>& operator-=(const Vector2<T> &other);
+  Vector2<T>& operator*=(const Vector2<T> &other);
   Vector2<T>& operator/=(const Vector2<T> &other);
+  Vector2<T>  operator+ (T t) const;
+  Vector2<T>  operator- (T t) const;
+  Vector2<T>  operator* (T t) const;
+  Vector2<T>  operator/ (T t) const;
+  Vector2<T>& operator+=(T t);
+  Vector2<T>& operator-=(T t);
+  Vector2<T>& operator*=(T t);
+  Vector2<T>& operator/=(T t);
 
   T& operator[](int i) { return this->val[i]; }
   T  operator[](int i) const { return this->val[i]; }

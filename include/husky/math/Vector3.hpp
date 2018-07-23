@@ -18,7 +18,7 @@ public:
   };
 
   Vector3();
-  Vector3(T xyz);
+  explicit Vector3(T xyz);
   Vector3(T x, T y, T z);
   Vector3(const Vector2<T> &xy, T z);
 
@@ -43,13 +43,21 @@ public:
 
   Vector3<T>  operator- () const;
   Vector3<T>  operator+ (const Vector3<T> &other) const;
-  Vector3<T>& operator+=(const Vector3<T> &other);
   Vector3<T>  operator- (const Vector3<T> &other) const;
-  Vector3<T>& operator-=(const Vector3<T> &other);
   Vector3<T>  operator* (const Vector3<T> &other) const;
-  Vector3<T>& operator*=(const Vector3<T> &other);
   Vector3<T>  operator/ (const Vector3<T> &other) const;
+  Vector3<T>& operator+=(const Vector3<T> &other);
+  Vector3<T>& operator-=(const Vector3<T> &other);
+  Vector3<T>& operator*=(const Vector3<T> &other);
   Vector3<T>& operator/=(const Vector3<T> &other);
+  Vector3<T>  operator+ (T t) const;
+  Vector3<T>  operator- (T t) const;
+  Vector3<T>  operator* (T t) const;
+  Vector3<T>  operator/ (T t) const;
+  Vector3<T>& operator+=(T t);
+  Vector3<T>& operator-=(T t);
+  Vector3<T>& operator*=(T t);
+  Vector3<T>& operator/=(T t);
 
   T& operator[](int i) { return this->val[i]; }
   T  operator[](int i) const { return this->val[i]; }

@@ -88,67 +88,23 @@ Vector2<T> Vector2<T>::nlerp(const Vector2<T> &target, T t) const
   return lerp(target, t).normalized();
 }
 
-template<typename T>
-Vector2<T>& Vector2<T>::operator+=(const Vector2<T> &other)
-{
-  x += other.x;
-  y += other.y;
-  return *this;
-}
-
-template<typename T>
-Vector2<T>& Vector2<T>::operator-=(const Vector2<T> &other)
-{
-  x -= other.x;
-  y -= other.y;
-  return *this;
-}
-
-template<typename T>
-Vector2<T>& Vector2<T>::operator*=(const Vector2<T> &other)
-{
-  x *= other.x;
-  y *= other.y;
-  return *this;
-}
-
-template<typename T>
-Vector2<T>& Vector2<T>::operator/=(const Vector2<T> &other)
-{
-  x /= other.x;
-  y /= other.y;
-  return *this;
-}
-
-template<typename T>
-Vector2<T> Vector2<T>::operator+(const Vector2<T> &other) const
-{
-  return Vector2<T>(x + other.x, y + other.y);
-}
-
-template<typename T>
-Vector2<T> Vector2<T>::operator-(const Vector2<T> &other) const
-{
-  return Vector2<T>(x - other.x, y - other.y);
-}
-
-template<typename T>
-Vector2<T> Vector2<T>::operator*(const Vector2<T> &other) const
-{
-  return Vector2<T>(x * other.x, y * other.y);
-}
-
-template<typename T>
-Vector2<T> Vector2<T>::operator/(const Vector2<T> &other) const
-{
-  return Vector2<T>(x / other.x, y / other.y);
-}
-
-template<typename T>
-Vector2<T> Vector2<T>::operator-() const
-{
-  return Vector2<T>(-x, -y);
-}
+template<typename T> Vector2<T> Vector2<T>::operator-() const { return Vector2<T>(-x, -y); }
+template<typename T> Vector2<T> Vector2<T>::operator+(const Vector2<T> &other) const { return Vector2<T>(x + other.x, y + other.y); }
+template<typename T> Vector2<T> Vector2<T>::operator-(const Vector2<T> &other) const { return Vector2<T>(x - other.x, y - other.y); }
+template<typename T> Vector2<T> Vector2<T>::operator*(const Vector2<T> &other) const { return Vector2<T>(x * other.x, y * other.y); }
+template<typename T> Vector2<T> Vector2<T>::operator/(const Vector2<T> &other) const { return Vector2<T>(x / other.x, y / other.y); }
+template<typename T> Vector2<T>& Vector2<T>::operator+=(const Vector2<T> &other) { x += other.x; y += other.y; return *this; }
+template<typename T> Vector2<T>& Vector2<T>::operator-=(const Vector2<T> &other) { x -= other.x; y -= other.y; return *this; }
+template<typename T> Vector2<T>& Vector2<T>::operator*=(const Vector2<T> &other) { x *= other.x; y *= other.y; return *this; }
+template<typename T> Vector2<T>& Vector2<T>::operator/=(const Vector2<T> &other) { x /= other.x; y /= other.y; return *this; }
+template<typename T> Vector2<T> Vector2<T>::operator+(T t) const { return *this + Vector2<T>(t); }
+template<typename T> Vector2<T> Vector2<T>::operator-(T t) const { return *this - Vector2<T>(t); }
+template<typename T> Vector2<T> Vector2<T>::operator*(T t) const { return *this * Vector2<T>(t); }
+template<typename T> Vector2<T> Vector2<T>::operator/(T t) const { return *this / Vector2<T>(t); }
+template<typename T> Vector2<T>& Vector2<T>::operator+=(T t) { return *this += Vector2<T>(t); }
+template<typename T> Vector2<T>& Vector2<T>::operator-=(T t) { return *this -= Vector2<T>(t); }
+template<typename T> Vector2<T>& Vector2<T>::operator*=(T t) { return *this *= Vector2<T>(t); }
+template<typename T> Vector2<T>& Vector2<T>::operator/=(T t) { return *this /= Vector2<T>(t); }
 
 template class Vector2<double>;
 template class Vector2<float>;

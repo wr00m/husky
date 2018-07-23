@@ -19,7 +19,7 @@ public:
   };
 
   Vector4();
-  Vector4(T xyzw);
+  explicit Vector4(T xyzw);
   Vector4(T x, T y, T z, T w);
   Vector4(const Vector2<T> &xy, T z, T w);
   Vector4(const Vector3<T> &xyz, T w);
@@ -43,13 +43,21 @@ public:
 
   Vector4<T>  operator- () const;
   Vector4<T>  operator+ (const Vector4<T> &other) const;
-  Vector4<T>& operator+=(const Vector4<T> &other);
   Vector4<T>  operator- (const Vector4<T> &other) const;
-  Vector4<T>& operator-=(const Vector4<T> &other);
   Vector4<T>  operator* (const Vector4<T> &other) const;
-  Vector4<T>& operator*=(const Vector4<T> &other);
   Vector4<T>  operator/ (const Vector4<T> &other) const;
+  Vector4<T>& operator+=(const Vector4<T> &other);
+  Vector4<T>& operator-=(const Vector4<T> &other);
+  Vector4<T>& operator*=(const Vector4<T> &other);
   Vector4<T>& operator/=(const Vector4<T> &other);
+  Vector4<T>  operator+ (T t) const;
+  Vector4<T>  operator- (T t) const;
+  Vector4<T>  operator* (T t) const;
+  Vector4<T>  operator/ (T t) const;
+  Vector4<T>& operator+=(T t);
+  Vector4<T>& operator-=(T t);
+  Vector4<T>& operator*=(T t);
+  Vector4<T>& operator/=(T t);
 
   T& operator[](int i) { return this->val[i]; }
   T  operator[](int i) const { return this->val[i]; }

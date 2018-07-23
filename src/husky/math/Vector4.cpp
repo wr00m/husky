@@ -94,75 +94,23 @@ Vector4<T> Vector4<T>::nlerp(const Vector4<T> &target, T t) const
   return lerp(target, t).normalized();
 }
 
-template<typename T>
-Vector4<T>& Vector4<T>::operator+=(const Vector4<T> &other)
-{
-  x += other.x;
-  y += other.y;
-  z += other.z;
-  w += other.w;
-  return *this;
-}
-
-template<typename T>
-Vector4<T>& Vector4<T>::operator-=(const Vector4<T> &other)
-{
-  x -= other.x;
-  y -= other.y;
-  z -= other.z;
-  w -= other.w;
-  return *this;
-}
-
-template<typename T>
-Vector4<T>& Vector4<T>::operator*=(const Vector4<T> &other)
-{
-  x *= other.x;
-  y *= other.y;
-  z *= other.z;
-  w *= other.w;
-  return *this;
-}
-
-template<typename T>
-Vector4<T>& Vector4<T>::operator/=(const Vector4<T> &other)
-{
-  x /= other.x;
-  y /= other.y;
-  z /= other.z;
-  w /= other.w;
-  return *this;
-}
-
-template<typename T>
-Vector4<T> Vector4<T>::operator+(const Vector4<T> &other) const
-{
-  return Vector4<T>(x + other.x, y + other.y, z + other.z, w + other.w);
-}
-
-template<typename T>
-Vector4<T> Vector4<T>::operator-(const Vector4<T> &other) const
-{
-  return Vector4<T>(x - other.x, y - other.y, z - other.z, w - other.w);
-}
-
-template<typename T>
-Vector4<T> Vector4<T>::operator*(const Vector4<T> &other) const
-{
-  return Vector4<T>(x * other.x, y * other.y, z * other.z, w * other.w);
-}
-
-template<typename T>
-Vector4<T> Vector4<T>::operator/(const Vector4<T> &other) const
-{
-  return Vector4<T>(x / other.x, y / other.y, z / other.z, w / other.w);
-}
-
-template<typename T>
-Vector4<T> Vector4<T>::operator-() const
-{
-  return Vector4<T>(-x, -y, -z, -w);
-}
+template<typename T> Vector4<T> Vector4<T>::operator-() const { return Vector4<T>(-x, -y, -z, -w); }
+template<typename T> Vector4<T> Vector4<T>::operator+(const Vector4<T> &other) const { return Vector4<T>(x + other.x, y + other.y, z + other.z, w + other.w); }
+template<typename T> Vector4<T> Vector4<T>::operator-(const Vector4<T> &other) const { return Vector4<T>(x - other.x, y - other.y, z - other.z, w - other.w); }
+template<typename T> Vector4<T> Vector4<T>::operator*(const Vector4<T> &other) const { return Vector4<T>(x * other.x, y * other.y, z * other.z, w * other.w); }
+template<typename T> Vector4<T> Vector4<T>::operator/(const Vector4<T> &other) const { return Vector4<T>(x / other.x, y / other.y, z / other.z, w / other.w); }
+template<typename T> Vector4<T>& Vector4<T>::operator+=(const Vector4<T> &other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
+template<typename T> Vector4<T>& Vector4<T>::operator-=(const Vector4<T> &other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }
+template<typename T> Vector4<T>& Vector4<T>::operator*=(const Vector4<T> &other) { x *= other.x; y *= other.y; z *= other.z; w *= other.w; return *this; }
+template<typename T> Vector4<T>& Vector4<T>::operator/=(const Vector4<T> &other) { x /= other.x; y /= other.y; z /= other.z; w /= other.w; return *this; }
+template<typename T> Vector4<T> Vector4<T>::operator+(T t) const { return *this + Vector4<T>(t); }
+template<typename T> Vector4<T> Vector4<T>::operator-(T t) const { return *this - Vector4<T>(t); }
+template<typename T> Vector4<T> Vector4<T>::operator*(T t) const { return *this * Vector4<T>(t); }
+template<typename T> Vector4<T> Vector4<T>::operator/(T t) const { return *this / Vector4<T>(t); }
+template<typename T> Vector4<T>& Vector4<T>::operator+=(T t) { return *this += Vector4<T>(t); }
+template<typename T> Vector4<T>& Vector4<T>::operator-=(T t) { return *this -= Vector4<T>(t); }
+template<typename T> Vector4<T>& Vector4<T>::operator*=(T t) { return *this *= Vector4<T>(t); }
+template<typename T> Vector4<T>& Vector4<T>::operator/=(T t) { return *this /= Vector4<T>(t); }
 
 template class Vector4<double>;
 template class Vector4<float>;
