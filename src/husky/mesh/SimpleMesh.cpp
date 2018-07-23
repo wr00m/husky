@@ -257,12 +257,20 @@ void SimpleMesh::setBoneIndices(int iVert, const BoneIndices &inds) { vertBoneIn
 void SimpleMesh::setBoneWeights(int iVert, const BoneWeights &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
 const SimpleMesh::Triangle& SimpleMesh::getTriangle(int iTri) const { return tris[iTri]; }
 const SimpleMesh::Quad& SimpleMesh::getQuad(int iQuad) const { return quads[iQuad]; }
-//void SimpleMesh::reserve(int vertexCount, int triangleCount, int quadCount) { verts.reserve(vertexCount); tris.reserve(triangleCount); quads.reserve(quadCount); }
 void SimpleMesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
 
 void SimpleMesh::addMesh(const SimpleMesh &m)
 {
-  //reserve(numVerts() + m.numVerts(), getTriangleCount() + m.getTriangleCount(), getQuadCount() + m.getQuadCount());
+  vertPosition.reserve(numVerts() + m.numVerts());
+  if (hasNormals() || m.hasNormals()) { vertNormal.reserve(vertPosition.capacity()); }
+  if (hasTangents() || m.hasTangents()) { vertTangent.reserve(vertPosition.capacity()); }
+  if (hasTexCoord() || m.hasTexCoord()) { vertTexCoord.reserve(vertPosition.capacity()); }
+  if (hasColors() || m.hasColors()) { vertColor.reserve(vertPosition.capacity()); }
+  if (hasBoneIndices() || m.hasBoneIndices()) { vertBoneIndices.reserve(vertPosition.capacity()); }
+  if (hasBoneWeights() || m.hasBoneWeights()) { vertBoneWeights.reserve(vertPosition.capacity()); }
+  //lineStrips.reserve(numLineStrips() + m.numLineStrips());
+  tris.reserve(numTriangles() + m.numTriangles());
+  quads.reserve(numQuads() + m.numQuads());
 
   const int indexOffset = numVerts();
 

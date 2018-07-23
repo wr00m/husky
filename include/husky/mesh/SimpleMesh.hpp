@@ -25,7 +25,7 @@ public:
   typedef Vector4b Color;
   typedef Vector4b BoneIndices;
   typedef Vector4f BoneWeights;
-  typedef std::vector<int> LineStrip;
+  //typedef std::vector<int> LineStrip;
   typedef Vector3i Triangle;
   typedef Vector4i Quad;
 
@@ -55,7 +55,6 @@ public:
   void setBoneWeights(int iVert, const BoneWeights &weights);
   const Triangle& getTriangle(int iTri) const;
   const Quad& getQuad(int iQuad) const;
-  //void reserve(int vertexCount, int triangleCount, int quadCount);
   void setAllColors(const Color &color);
   void addMesh(const SimpleMesh &otherMesh);
   void triangulateQuads();
