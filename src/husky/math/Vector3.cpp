@@ -17,6 +17,12 @@ Vector3<T>::Vector3(T xyz)
 }
 
 template<typename T>
+Vector3<T>::Vector3(const T *xyz)
+  : x(xyz[0]), y(xyz[1]), z(xyz[2])
+{
+}
+
+template<typename T>
 Vector3<T>::Vector3(T x, T y, T z)
   : x(x), y(y), z(z)
 {

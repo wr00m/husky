@@ -20,6 +20,7 @@ public:
 
   Vector4();
   explicit Vector4(T xyzw);
+  explicit Vector4(const T *xyzw);
   Vector4(T x, T y, T z, T w);
   Vector4(const Vector2<T> &xy, T z, T w);
   Vector4(const Vector3<T> &xyz, T w);

@@ -18,6 +18,7 @@ public:
 
   Vector2();
   explicit Vector2(T xy);
+  explicit Vector2(const T *xy);
   Vector2(T x, T y);
 
   template<typename T2>

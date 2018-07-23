@@ -17,6 +17,12 @@ Vector4<T>::Vector4(T xyzw)
 }
 
 template<typename T>
+Vector4<T>::Vector4(const T *xyzw)
+  : x(xyzw[0]), y(xyzw[1]), z(xyzw[2]), w(xyzw[3])
+{
+}
+
+template<typename T>
 Vector4<T>::Vector4(T x, T y, T z, T w)
   : x(x), y(y), z(z), w(w)
 {

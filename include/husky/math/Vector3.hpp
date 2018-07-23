@@ -19,6 +19,7 @@ public:
 
   Vector3();
   explicit Vector3(T xyz);
+  explicit Vector3(const T *xyz);
   Vector3(T x, T y, T z);
   Vector3(const Vector2<T> &xy, T z);
 

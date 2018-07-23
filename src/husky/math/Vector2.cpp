@@ -17,6 +17,12 @@ Vector2<T>::Vector2(T xy)
 }
 
 template<typename T>
+Vector2<T>::Vector2(const T *xy)
+  : x(xy[0]), y(xy[1])
+{
+}
+
+template<typename T>
 Vector2<T>::Vector2(T x, T y)
   : x(x), y(y)
 {
