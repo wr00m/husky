@@ -127,31 +127,28 @@ static SimpleMesh getMesh(const aiMesh *mesh)
   for (unsigned int iVert = 0; iVert < mesh->mNumVertices; iVert++)
   {
     const aiVector3D &pos = mesh->mVertices[iVert];
-    SimpleMesh::Vertex v({ pos.x, pos.y, pos.z });
+    int i = m.addVert({ pos.x, pos.y, pos.z });
 
     if (mesh->HasNormals()) {
       const aiVector3D &normal = mesh->mNormals[iVert];
-      v.normal.set(normal.x, normal.y, normal.z);
+      m.setNormal(i, { normal.x, normal.y, normal.z });
     }
 
     if (mesh->HasTextureCoords(0)) {
       const aiVector3D &uv = mesh->mTextureCoords[0][iVert];
-      v.texCoord.set(uv.x, uv.y);
+      m.setTexCoord(i, { uv.x, uv.y });
     }
 
     if (mesh->HasVertexColors(0)) {
       const aiColor4D &color = mesh->mColors[0][iVert];
-      v.color.set(std::uint8_t(color.r * 255), std::uint8_t(color.g * 255), std::uint8_t(color.b * 255), std::uint8_t(color.a * 255));
+      m.setColor(i, { std::uint8_t(color.r * 255), std::uint8_t(color.g * 255), std::uint8_t(color.b * 255), std::uint8_t(color.a * 255) });
     }
-
-    m.addVertex(v);
   }
 
   for (unsigned int iFace = 0; iFace < mesh->mNumFaces; iFace++) {
     const aiFace &face = mesh->mFaces[iFace];
     assert(face.mNumIndices == 3); // We have requested triangulated faces
-    m.addTriangle(face.mIndices[0], face.mIndices[1], face.mIndices[2]);
-    //m.addTriangle(face.mIndices[0], face.mIndices[2], face.mIndices[1]);
+    m.addTriangle({ (int)face.mIndices[0], (int)face.mIndices[1], (int)face.mIndices[2] });
   }
 
   for (unsigned int iBone = 0; iBone < mesh->mNumBones; iBone++) {

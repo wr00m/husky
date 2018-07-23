@@ -15,9 +15,10 @@ public:
     NORMAL,
     TEXCOORD,
     COLOR,
-    //BONE_INDICES, // TODO
-    //BONE_WEIGHTS, // TODO
-    //TANGENTS, // TODO: Pack vertex attributes according to http://www.humus.name/Articles/Persson_CreatingVastGameWorlds.pdf#page=22
+    BONE_INDICES,
+    BONE_WEIGHTS,
+    //TANGENTS,
+    // TODO: Pack vertex attributes according to http://www.humus.name/Articles/Persson_CreatingVastGameWorlds.pdf#page=22 / https://www.khronos.org/opengl/wiki/Vertex_Specification_Best_Practices
   };
 
   enum class Mode
@@ -97,15 +98,19 @@ public:
   }
 
   template<typename T>
-  void setValue(int vertIndex, Attribute attr, const T &value)
+  bool setValue(int vertIndex, Attribute attr, const T &value)
   {
     const int attrByteOffset = attrByteOffsets[(int)attr];
-    assert(attrByteOffset >= 0);
+    if (attrByteOffset < 0) {
+      return false;
+    }
 
     const std::uint8_t *b = reinterpret_cast<const std::uint8_t*>(&value);
     
     const int byteStartIndex = (vertIndex * vertByteCount + attrByteOffset);
     std::copy(b, b + sizeof(T), bytes.begin() + byteStartIndex);
+
+    return true;
   }
 
   template<typename T>

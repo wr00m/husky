@@ -158,6 +158,16 @@ private:
       glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, attrPtr);
     }
 
+    if (shader.getAttributeLocation("vertBoneIndices", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::BONE_INDICES, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE, renderData.vertByteCount, attrPtr);
+    }
+
+    if (shader.getAttributeLocation("vertBoneWeights", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::BONE_WEIGHTS, attrPtr)) {
+      glEnableVertexAttribArray(varLocation);
+      glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, attrPtr);
+    }
+
     GLenum mode = GL_POINTS; // Default fallback
     switch (renderData.mode) {
     case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;          break;

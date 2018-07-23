@@ -10,40 +10,40 @@ SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
   SimpleMesh m;
 
   m.addQuad( // X+
-    m.addVertex({  h.x, -h.y, -h.z }, {  1,  0,  0 }, { 0, 0 }),
-    m.addVertex({  h.x,  h.y, -h.z }, {  1,  0,  0 }, { 1, 0 }),
-    m.addVertex({  h.x,  h.y,  h.z }, {  1,  0,  0 }, { 1, 1 }),
-    m.addVertex({  h.x, -h.y,  h.z }, {  1,  0,  0 }, { 0, 1 }));
+    m.addVert({  h.x, -h.y, -h.z }, {  1,  0,  0 }, { 0, 0 }),
+    m.addVert({  h.x,  h.y, -h.z }, {  1,  0,  0 }, { 1, 0 }),
+    m.addVert({  h.x,  h.y,  h.z }, {  1,  0,  0 }, { 1, 1 }),
+    m.addVert({  h.x, -h.y,  h.z }, {  1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // X-
-    m.addVertex({ -h.x,  h.y, -h.z }, { -1,  0,  0 }, { 0, 0 }),
-    m.addVertex({ -h.x, -h.y, -h.z }, { -1,  0,  0 }, { 1, 0 }),
-    m.addVertex({ -h.x, -h.y,  h.z }, { -1,  0,  0 }, { 1, 1 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, { -1,  0,  0 }, { 0, 1 }));
+    m.addVert({ -h.x,  h.y, -h.z }, { -1,  0,  0 }, { 0, 0 }),
+    m.addVert({ -h.x, -h.y, -h.z }, { -1,  0,  0 }, { 1, 0 }),
+    m.addVert({ -h.x, -h.y,  h.z }, { -1,  0,  0 }, { 1, 1 }),
+    m.addVert({ -h.x,  h.y,  h.z }, { -1,  0,  0 }, { 0, 1 }));
 
   m.addQuad( // Y+
-    m.addVertex({  h.x,  h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
-    m.addVertex({ -h.x,  h.y, -h.z }, {  0,  1,  0 }, { 1, 0 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, {  0,  1,  0 }, { 1, 1 }),
-    m.addVertex({  h.x,  h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }));
+    m.addVert({  h.x,  h.y, -h.z }, {  0,  1,  0 }, { 0, 0 }),
+    m.addVert({ -h.x,  h.y, -h.z }, {  0,  1,  0 }, { 1, 0 }),
+    m.addVert({ -h.x,  h.y,  h.z }, {  0,  1,  0 }, { 1, 1 }),
+    m.addVert({  h.x,  h.y,  h.z }, {  0,  1,  0 }, { 0, 1 }));
 
   m.addQuad( // Y-
-    m.addVertex({ -h.x, -h.y, -h.z }, {  0, -1,  0 }, { 0, 0 }),
-    m.addVertex({  h.x, -h.y, -h.z }, {  0, -1,  0 }, { 1, 0 }),
-    m.addVertex({  h.x, -h.y,  h.z }, {  0, -1,  0 }, { 1, 1 }),
-    m.addVertex({ -h.x, -h.y,  h.z }, {  0, -1,  0 }, { 0, 1 }));
+    m.addVert({ -h.x, -h.y, -h.z }, {  0, -1,  0 }, { 0, 0 }),
+    m.addVert({  h.x, -h.y, -h.z }, {  0, -1,  0 }, { 1, 0 }),
+    m.addVert({  h.x, -h.y,  h.z }, {  0, -1,  0 }, { 1, 1 }),
+    m.addVert({ -h.x, -h.y,  h.z }, {  0, -1,  0 }, { 0, 1 }));
 
   m.addQuad( // Z+
-    m.addVertex({ -h.x, -h.y,  h.z }, {  0,  0,  1 }, { 0, 0 }),
-    m.addVertex({  h.x, -h.y,  h.z }, {  0,  0,  1 }, { 1, 0 }),
-    m.addVertex({  h.x,  h.y,  h.z }, {  0,  0,  1 }, { 1, 1 }),
-    m.addVertex({ -h.x,  h.y,  h.z }, {  0,  0,  1 }, { 0, 1 }));
+    m.addVert({ -h.x, -h.y,  h.z }, {  0,  0,  1 }, { 0, 0 }),
+    m.addVert({  h.x, -h.y,  h.z }, {  0,  0,  1 }, { 1, 0 }),
+    m.addVert({  h.x,  h.y,  h.z }, {  0,  0,  1 }, { 1, 1 }),
+    m.addVert({ -h.x,  h.y,  h.z }, {  0,  0,  1 }, { 0, 1 }));
 
   m.addQuad( // Z-
-    m.addVertex({  h.x, -h.y, -h.z }, {  0,  0, -1 }, { 1, 0 }),
-    m.addVertex({ -h.x, -h.y, -h.z }, {  0,  0, -1 }, { 0, 0 }),
-    m.addVertex({ -h.x,  h.y, -h.z }, {  0,  0, -1 }, { 0, 1 }),
-    m.addVertex({  h.x,  h.y, -h.z }, {  0,  0, -1 }, { 1, 1 }));
+    m.addVert({  h.x, -h.y, -h.z }, {  0,  0, -1 }, { 1, 0 }),
+    m.addVert({ -h.x, -h.y, -h.z }, {  0,  0, -1 }, { 0, 0 }),
+    m.addVert({ -h.x,  h.y, -h.z }, {  0,  0, -1 }, { 0, 1 }),
+    m.addVert({  h.x,  h.y, -h.z }, {  0,  0, -1 }, { 1, 1 }));
 
   return m;
 }
@@ -65,7 +65,7 @@ SimpleMesh SimpleMesh::cylinder(double radiusBottom, double radiusTop, double he
       double v = iv / double(vSegmentCount); // [0:1]
       double radius = Math::lerp(radiusBottom, radiusTop, v); // [radiusBottom:radiusTop]
 
-      int iVert = m.addVertex({ dir * radius, v * height }, n, { u, v });
+      int iVert = m.addVert({ dir * radius, v * height }, n, { u, v });
 
       if (iu > 0 && iv > 0) {
         m.addQuad(iVert - 1, iVert, iVert - vSegmentCount - 1, iVert - vSegmentCount - 2);
@@ -97,7 +97,7 @@ SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, 
 {
   SimpleMesh m;
 
-  int iVertCenter = m.addVertex({ 0, 0, height }, { 0, 0, 1 }, { 0.5, 1 });
+  int iCenterVert = m.addVert({ 0, 0, height }, { 0, 0, 1 }, { 0.5, 1 });
 
   double coneAngle = std::atan2(radiusBottom, height); // Slope
   Vector2d nCone(std::cos(coneAngle), std::sin(coneAngle));
@@ -108,10 +108,10 @@ SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, 
     Vector2d dir(std::cos(circleAngle), std::sin(circleAngle));
     Vector3d n(dir * nCone.x, nCone.y);
 
-    int iVert = m.addVertex({ dir * radiusBottom, 0 }, n, { u, 0 });
+    int iVert = m.addVert({ dir * radiusBottom, 0 }, n, { u, 0 });
 
     if (iu > 0) {
-      m.addTriangle(iVert, iVertCenter, iVert - 1);
+      m.addTriangle(iVert, iCenterVert, iVert - 1);
     }
   }
 
@@ -128,17 +128,17 @@ SimpleMesh SimpleMesh::disk(double radius, int uSegmentCount)
 {
   SimpleMesh m;
 
-  int iVertCenter = m.addVertex({ 0, 0, 0 }, { 0, 0, 1 }, { 0.5, 0.5 });
+  int iCenterVert = m.addVert({ 0, 0, 0 }, { 0, 0, 1 }, { 0.5, 0.5 });
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
     double u = iu / double(uSegmentCount); // [0:1]
     double circleAngle = (u * Math::twoPi); // [0:2*pi]
     Vector2d dir(std::cos(circleAngle), std::sin(circleAngle));
 
-    int iVert = m.addVertex({ dir * radius, 0 }, { 0, 0, 1 }, dir * 0.5 + 0.5);
+    int iVert = m.addVert({ dir * radius, 0 }, { 0, 0, 1 }, dir * 0.5 + 0.5);
 
     if (iu > 0) {
-      m.addTriangle(iVert, iVertCenter, iVert - 1);
+      m.addTriangle(iVert, iCenterVert, iVert - 1);
     }
   }
 
@@ -162,13 +162,13 @@ SimpleMesh SimpleMesh::sphere(double radius, int uSegmentCount, int vSegmentCoun
       n.y = std::sin(theta) * std::sin(phi);
       n.z = std::cos(phi);
 
-      m.addVertex(n * radius, n, { u, v });
+      m.addVert(n * radius, n, { u, v });
 
       if (iu > 0 && iv > 0) {
-        assert(m.getVertexCount() >= 4);
+        assert(m.numVerts() >= 4);
 
         SimpleMesh::Quad q;
-        q[0] = m.getVertexCount() - 1;
+        q[0] = m.numVerts() - 1;
         q[1] = q[0] - (vSegmentCount + 1);
         q[2] = q[0] - (vSegmentCount + 2);
         q[3] = q[0] - 1;
@@ -198,13 +198,13 @@ SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmen
 
       const Vector3d vertNormal = rotate * Vector3d(std::cos(phi), 0.0, std::sin(-phi));
       const Vector3d vertPosition = (radCenter + vertNormal * tubeRadius);
-      m.addVertex(vertPosition, vertNormal, { u, v });
+      m.addVert(vertPosition, vertNormal, { u, v });
 
       if (iu > 0 && iv > 0) {
-        assert(m.getVertexCount() >= 4);
+        assert(m.numVerts() >= 4);
 
         SimpleMesh::Quad q;
-        q[0] = m.getVertexCount() - 1;
+        q[0] = m.numVerts() - 1;
         q[1] = q[0] - 1;
         q[2] = q[0] - (vSegmentCount + 2);
         q[3] = q[0] - (vSegmentCount + 1);
@@ -217,21 +217,70 @@ SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmen
   return m;
 }
 
-void SimpleMesh::addMesh(const SimpleMesh &otherMesh)
+int SimpleMesh::numVerts() const { return int(vertPosition.size()); }
+int SimpleMesh::numTriangles() const { return int(tris.size()); }
+int SimpleMesh::numQuads() const { return int(quads.size()); }
+
+int SimpleMesh::addVert(const Vector3d &pos)
 {
-  reserve(getVertexCount() + otherMesh.getVertexCount(), getTriangleCount() + otherMesh.getTriangleCount(), getQuadCount() + otherMesh.getQuadCount());
+  int iVert = (int)vertPosition.size();
+  vertPosition.emplace_back(pos);
+  return iVert;
+}
 
-  const int indexOffset = getVertexCount();
+int SimpleMesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord)
+{
+  int iVert = addVert(pos);
+  setNormal(iVert, nor);
+  setTexCoord(iVert, texCoord);
+  return iVert;
+}
 
-  for (const Vertex &vert : otherMesh.verts) {
-    verts.emplace_back(vert);
+void SimpleMesh::addTriangle(const Triangle &t) { tris.emplace_back(t); }
+void SimpleMesh::addTriangle(int v0, int v1, int v2) { addTriangle({ v0, v1, v2 }); }
+const SimpleMesh::Triangle& SimpleMesh::addTriangle(const Position &p0, const Position &p1, const Position &p2) { addTriangle({ addVert(p0), addVert(p1), addVert(p2) }); return tris.back(); }
+void SimpleMesh::addQuad(const Quad &q) { quads.emplace_back(q); }
+void SimpleMesh::addQuad(int v0, int v1, int v2, int v3) { addQuad({ v0, v1, v2, v3 }); }
+const SimpleMesh::Quad& SimpleMesh::addQuad(const Position &p0, const Position &p1, const Position &p2, const Position &p3) { addQuad({ addVert(p0), addVert(p1), addVert(p2), addVert(p3) }); return quads.back(); }
+bool SimpleMesh::hasNormals() const { return !vertNormal.empty(); }
+bool SimpleMesh::hasTangents() const { return !vertTangent.empty(); }
+bool SimpleMesh::hasTexCoord() const { return !vertTexCoord.empty(); }
+bool SimpleMesh::hasColors() const { return !vertColor.empty(); }
+bool SimpleMesh::hasBoneIndices() const { return !vertBoneIndices.empty(); }
+bool SimpleMesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
+void SimpleMesh::setPosition(int iVert, const Position &pos) { vertPosition[iVert] = pos; }
+void SimpleMesh::setNormal(int iVert, const Normal &nor) { vertNormal.resize(vertPosition.size()); vertNormal[iVert] = nor; }
+void SimpleMesh::setTangent(int iVert, const Tangent &tangent) { vertTangent.resize(vertPosition.size()); vertTangent[iVert] = tangent; }
+void SimpleMesh::setTexCoord(int iVert, const TexCoord &texCoord) { vertTexCoord.resize(vertPosition.size()); vertTexCoord[iVert] = texCoord; }
+void SimpleMesh::setColor(int iVert, const Color &color) { vertColor.resize(vertPosition.size(), Color(255)); vertColor[iVert] = color; }
+void SimpleMesh::setBoneIndices(int iVert, const BoneIndices &inds) { vertBoneIndices.resize(vertPosition.size()); vertBoneIndices[iVert] = inds; }
+void SimpleMesh::setBoneWeights(int iVert, const BoneWeights &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
+const SimpleMesh::Triangle& SimpleMesh::getTriangle(int iTri) const { return tris[iTri]; }
+const SimpleMesh::Quad& SimpleMesh::getQuad(int iQuad) const { return quads[iQuad]; }
+//void SimpleMesh::reserve(int vertexCount, int triangleCount, int quadCount) { verts.reserve(vertexCount); tris.reserve(triangleCount); quads.reserve(quadCount); }
+void SimpleMesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
+
+void SimpleMesh::addMesh(const SimpleMesh &m)
+{
+  //reserve(numVerts() + m.numVerts(), getTriangleCount() + m.getTriangleCount(), getQuadCount() + m.getQuadCount());
+
+  const int indexOffset = numVerts();
+
+  for (int i = 0; i < m.numVerts(); i++) {
+    int iVert = addVert(m.vertPosition[i]);
+    if (m.hasNormals()) { setNormal(iVert, m.vertNormal[i]); }
+    if (m.hasTangents()) { setTangent(iVert, m.vertTangent[i]); }
+    if (m.hasTexCoord()) { setTexCoord(iVert, m.vertTexCoord[i]); }
+    if (m.hasColors()) { setColor(iVert, m.vertColor[i]); }
+    if (m.hasBoneIndices()) { setBoneIndices(iVert, m.vertBoneIndices[i]); }
+    if (m.hasBoneWeights()) { setBoneWeights(iVert, m.vertBoneWeights[i]); }
   }
 
-  for (const Triangle &tri : otherMesh.tris) {
+  for (const Triangle &tri : m.tris) {
     tris.emplace_back(tri + indexOffset);
   }
 
-  for (const Quad &quad : otherMesh.quads) {
+  for (const Quad &quad : m.quads) {
     quads.emplace_back(quad + indexOffset);
   }
 }
@@ -249,45 +298,42 @@ void SimpleMesh::triangulateQuads()
 void SimpleMesh::recalculateVertexNormals()
 {
   // Initialize vertex normals to zero
-  for (Vertex &vert : verts) {
-    vert.normal.set(0.0, 0.0, 0.0);
-  }
+  vertNormal.assign(vertPosition.size(), { 0, 0, 0 });
 
   // Get vertex normal contributions from triangles
   for (const Triangle &tri : tris) {
-    Vertex &v0 = verts[tri[0]];
-    Vertex &v1 = verts[tri[1]];
-    Vertex &v2 = verts[tri[2]];
+    const Position &v0 = vertPosition[tri[0]];
+    const Position &v1 = vertPosition[tri[1]];
+    const Position &v2 = vertPosition[tri[2]];
 
-    const Normal triNormal = (v1.pos - v0.pos).cross(v2.pos - v0.pos).normalized();
+    const Normal triNormal = (v1- v0).cross(v2- v0).normalized();
 
-    v0.normal += triNormal;
-    v1.normal += triNormal;
-    v2.normal += triNormal;
+    vertNormal[tri[0]] += triNormal;
+    vertNormal[tri[1]] += triNormal;
+    vertNormal[tri[2]] += triNormal;
   }
 
   // Get vertex normal contributions from quads
   for (const Quad &quad : quads) {
-    Vertex &v0 = verts[quad[0]];
-    Vertex &v1 = verts[quad[1]];
-    Vertex &v2 = verts[quad[2]];
-    Vertex &v3 = verts[quad[3]];
+    const Position &v0 = vertPosition[quad[0]];
+    const Position &v1 = vertPosition[quad[1]];
+    const Position &v2 = vertPosition[quad[2]];
+    const Position &v3 = vertPosition[quad[3]];
 
-    const Normal quadNormal
-      = ((v1.pos - v0.pos).cross(v3.pos - v0.pos)
-        + (v2.pos - v1.pos).cross(v0.pos - v1.pos)
-        + (v3.pos - v2.pos).cross(v1.pos - v2.pos)
-        + (v0.pos - v3.pos).cross(v2.pos - v3.pos)).normalized();
+    const Normal quadNormal = ((v1 - v0).cross(v3 - v0)
+                            +  (v2 - v1).cross(v0 - v1)
+                            +  (v3 - v2).cross(v1 - v2)
+                            +  (v0 - v3).cross(v2 - v3)).normalized();
 
-    v0.normal += quadNormal;
-    v1.normal += quadNormal;
-    v2.normal += quadNormal;
-    v3.normal += quadNormal;
+    vertNormal[quad[0]] += quadNormal;
+    vertNormal[quad[1]] += quadNormal;
+    vertNormal[quad[2]] += quadNormal;
+    vertNormal[quad[3]] += quadNormal;
   }
 
   // Normalize vertex normals
-  for (Vertex &vert : verts) {
-    vert.normal.normalize();
+  for (Normal &normal : vertNormal) {
+    normal.normalize();
   }
 }
 
@@ -295,9 +341,9 @@ void SimpleMesh::transform(const Matrix44d &m)
 {
   const Matrix33d nm = m.get3x3(); // Normal matrix
 
-  for (Vertex &vert : verts) {
-    vert.pos = (m * Vector4d(vert.pos, 1.0)).xyz;
-    vert.normal = nm * vert.normal;
+  for (int i = 0; i < numVerts(); i++) {
+    vertPosition[i] = (m * Vector4d(vertPosition[i], 1.0)).xyz;
+    if (hasNormals()) { vertNormal[i] = nm * vertNormal[i]; }
   }
 }
 
@@ -308,17 +354,16 @@ RenderData SimpleMesh::getRenderData() const
   r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
   r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
   r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-  r.init((int)verts.size());
+  r.init(numVerts());
 
-  if (!verts.empty()) {
+  if (numVerts() > 0) {
     r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
-    for (int i = 0; i < verts.size(); i++) {
-      const Vertex &vert = verts[i];
-      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vert.pos);
-      r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vert.normal);
-      r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vert.texCoord);
-      r.setValue(i, RenderData::Attribute::COLOR, vert.color);
+    for (int i = 0; i < numVerts(); i++) {
+      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+      if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
+      if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
+      r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
     }
 
     for (const Triangle &t : tris) {
@@ -339,15 +384,14 @@ RenderData SimpleMesh::getRenderDataWireframe() const
   RenderData r(RenderData::Mode::LINES);
   r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
   r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-  r.init((int)verts.size());
+  r.init(numVerts());
 
-  if (!verts.empty()) {
+  if (numVerts() > 0) {
     r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
-    for (int i = 0; i < verts.size(); i++) {
-      const Vertex &vert = verts[i];
-      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vert.pos);
-      r.setValue(i, RenderData::Attribute::COLOR, vert.color);
+    for (int i = 0; i < numVerts(); i++) {
+      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+      r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
     }
 
     for (const Triangle &t : tris) {
