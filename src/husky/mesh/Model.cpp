@@ -161,6 +161,8 @@ static SimpleMesh getMesh(const aiMesh *mesh)
     }
   }
 
+  //m.normalizeBoneWeights();
+
   return m;
 }
 

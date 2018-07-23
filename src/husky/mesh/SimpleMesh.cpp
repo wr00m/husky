@@ -352,7 +352,25 @@ void SimpleMesh::recalculateVertexNormals()
 
 void SimpleMesh::normalizeBoneWeights()
 {
-  // TODO
+  if (!hasBoneWeights()) {
+    return;
+  }
+
+  for (int i = 0; i < numVerts(); i++) {
+    std::vector<BoneWeight> &boneWeights = vertBoneWeights[i];
+
+    if (boneWeights.size() > 4) {
+      boneWeights.resize(4);
+
+      Vector4d normWeights(boneWeights[0].weight, boneWeights[1].weight, boneWeights[2].weight, boneWeights[3].weight);
+      normWeights.normalize();
+
+      boneWeights[0].weight = normWeights[0];
+      boneWeights[1].weight = normWeights[1];
+      boneWeights[2].weight = normWeights[2];
+      boneWeights[3].weight = normWeights[3];
+    }
+  }
 }
 
 void SimpleMesh::transform(const Matrix44d &m)
