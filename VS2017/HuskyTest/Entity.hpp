@@ -10,8 +10,63 @@
 
 class Entity
 {
+public:
+  Entity(const std::string &name, const Shader &shader, const Shader &lineShader, husky::Model *model)
+    : name(name)
+    , shader(shader)
+    , lineShader(lineShader)
+    , modelInstance(model)
+  {
+    for (const auto &renderData : model->meshRenderDatas) {
+      for (int iVert = 0; iVert < renderData.vertCount; iVert++) {
+        husky::Vector3f pos = renderData.getValue<husky::Vector3f>(iVert, husky::RenderData::Attribute::POSITION);
+        pos += renderData.anchor;
+        bboxLocal.expand(pos);
+      }
+    }
+    
+    husky::Vector3d bboxSize = bboxLocal.size();
+    husky::SimpleMesh bboxMesh = husky::SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
+    bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
+    bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
+  }
+
+  void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
+  {
+    const husky::Matrix44f view(cam.view);
+    const husky::Matrix44f modelView(cam.view * transform);
+    const husky::Matrix44f projection(cam.projection);
+
+    draw(shader, modelInstance, viewport, view, modelView, projection);
+
+    if (drawBbox) {
+      draw(lineShader, bboxModel, viewport, view, modelView, projection);
+    }
+  }
+
+  std::string name;
+  husky::Matrix44d transform = husky::Matrix44d::identity();
+  Shader shader;
+  Shader lineShader;
+  husky::ModelInstance modelInstance;
+  husky::BoundingBox bboxLocal;
+  husky::Model bboxModel;
+
 private:
   static void draw(
+    const Shader &shader,
+    const husky::ModelInstance &modelInstance,
+    const husky::Viewport &viewport,
+    const husky::Matrix44f &view,
+    const husky::Matrix44f &modelView,
+    const husky::Matrix44f &projection)
+  {
+    // TODO: Set instance uniforms (bone matrices, etc.)
+
+    draw(shader, *modelInstance.model, viewport, view, modelView, projection);
+  }
+
+  static void draw( // TODO: Remove (render ModelInstance, not Model)
     const Shader &shader,
     const husky::Model &model,
     const husky::Viewport &viewport,
@@ -178,46 +233,4 @@ private:
 
     glDrawElements(mode, (int)renderData.indices.size(), GL_UNSIGNED_SHORT, renderData.indices.data());
   }
-
-public:
-  Entity(const std::string &name, const Shader &shader, const Shader &lineShader, const husky::Model &&mdl)
-    : name(name)
-    , shader(shader)
-    , lineShader(lineShader)
-    , model(mdl)
-  {
-    for (const auto &renderData : mdl.meshRenderDatas) {
-      for (int iVert = 0; iVert < renderData.vertCount; iVert++) {
-        husky::Vector3f pos = renderData.getValue<husky::Vector3f>(iVert, husky::RenderData::Attribute::POSITION);
-        pos += renderData.anchor;
-        bboxLocal.expand(pos);
-      }
-    }
-    
-    husky::Vector3d bboxSize = bboxLocal.size();
-    husky::SimpleMesh bboxMesh = husky::SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
-    bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
-    bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
-  }
-
-  void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
-  {
-    const husky::Matrix44f view(cam.view);
-    const husky::Matrix44f modelView(cam.view * transform);
-    const husky::Matrix44f projection(cam.projection);
-
-    draw(shader, model, viewport, view, modelView, projection);
-
-    if (drawBbox) {
-      draw(lineShader, bboxModel, viewport, view, modelView, projection);
-    }
-  }
-
-  std::string name;
-  husky::Matrix44d transform = husky::Matrix44d::identity();
-  Shader shader;
-  Shader lineShader;
-  husky::Model model;
-  husky::BoundingBox bboxLocal;
-  husky::Model bboxModel;
 };

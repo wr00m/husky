@@ -25,4 +25,14 @@ public:
   std::vector<Animation> animations;
 };
 
+class HUSKY_DLL ModelInstance
+{
+public:
+  ModelInstance(Model *model);
+
+  Model *model;
+  int animationIndex;
+  double animationTime;
+};
+
 }

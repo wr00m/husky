@@ -185,6 +185,7 @@ static husky::Viewport viewport;
 static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
+static std::vector<std::unique_ptr<husky::Model>> models;
 static std::vector<std::unique_ptr<Entity>> entities;
 static int iSelectedEntity = -1;
 static GLuint fbo = 0;
@@ -534,48 +535,33 @@ int main()
   Shader lineShader(lineShaderProg);
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::sphere(1.0);
-    husky::Model mdl(std::move(mesh), husky::Material({ 0, 1, 0 }));
-
-    auto entity = std::make_unique<Entity>("Sphere", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 3, 3, 0 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::sphere(1.0), husky::Material({ 0, 1, 0 })));
+    entities.emplace_back(std::make_unique<Entity>("Sphere", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::translate({ 3, 3, 0 });
   }
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1);
-    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
-
-    auto entity = std::make_unique<Entity>("Cylinder", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 4, -2, 0 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 })));
+    entities.emplace_back(std::make_unique<Entity>("Cylinder", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 0 });
   }
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::cone(0.5, 1.0, true, 8);
-    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 1 }));
-
-    auto entity = std::make_unique<Entity>("Cone", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 4, -2, 2 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 })));
+    entities.emplace_back(std::make_unique<Entity>("Cone", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 2 });
   }
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::box(2.0, 3.0, 1.0);
-    husky::Model mdl(std::move(mesh), husky::Material({ 1, 0, 0 }));
-
-    auto entity = std::make_unique<Entity>("Box", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 })));
+    entities.emplace_back(std::make_unique<Entity>("Box", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
   }
 
   {
-    husky::SimpleMesh mesh = husky::SimpleMesh::torus(8.0, 1.0);
-    husky::Model mdl(std::move(mesh), husky::Material({ 1, 1, 0 }));
-
-    auto entity = std::make_unique<Entity>("Torus", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::translate({ 0, 0, 0 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 })));
+    entities.emplace_back(std::make_unique<Entity>("Torus", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::translate({ 0, 0, 0 });
   }
 
   {
@@ -586,13 +572,13 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
     husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
 
-    auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
-    entities.emplace_back(std::move(entity));
+    models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
+    entities.emplace_back(std::make_unique<Entity>("TestModel", defaultShader, lineShader, models.back().get()));
+    entities.back()->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
   }
 
   for (auto &entity : entities) {
-    initRenderDataGPU(entity->model); // TODO: Remove
+    initRenderDataGPU(*entity->modelInstance.model); // TODO: Remove
     initRenderDataGPU(entity->bboxModel); // TODO: Remove
   }
 
@@ -674,6 +660,10 @@ int main()
       ImGui::Text(entitiesDebugText.c_str());
 
       if (iSelectedEntity != -1) {
+        if (ImGui::Button("Zoom to selected")) {
+          // TODO
+        }
+
         const auto &selectedEntity = entities[iSelectedEntity];
 
         husky::Vector3d scale, trans;

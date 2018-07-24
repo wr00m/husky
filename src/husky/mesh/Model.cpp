@@ -257,4 +257,13 @@ void Model::addRenderData(const RenderData &&renderData, const Material &mtl)
   addRenderData(std::move(renderData), mtlIndex);
 }
 
+ModelInstance::ModelInstance(Model *model)
+  : model(model)
+  , animationIndex(-1)
+  , animationTime(0)
+{
+  assert(model != nullptr);
+  if (!model->animations.empty()) { animationIndex = 0; } // TODO: Remove
+}
+
 }
