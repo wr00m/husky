@@ -220,7 +220,7 @@ Model Model::load(const std::string &filePath)
         animationChannel.keyframeScale[key.mTime] = { key.mValue.x, key.mValue.y, key.mValue.z };
       }
 
-      animation.channels.emplace_back(std::move(animationChannel));
+      animation.channels.emplace(animationChannel.nodeName, std::move(animationChannel));
     }
 
     mdl.animations.emplace_back(std::move(animation));

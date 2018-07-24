@@ -12,7 +12,7 @@ Bone::Bone(const std::string &name, int parent)
 {
 }
 
-Bone::Bone(const std::string &name, int parent, const husky::Matrix44f &mtx)
+Bone::Bone(const std::string &name, int parent, const husky::Matrix44d &mtx)
   : name(name)
   , parent(parent)
   , mtx(mtx)

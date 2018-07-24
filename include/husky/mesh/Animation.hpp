@@ -1,5 +1,6 @@
 #pragma once
 
+#include <husky/mesh/Bone.hpp>
 #include <husky/math/Quaternion.hpp>
 #include <map>
 #include <vector>
@@ -22,10 +23,15 @@ class HUSKY_DLL Animation
 public:
   Animation(const std::string &name, double durationTicks, double ticksPerSecond);
 
+  Matrix44d getBoneTransform(const Bone &bone, double time) const;
+
   std::string name;
   double durationTicks;
   double ticksPerSecond;
-  std::vector<AnimationChannel> channels;
+  std::map<std::string, AnimationChannel> channels; // Node name is map key
+
+private:
+  Matrix44d getNodeTransform(const std::string &nodeName, double time, const Matrix44d &defaultTransform) const;
 };
 
 }

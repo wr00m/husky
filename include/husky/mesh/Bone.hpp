@@ -10,13 +10,13 @@ class HUSKY_DLL Bone
 public:
   Bone(const std::string &name);
   Bone(const std::string &name, int parent);
-  Bone(const std::string &name, int parent, const Matrix44f &mtx);
+  Bone(const std::string &name, int parent, const Matrix44d &mtx);
 
   std::string name;
   //int index;
   int parent;
-  Matrix44f mtx;
-  Matrix44f mtxCombined;
+  Matrix44d mtx;
+  Matrix44d mtxCombined;
 };
 
 }
