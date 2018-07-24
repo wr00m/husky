@@ -22,6 +22,7 @@ public:
   std::vector<Material> materials;
   std::vector<RenderData> meshRenderDatas;
   std::vector<int> meshMaterialIndices;
+  std::vector<Animation> animations;
 };
 
 }

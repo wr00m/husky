@@ -195,10 +195,36 @@ Model Model::load(const std::string &filePath)
     meshMaterialIndices.emplace_back(scene->mMeshes[iMesh]->mMaterialIndex);
   }
 
-  //for (unsigned int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
-  //  const aiAnimation *anim = scene->mAnimations[iAnim];
-  //  Log::info("Animation: %s", anim->mName.C_Str());
-  //}
+  for (unsigned int iAnim = 0; iAnim < scene->mNumAnimations; iAnim++) {
+    const aiAnimation *anim = scene->mAnimations[iAnim];
+
+    Animation animation(anim->mName.C_Str(), anim->mDuration, anim->mTicksPerSecond);
+
+    for (unsigned int iChannel = 0; iChannel < anim->mNumChannels; iChannel++) {
+      const aiNodeAnim *nodeAnim = anim->mChannels[iChannel];
+      
+      AnimationChannel animationChannel(nodeAnim->mNodeName.C_Str());
+      
+      for (unsigned int iKey = 0; iKey < nodeAnim->mNumPositionKeys; iKey++) {
+        const auto &key = nodeAnim->mPositionKeys[iKey];
+        animationChannel.keyframePosition[key.mTime] = { key.mValue.x, key.mValue.y, key.mValue.z };
+      }
+
+      for (unsigned int iKey = 0; iKey < nodeAnim->mNumRotationKeys; iKey++) {
+        const auto &key = nodeAnim->mRotationKeys[iKey];
+        animationChannel.keyframeRotation[key.mTime] = { key.mValue.x, key.mValue.y, key.mValue.z, key.mValue.w };
+      }
+
+      for (unsigned int iKey = 0; iKey < nodeAnim->mNumScalingKeys; iKey++) {
+        const auto &key = nodeAnim->mScalingKeys[iKey];
+        animationChannel.keyframeScale[key.mTime] = { key.mValue.x, key.mValue.y, key.mValue.z };
+      }
+
+      animation.channels.emplace_back(std::move(animationChannel));
+    }
+
+    mdl.animations.emplace_back(std::move(animation));
+  }
 
   getNodeMeshesRecursive(scene->mRootNode, nullptr, meshes, meshMaterialIndices, mdl);
   return mdl;
