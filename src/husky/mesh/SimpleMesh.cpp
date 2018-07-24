@@ -360,6 +360,7 @@ void SimpleMesh::normalizeBoneWeights()
     std::vector<BoneWeight> &boneWeights = vertBoneWeights[i];
 
     if (boneWeights.size() > 4) {
+      // TODO: Sort by weight
       boneWeights.resize(4);
 
       Vector4d normWeights(boneWeights[0].weight, boneWeights[1].weight, boneWeights[2].weight, boneWeights[3].weight);
@@ -406,18 +407,20 @@ RenderData SimpleMesh::getRenderData() const
       if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
       if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
       r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+
       if (hasBoneWeights()) {
         const auto &boneWeights = vertBoneWeights[i];
-        Vector4b inds, weights;
+        Vector4b inds; // = { 0, 1, 2, 3 };
+        Vector4b weights; // = { 255, 0, 0, 0 };
 
-        for (int j = 0; j < vertBoneWeights[i].size(); j++) {
+        for (int j = 0; j < boneWeights.size(); j++) {
           if (j > 3) {
             Log::warning("Too many bone weights, should be normalized");
             break;
           }
 
-          inds[j] = (std::uint8_t)vertBoneWeights[i][j].boneIndex;
-          weights[j] = (std::uint8_t)(vertBoneWeights[i][j].weight * 255); // Check/clamp value?
+          inds[j] = (std::uint8_t)boneWeights[j].boneIndex;
+          weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
         }
 
         r.setValue(i, RenderData::Attribute::BONE_INDICES, inds);

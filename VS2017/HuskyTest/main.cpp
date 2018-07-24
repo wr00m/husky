@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Entity.hpp"
@@ -76,13 +77,23 @@ void main()
 )";
 
 static const char *defaultVertSrc =
-R"(#version 400 core
-#define USE_BONES // TODO: Remove
+R"(//#version 400 core
 #ifdef USE_BONES
 #ifndef MAX_BONES
-#define MAX_BONES 256 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
+#define MAX_BONES 100 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
 #endif
-uniform mat4 mtxBones[MAX_BONES];
+uniform mat4 mtxBones[MAX_BONES] = {
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+};
 in ivec4 vertBoneIndices;
 in vec4 vertBoneWeights;
 #endif
@@ -94,7 +105,7 @@ in vec3 vertPosition;
 in vec3 vertNormal;
 in vec2 vertTexCoord;
 in vec4 vertColor;
-out vec4 varPos;
+out vec4 varPosition;
 out vec3 varNormal;
 out vec2 varTexCoord;
 out vec4 varColor;
@@ -104,12 +115,15 @@ void main() {
                + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
                + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
                + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3]; // TODO
-#endif
-  varPos = mtxModelView * vec4(vertPosition, 1.0);
+  varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
+  varNormal = mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz;
+#else
+  varPosition = mtxModelView * vec4(vertPosition, 1.0);
   varNormal = mtxNormal * vertNormal;
+#endif
   varTexCoord = vertTexCoord * texCoordScale;
   varColor = vertColor;
-  gl_Position = mtxProjection * varPos;
+  gl_Position = mtxProjection * varPosition;
 })";
 
 static const char *defaultFragSrc =
@@ -125,13 +139,13 @@ uniform vec3 mtlSpecular = vec3(1.0, 1.0, 1.0);
 uniform vec3 mtlEmissive = vec3(0.0, 0.0, 0.0);
 uniform float mtlShininess = 100.0;
 uniform float mtlShininessStrength = 1.0;
-in vec4 varPos;
+in vec4 varPosition;
 in vec3 varNormal;
 in vec2 varTexCoord;
 in vec4 varColor;
 out vec4 fragColor;
 void main() {
-  vec3 v = varPos.xyz;
+  vec3 v = varPosition.xyz;
   vec3 N = varNormal;
   vec3 L = lightDir;
   vec3 E = normalize(-v);
@@ -172,7 +186,7 @@ static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
 static std::vector<std::unique_ptr<Entity>> entities;
-static Entity *selectedEntity = nullptr;
+static int iSelectedEntity = -1;
 static GLuint fbo = 0;
 static husky::Viewport fboViewport;
 static ImGuiIO *io = nullptr;
@@ -198,11 +212,21 @@ static void toggleFullscreen(GLFWwindow *win)
 static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS) {
-    if (key == GLFW_KEY_F11) {
+    if (key == GLFW_KEY_F11) { // Fullscreen
       toggleFullscreen(win);
     }
-    else if (key == GLFW_KEY_ESCAPE) {
+    else if (key == GLFW_KEY_ESCAPE) { // Exit
       glfwSetWindowShouldClose(win, GLFW_TRUE);
+    }
+    else if (key == GLFW_KEY_PAGE_UP) { // Select previous entity
+      if (!entities.empty()) {
+        iSelectedEntity = (std::max(iSelectedEntity, 0) + (int)entities.size() - 1) % entities.size();
+      }
+    }
+    else if (key == GLFW_KEY_PAGE_DOWN) { // Select next entity
+      if (!entities.empty()) {
+        iSelectedEntity = (iSelectedEntity + 1) % entities.size();
+      }
     }
   }
 }
@@ -234,9 +258,11 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-      std::multimap<double, Entity*> clickedEntities; // Sorted by key (tMean)
+      std::multimap<double, int> clickedEntities; // Sorted by key (tMean)
 
-      for (const auto &entity : entities) {
+      for (int iEntity = 0; iEntity < (int)entities.size(); iEntity++) {
+        const auto &entity = entities[iEntity];
+
         husky::Vector2i windowSize;
         glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
         husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
@@ -250,20 +276,20 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
           double tMean = (t0 + t1) * 0.5; // Picking priority feels more intuitive with tMean than t0
-          clickedEntities.insert({ tMean, entity.get() });
+          clickedEntities.insert({ tMean, iEntity });
         }
       }
 
       if (clickedEntities.empty()) { // Nothing clicked => Deselect
-        selectedEntity = nullptr;
+        iSelectedEntity = -1;
       }
       else if (clickedEntities.size() == 1) { // One entity clicked => Select the entity
-        selectedEntity = clickedEntities.begin()->second;
+        iSelectedEntity = clickedEntities.begin()->second;
       }
       else { // Multiple entities clicked => Select first unselected entity
         for (const auto &pair : clickedEntities) {
-          if (pair.second != selectedEntity) {
-            selectedEntity = pair.second;
+          if (pair.second != iSelectedEntity) {
+            iSelectedEntity = pair.second;
             break;
           }
         }
@@ -348,6 +374,68 @@ static void initRenderDataGPU(husky::Model &mdl)
   }
 }
 
+static GLuint compileShader(GLenum shaderType, const std::string &shaderSrc)
+{
+  GLuint shader = glCreateShader(shaderType);
+  const char *cShaderSrc = shaderSrc.c_str();
+  glShaderSource(shader, 1, &cShaderSrc, NULL);
+  glCompileShader(shader);
+
+  GLint isCompiled = GL_FALSE;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+  if (isCompiled == GL_FALSE) {
+    GLint logLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::vector<GLchar> log(logLength, ' ');
+    glGetShaderInfoLog(shader, logLength, nullptr, log.data());
+    
+    std::string s(log.begin(), log.end());
+    husky::Log::error(s.c_str());
+
+    glDeleteShader(shader);
+    return 0;
+  }
+
+  return shader;
+}
+
+static GLuint compileShaderProgram(const std::string &vertSrc, const std::string &geomSrc, const std::string &fragSrc)
+{
+  GLuint program = glCreateProgram();
+
+  GLuint vertShader = compileShader(GL_VERTEX_SHADER, vertSrc);
+  glAttachShader(program, vertShader);
+
+  if (!geomSrc.empty()) {
+    GLuint geomShader = compileShader(GL_GEOMETRY_SHADER, geomSrc);
+    glAttachShader(program, geomShader);
+  }
+
+  GLuint fragShader = compileShader(GL_FRAGMENT_SHADER, fragSrc);
+  glAttachShader(program, fragShader);
+
+  glLinkProgram(program);
+
+  GLint isLinked = GL_FALSE;
+  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+  if (isLinked == GL_FALSE) {
+    GLint logLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::vector<GLchar> log(logLength);
+    glGetProgramInfoLog(program, logLength, nullptr, log.data());
+
+    std::string s(log.begin(), log.end());
+    husky::Log::error(s.c_str());
+
+    glDeleteProgram(program);
+    return 0;
+  }
+
+  return program;
+}
+
 int main()
 {
   runUnitTests();
@@ -398,31 +486,9 @@ int main()
 
   updateViewportAndRebuildFbo();
 
-  GLuint defaultVertShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(defaultVertShader, 1, &defaultVertSrc, NULL);
-  glCompileShader(defaultVertShader);
-  GLuint defaultFragShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(defaultFragShader, 1, &defaultFragSrc, NULL);
-  glCompileShader(defaultFragShader);
-  GLuint defaultShaderProg = glCreateProgram();
-  glAttachShader(defaultShaderProg, defaultVertShader);
-  glAttachShader(defaultShaderProg, defaultFragShader);
-  glLinkProgram(defaultShaderProg);
-
-  GLuint lineVertShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(lineVertShader, 1, &lineVertSrc, NULL);
-  glCompileShader(lineVertShader);
-  GLuint lineGeomShader = glCreateShader(GL_GEOMETRY_SHADER);
-  glShaderSource(lineGeomShader, 1, &lineGeomSrc, NULL);
-  glCompileShader(lineGeomShader);
-  GLuint lineFragShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(lineFragShader, 1, &lineFragSrc, NULL);
-  glCompileShader(lineFragShader);
-  GLuint lineShaderProg = glCreateProgram();
-  glAttachShader(lineShaderProg, lineVertShader);
-  glAttachShader(lineShaderProg, lineGeomShader);
-  glAttachShader(lineShaderProg, lineFragShader);
-  glLinkProgram(lineShaderProg);
+  GLuint defaultShaderProg = compileShaderProgram(std::string("#version 400 core\n") + defaultVertSrc, "", defaultFragSrc);
+  GLuint defaultShaderProgBone = compileShaderProgram(std::string("#version 400 core\n#define USE_BONES\n") + defaultVertSrc, "", defaultFragSrc);
+  GLuint lineShaderProg = compileShaderProgram(lineVertSrc, lineGeomSrc, lineFragSrc);
 
 #if 1
   husky::Image image(2, 2, sizeof(husky::Vector4b));
@@ -515,12 +581,13 @@ int main()
   {
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
-    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
+    husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
 
     auto entity = std::make_unique<Entity>("TestModel", defaultShader, lineShader, std::move(mdl));
-    entity->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
+    entity->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
     entities.emplace_back(std::move(entity));
   }
 
@@ -547,7 +614,7 @@ int main()
     cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
     cam.buildViewMatrix();
 
-    std::vector<const Entity*> viewEntities;
+    std::vector<int> viewEntities;
 
     { // Render scene to FBO
       glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -561,13 +628,15 @@ int main()
 
       const husky::Frustum frustum = cam.frustum();
 
-      for (const auto &entity : entities) {
-        bool isSelected = (entity.get() == selectedEntity);
+      for (int iEntity = 0; iEntity < (int)entities.size(); iEntity++) {
+        const auto &entity = entities[iEntity];
+
+        bool isSelected = (iEntity == iSelectedEntity);
         entity->draw(viewport, cam, isSelected);
 
         // TODO: Don't test frustum intersection with *local* bounding box!
         if ((bool)frustum.touches(entity->bboxLocal.min, entity->bboxLocal.max)) {
-          viewEntities.emplace_back(entity.get());
+          viewEntities.emplace_back(iEntity);
         }
       }
 
@@ -594,8 +663,8 @@ int main()
       {
         std::ostringstream oss;
         oss << "Entities in view: " << viewEntities.size();
-        for (const auto e : viewEntities) {
-          oss << "\n  " << e->name;
+        for (const auto iViewEntity : viewEntities) {
+          oss << "\n  " << (iViewEntity == iSelectedEntity ? "*" : "") << entities[iViewEntity]->name;
         }
         entitiesDebugText = oss.str();
       }
@@ -604,7 +673,9 @@ int main()
       ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
       ImGui::Text(entitiesDebugText.c_str());
 
-      if (selectedEntity != nullptr) {
+      if (iSelectedEntity != -1) {
+        const auto &selectedEntity = entities[iSelectedEntity];
+
         husky::Vector3d scale, trans;
         husky::Matrix33d rot;
         selectedEntity->transform.decompose(scale, rot, trans);
