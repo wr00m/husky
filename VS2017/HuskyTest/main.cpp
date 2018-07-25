@@ -244,8 +244,8 @@ static void mouseMoveCallback(GLFWwindow* win, double x, double y)
 
   if (mouseDragRight) {
     const double rotSpeed = 0.01;
-    cam.attitude = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.x, { 0, 0, 1 }) * cam.attitude; // Yaw
-    cam.attitude = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.y, cam.right()) * cam.attitude; // Pitch
+    cam.rot = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.x, { 0, 0, 1 }) * cam.rot; // Yaw
+    cam.rot = husky::Quaterniond::fromAxisAngle(rotSpeed * -mouseDelta.y, cam.right()) * cam.rot; // Pitch
   }
 
   mousePos = newMousePos;
@@ -270,7 +270,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
         // TODO: Each entity should provide its bounding box in world coordinates (better performance than inverting the picking ray for each entity)
         husky::Matrix44d inv = entity->transform.inverted();
-        husky::Vector3d rayStart = (inv * husky::Vector4d(cam.position, 1.0)).xyz;
+        husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
         husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
         rayDir = -rayDir; // Reverse Z
 
@@ -312,7 +312,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 static void scrollCallback(GLFWwindow *win, double deltaX, double deltaY)
 {
   constexpr double zoomSpeed = 1.0;
-  cam.position += cam.forward() * zoomSpeed * deltaY;
+  cam.pos += cam.forward() * zoomSpeed * deltaY;
 }
 
 static void handleKeyInput(GLFWwindow *win)
@@ -324,14 +324,18 @@ static void handleKeyInput(GLFWwindow *win)
 
   const husky::Vector3d camSpeed(20, 20, 20);
 
-  cam.position += cam.right()   * input.x * camSpeed.x * frameTime;
-  cam.position += cam.forward() * input.y * camSpeed.y * frameTime;
-  cam.position += cam.up()      * input.z * camSpeed.z * frameTime;
+  cam.pos += cam.right()   * input.x * camSpeed.x * frameTime;
+  cam.pos += cam.forward() * input.y * camSpeed.y * frameTime;
+  cam.pos += cam.up()      * input.z * camSpeed.z * frameTime;
 }
 
 static void updateViewportAndRebuildFbo()
 {
   glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+  
+  cam.aspectRatio = viewport.aspectRatio();
+  cam.buildProjMatrix();
+
   fboViewport.set(0, 0, viewport.width, viewport.height);
 
   GLuint color, depth;
@@ -597,7 +601,6 @@ int main()
       handleKeyInput(window);
     }
 
-    cam.projection = husky::Matrix44d::perspectiveInfRevZ(husky::Math::deg2rad * 60.0, fboViewport.aspectRatio(), 0.1); // , 2.4e-7);
     cam.buildViewMatrix();
 
     std::vector<int> viewEntities;
@@ -656,16 +659,26 @@ int main()
       }
 
       ImGui::Text("fps: %d", (int)std::round(fps));
-      ImGui::Text("cam.position:\n  %f\n  %f\n  %f", cam.position.x, cam.position.y, cam.position.z);
+      ImGui::Text("cam.pos:\n  %f\n  %f\n  %f", cam.pos.x, cam.pos.y, cam.pos.z);
+
+      float fov = (float)cam.vFovRad;
+      if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {
+        cam.vFovRad = fov;
+        cam.buildProjMatrix();
+      }
+
+      //ImGui::Text("cam.fov: %f", cam.projection.fov() * husky::Math::rad2deg);
       ImGui::Text(entitiesDebugText.c_str());
 
       if (iSelectedEntity != -1) {
+        const auto &selectedEntity = entities[iSelectedEntity];
+        
         if (ImGui::Button("Zoom to selected")) {
           // TODO
+          //husky::Vector3d boundingSphereCenterPt = selectedEntity->bboxLocal.center();
+          //double boundingSphereRadius = (selectedEntity->bboxLocal.max - selectedEntity->bboxLocal.min).length() * 0.5;
         }
-
-        const auto &selectedEntity = entities[iSelectedEntity];
-
+        
         husky::Vector3d scale, trans;
         husky::Matrix33d rot;
         selectedEntity->transform.decompose(scale, rot, trans);
@@ -675,13 +688,15 @@ int main()
         float pitch = (float)eulerAngles.pitch;
         float roll  = (float)eulerAngles.roll;
 
-        ImGui::SliderAngle("Yaw",   &yaw,   -180.f, 180.f);
-        ImGui::SliderAngle("Pitch", &pitch, -180.f, 180.f);
-        ImGui::SliderAngle("Roll",  &roll,  -180.f, 180.f);
+        bool rotated = false;
+        rotated |= ImGui::SliderAngle("Yaw",   &yaw,   -180.f, 180.f);
+        rotated |= ImGui::SliderAngle("Pitch", &pitch, -180.f, 180.f);
+        rotated |= ImGui::SliderAngle("Roll",  &roll,  -180.f, 180.f);
 
-        eulerAngles.angles.set(yaw, pitch, roll);
-
-        selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
+        if (rotated) {
+          eulerAngles.angles.set(yaw, pitch, roll);
+          selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
+        }
       }
 
       ImGui::Image(((std::uint8_t*)nullptr) + textureHandle, { 100, 100 });

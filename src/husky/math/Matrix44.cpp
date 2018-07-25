@@ -56,18 +56,18 @@ Matrix44<T> Matrix44<T>::ortho(T left, T right, T bottom, T top, T near, T far)
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspective(T yFovRad, T aspectRatio, T near, T far)
+Matrix44<T> Matrix44<T>::perspective(T vFovRad, T aspectRatio, T near, T far)
 {
-  T top = near * std::tan(yFovRad * T(0.5));
+  T top = near * std::tan(vFovRad * T(0.5));
   T right = top * aspectRatio;
   return frustum(-right, right, -top, top, near, far);
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspectiveInf(T yFovRad, T aspectRatio, T near, T epsilon) // 2.4e-7
+Matrix44<T> Matrix44<T>::perspectiveInf(T vFovRad, T aspectRatio, T near, T epsilon) // 2.4e-7
 {
   // Note: This differs slightly from http://www.terathon.com/gdc07_lengyel.pdf
-  T e = T(1) / (std::tan(T(0.5) * yFovRad) * aspectRatio);
+  T e = T(1) / (std::tan(T(0.5) * vFovRad) * aspectRatio);
 
   Matrix44<T> m;
   m[0][0] = e;
@@ -80,10 +80,10 @@ Matrix44<T> Matrix44<T>::perspectiveInf(T yFovRad, T aspectRatio, T near, T epsi
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T yFovRad, T aspectRatio, T near, Matrix44<T> *inv)
+Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T vFovRad, T aspectRatio, T near, Matrix44<T> *inv)
 {
   // https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/
-  T e = T(1) / (std::tan(T(0.5) * yFovRad) * aspectRatio);
+  T e = T(1) / (std::tan(T(0.5) * vFovRad) * aspectRatio);
   T er = e * aspectRatio;
 
   Matrix44<T> m = {

@@ -21,7 +21,8 @@ public:
   Quaternion();
   Quaternion(T xyzw);
   Quaternion(T x, T y, T z, T w);
-  
+  Quaternion(const Vector3<T> &xyz, T w);
+
   template<typename T2>
   explicit Quaternion(const Quaternion<T2> &xyzw) : x(T(xyzw.x)), y(T(xyzw.y)), z(T(xyzw.z)), w(T(xyzw.w)) {}
   

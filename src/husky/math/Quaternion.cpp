@@ -100,6 +100,12 @@ Quaternion<T>::Quaternion(T x, T y, T z, T w)
 }
 
 template<typename T>
+Quaternion<T>::Quaternion(const Vector3<T> &xyz, T w)
+  : x(xyz.x), y(xyz.y), z(xyz.z), w(w)
+{
+}
+
+template<typename T>
 Matrix33<T> Quaternion<T>::toMatrix() const
 {
   Quaternion<T> n = normalized();

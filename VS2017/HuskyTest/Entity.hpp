@@ -35,7 +35,7 @@ public:
   {
     const husky::Matrix44f view(cam.view);
     const husky::Matrix44f modelView(cam.view * transform);
-    const husky::Matrix44f projection(cam.projection);
+    const husky::Matrix44f projection(cam.proj);
 
     draw(shader, modelInstance, viewport, view, modelView, projection);
 
