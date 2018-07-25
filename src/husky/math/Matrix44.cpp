@@ -43,39 +43,67 @@ Matrix44<T> Matrix44<T>::rotate(T rad, Vector3<T> axis)
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::ortho(T left, T right, T bottom, T top, T near, T far)
+Matrix44<T> Matrix44<T>::ortho(T left, T right, T bottom, T top, T near, T far, Matrix44<T> *inv)
 {
-  Matrix44<T> res = identity();
-  res.col[0].val[0] = T(2) / (right - left);
-  res.col[1].val[1] = T(2) / (top - bottom);
-  res.col[2].val[2] = -T(2) / (far - near);
-  res.col[3].val[0] = -(right + left) / (right - left);
-  res.col[3].val[1] = -(top + bottom) / (top - bottom);
-  res.col[3].val[2] = -(far + near) / (far - near);
-  return res;
+  T rpl = right + left;
+  T rml = right - left;
+  T tpb = top + bottom;
+  T tmb = top - bottom;
+  T fpn = far + near;
+  T fmn = far - near;
+
+  Matrix44<T> m = {
+       2 / rml,          0,          0, 0,
+             0,    2 / tmb,          0, 0,
+             0,          0,   -2 / fmn, 0,
+    -rpl / rml, -tpb / tmb, -fpn / fmn, 1
+  };
+
+  if (inv != nullptr) {
+    *inv = {
+      rml / 2,       0,        0, 0,
+            0, tmb / 2,        0, 0,
+            0,       0, fmn / -2, 0,
+      rpl / 2, tpb / 2, fpn / -2, 1
+    };
+  }
+
+  return m;
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspective(T vFovRad, T aspectRatio, T near, T far)
+Matrix44<T> Matrix44<T>::perspective(T vFovRad, T aspectRatio, T near, T far, Matrix44<T> *inv)
 {
   T top = near * std::tan(vFovRad * T(0.5));
   T right = top * aspectRatio;
-  return frustum(-right, right, -top, top, near, far);
+  return frustum(-right, right, -top, top, near, far, inv);
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspectiveInf(T vFovRad, T aspectRatio, T near, T epsilon) // 2.4e-7
+Matrix44<T> Matrix44<T>::perspectiveInf(T vFovRad, T aspectRatio, T near, T epsilon, Matrix44<T> *inv)
 {
   // Note: This differs slightly from http://www.terathon.com/gdc07_lengyel.pdf
   T e = T(1) / (std::tan(T(0.5) * vFovRad) * aspectRatio);
+  T er = e * aspectRatio;
+  T emo = epsilon - 1;
+  T etn = (epsilon - 2) * near;
 
-  Matrix44<T> m;
-  m[0][0] = e;
-  m[1][1] = e * aspectRatio;
-  m[2][2] = epsilon - T(1);
-  m[2][3] = T(-1);
-  m[3][2] = (epsilon - T(2)) * near;
-  m[3][3] = T(0);
+  Matrix44<T> m = {
+    e,  0,   0,  0,
+    0, er,   0,  0,
+    0,  0, emo, -1,
+    0,  0, etn,  0
+  };
+
+  if (inv != nullptr) {
+    *inv = {
+      1/e,    0,  0,       0,
+        0, 1/er,  0,       0,
+        0,    0,  0,   1/etn,
+        0,    0, -1, emo/etn
+    };
+  }
+
   return m;
 }
 
@@ -95,10 +123,10 @@ Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T vFovRad, T aspectRatio, T near, Ma
 
   if (inv != nullptr) {
     *inv = {
-      1 / e,      0,  0,        0,
-          0, 1 / er,  0,        0,
-          0,      0,  0, 1 / near,
-          0,      0, -1,        0
+      1/e,    0,  0,      0,
+        0, 1/er,  0,      0,
+        0,    0,  0, 1/near,
+        0,    0, -1,      0
     };
   }
 
@@ -106,30 +134,32 @@ Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T vFovRad, T aspectRatio, T near, Ma
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::frustum(T left, T right, T bottom, T top, T near, T far)
+Matrix44<T> Matrix44<T>::frustum(T left, T right, T bottom, T top, T near, T far, Matrix44<T> *inv)
 {
-  T t1 = T(2) * near;
-  T t2 = right - left;
-  T t3 = top - bottom;
-  T t4 = far - near;
+  T npn = 2 * near;
+  T rpl = right + left;
+  T rml = right - left;
+  T tpb = top + bottom;
+  T tmb = top - bottom;
+  T fpn = far + near;
+  T fmn = far - near;
+  T mul = far * npn;
 
-  Matrix44<T> m;
-  m[0][0] = t1 / t2;
-  m[0][1] = 0;
-  m[0][2] = 0;
-  m[0][3] = 0;
-  m[1][0] = 0;
-  m[1][1] = t1 / t3;
-  m[1][2] = 0;
-  m[1][3] = 0;
-  m[2][0] = (right + left) / t2;
-  m[2][1] = (top + bottom) / t3;
-  m[2][2] = (-far - near) / t4;
-  m[2][3] = -1;
-  m[3][0] = 0;
-  m[3][1] = 0;
-  m[3][2] = (-t1 * far) / t4;
-  m[3][3] = 0;
+  Matrix44<T> m = {
+    npn / rml,         0,          0,  0,
+            0, npn / tmb,          0,  0,
+    rpl / rml, tpb / tmb, -fpn / fmn, -1,
+            0,         0, -mul / fmn,  0
+  };
+
+  if (inv != nullptr) {
+    *inv = {
+      rml/npn,       0,  0,        0,
+            0, tmb/npn,  0,        0,
+            0,       0,  0, -fmn/mul,
+      rpl/npn, tpb/npn, -1,  fpn/mul
+    };
+  }
 
   return m;
 }

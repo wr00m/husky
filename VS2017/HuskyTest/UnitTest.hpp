@@ -61,22 +61,32 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double           lookAtDiff  = matDiff(lookAt, lookAtGlm);
   assert(lookAtDiff < 1e-9);
   double           lookAtInvDiff = matDiff(lookAtInv1, glm::make_mat4(lookAtInv2.m));
-  assert(lookAtInvDiff < 1e-9);
+  assert(lookAtInvDiff < 1e-14);
 
-  husky::Matrix44d ortho       = husky::Matrix44d::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
+  husky::Matrix44d orthoInv1;
+  husky::Matrix44d ortho       = husky::Matrix44d::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, &orthoInv1);
+  husky::Matrix44d orthoInv2   = ortho.inverted();
   glm::dmat4x4     orthoGlm    =              glm::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
   double           orthoDiff   = matDiff(ortho, orthoGlm);
   assert(orthoDiff < 1e-9);
+  double           orthoInvDiff = matDiff(orthoInv1, glm::make_mat4(orthoInv2.m));
+  assert(orthoInvDiff < 1e-14);
 
-  husky::Matrix44d frustum     = husky::Matrix44d::frustum(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
+  husky::Matrix44d frustumInv;
+  husky::Matrix44d frustum     = husky::Matrix44d::frustum(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, &frustumInv);
   glm::dmat4x4     frustumGlm  =              glm::frustum(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
   double           frustumDiff = matDiff(frustum, frustumGlm);
   assert(frustumDiff < 1e-9);
+  double           frustumInvDiff = matDiff(frustumInv, glm::make_mat4(frustum.inverted().m));
+  assert(frustumInvDiff < 1e-14);
 
-  husky::Matrix44d persp       = husky::Matrix44d::perspective(husky::Math::deg2rad * 60.0, 1.5, 1.0, 100.0);
+  husky::Matrix44d perspInv;
+  husky::Matrix44d persp       = husky::Matrix44d::perspective(husky::Math::deg2rad * 60.0, 1.5, 1.0, 100.0, &perspInv);
   glm::dmat4x4     perspGlm    = glm::perspective(husky::Math::deg2rad * 60.0, 1.5, 1.0, 100.0);
   double           perspDiff   = matDiff(persp, perspGlm);
   assert(perspDiff < 1e-9);
+  double           perspInvDiff = matDiff(perspInv, glm::make_mat4(persp.inverted().m));
+  assert(perspInvDiff < 1e-14);
 
   husky::Matrix44d rot         = husky::Matrix44d::rotate(33.0, { 12.0, 13.0, 14.0 });
   glm::dmat4x4     rotGlm      = glm::rotate(33.0, glm::dvec3{ 12.0, 13.0, 14.0 });
@@ -103,10 +113,13 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double quatDirsDiff = quatDiff(quatDirs, quatDirsGlm);
   assert(quatDirsDiff < 1e-9);
 
-  husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1);
-  glm::dmat4x4 perspInfGlm = glm::infinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1);
+  husky::Matrix44d perspInfInv;
+  husky::Matrix44d perspInf = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1, std::numeric_limits<double>::epsilon(), &perspInfInv);
+  glm::dmat4x4 perspInfGlm = glm::tweakedInfinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1);
   double perspInfDiff = matDiff(perspInf, perspInfGlm);
   assert(perspInfDiff < 1e-9);
+  double perspInfInvDiff = matDiff(perspInfInv, glm::make_mat4(perspInf.inverted().m));
+  assert(perspInfInvDiff < 1e-14);
 
   husky::Matrix44d perspInfTweak = husky::Matrix44d::perspectiveInf(husky::Math::pi / 3.0, 1.25, 0.1, 1e-4);
   glm::dmat4x4 perspInfTweakGlm = glm::tweakedInfinitePerspective(husky::Math::pi / 3.0, 1.25, 0.1, 1e-4);
@@ -117,7 +130,7 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::Math::pi / 3.0, 1.25, 0.1, &perspInfRevZInv1); // TODO: Verify returned matrix
   husky::Matrix44d perspInfRevZInv2 = perspInfRevZ.inverted();
   double perspInfRevZInvDiff = matDiff(perspInfRevZInv1, glm::make_mat4(perspInfRevZInv2.m));
-  assert(perspInfRevZInvDiff < 1e-9);
+  assert(perspInfRevZInvDiff < 1e-14);
 
   double vec3Angle = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
   double vec3AngleGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));
