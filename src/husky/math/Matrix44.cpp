@@ -80,18 +80,28 @@ Matrix44<T> Matrix44<T>::perspectiveInf(T yFovRad, T aspectRatio, T near, T epsi
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T yFovRad, T aspectRatio, T near)
+Matrix44<T> Matrix44<T>::perspectiveInfRevZ(T yFovRad, T aspectRatio, T near, Matrix44<T> *inv)
 {
   // https://nlguillemot.wordpress.com/2016/12/07/reversed-z-in-opengl/
   T e = T(1) / (std::tan(T(0.5) * yFovRad) * aspectRatio);
+  T er = e * aspectRatio;
 
-  Matrix44<T> m;
-  m[0][0] = e;
-  m[1][1] = e * aspectRatio;
-  m[2][2] = T(0);
-  m[2][3] = T(-1);
-  m[3][2] = near;
-  m[3][3] = T(0);
+  Matrix44<T> m = {
+    e,  0,    0,  0,
+    0, er,    0,  0,
+    0,  0,    0, -1,
+    0,  0, near,  0
+  };
+
+  if (inv != nullptr) {
+    *inv = {
+      1 / e,      0,  0,        0,
+          0, 1 / er,  0,        0,
+          0,      0,  0, 1 / near,
+          0,      0, -1,        0
+    };
+  }
+
   return m;
 }
 
@@ -125,23 +135,29 @@ Matrix44<T> Matrix44<T>::frustum(T left, T right, T bottom, T top, T near, T far
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, Vector3<T> upDir)
+Matrix44<T> Matrix44<T>::lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, const Vector3<T> &upDir, Matrix44<T> *inv)
 {
-  upDir.normalize();
+  Vector3<T> u = upDir.normalized(); // Up
+  Vector3<T> f = (lookAtPos - camPos).normalized(); // Forward
+  Vector3<T> r = f.cross(u).normalized(); // Right
+  u = r.cross(f);
 
-  Vector3<T> forwardDir = (lookAtPos - camPos).normalized();
-  Vector3<T> rightDir = forwardDir.cross(upDir).normalized();
-  upDir = rightDir.cross(forwardDir);
+  Matrix44<T> m = {
+               r.x,            u.x,          -f.x, 0,
+               r.y,            u.y,          -f.y, 0,
+               r.z,            u.z,          -f.z, 0,
+    -r.dot(camPos), -u.dot(camPos), f.dot(camPos), 1
+  };
 
-  Matrix44<T> m;
-  m[0] = { rightDir, T(0) };
-  m[1] = { upDir, T(0) };
-  m[2] = { -forwardDir, T(0) };
-  m[0][3] = -rightDir.dot(camPos);
-  m[1][3] = -upDir.dot(camPos);
-  m[2][3] = forwardDir.dot(camPos);
-  m[3][3] = T(1);
-  m.transpose();
+  if (inv != nullptr) {
+    *inv = {
+      {      r, 0 },
+      {      u, 0 },
+      {     -f, 0 },
+      { camPos, 1 }
+    };
+  }
+
   return m;
 }
 

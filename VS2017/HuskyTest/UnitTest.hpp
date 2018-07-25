@@ -54,10 +54,14 @@ static double quatDiff(const husky::Quaterniond &a, const glm::dquat &g)
 
 static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
 {
-  husky::Matrix44d lookAt      = husky::Matrix44d::lookAt({ 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 });
+  husky::Matrix44d lookAtInv1;
+  husky::Matrix44d lookAt      = husky::Matrix44d::lookAt({ 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 }, &lookAtInv1);
+  husky::Matrix44d lookAtInv2  = lookAt.inverted();
   glm::dmat4x4     lookAtGlm   = glm::lookAt(glm::dvec3   { 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 });
   double           lookAtDiff  = matDiff(lookAt, lookAtGlm);
   assert(lookAtDiff < 1e-9);
+  double           lookAtInvDiff = matDiff(lookAtInv1, glm::make_mat4(lookAtInv2.m));
+  assert(lookAtInvDiff < 1e-9);
 
   husky::Matrix44d ortho       = husky::Matrix44d::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
   glm::dmat4x4     orthoGlm    =              glm::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
@@ -109,7 +113,11 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double perspInfTweakDiff = matDiff(perspInfTweak, perspInfTweakGlm);
   assert(perspInfTweakDiff < 1e-9);
 
-  //husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::Math::pi / 3.0, 1.25, 0.1);
+  husky::Matrix44d perspInfRevZInv1;
+  husky::Matrix44d perspInfRevZ = husky::Matrix44d::perspectiveInfRevZ(husky::Math::pi / 3.0, 1.25, 0.1, &perspInfRevZInv1); // TODO: Verify returned matrix
+  husky::Matrix44d perspInfRevZInv2 = perspInfRevZ.inverted();
+  double perspInfRevZInvDiff = matDiff(perspInfRevZInv1, glm::make_mat4(perspInfRevZInv2.m));
+  assert(perspInfRevZInvDiff < 1e-9);
 
   double vec3Angle = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
   double vec3AngleGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));

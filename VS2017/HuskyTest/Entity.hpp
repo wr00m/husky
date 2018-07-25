@@ -61,7 +61,17 @@ private:
     const husky::Matrix44f &modelView,
     const husky::Matrix44f &projection)
   {
-    // TODO: Set instance uniforms (bone matrices, etc.)
+    //glUseProgram(shader.shaderProgram);
+
+    //int varLocation;
+
+    //if (shader.getUniformLocation("mtxBones", varLocation)) {
+    //  // TODO
+    //  const std::vector<husky::Matrix44f> mtxBones = modelInstance.getAnimatedBoneMatrices();
+    //  if (!mtxBones.empty()) {
+    //    glUniformMatrix4fv(varLocation, mtxBones.size(), GL_FALSE, mtxBones.front().m);
+    //  }
+    //}
 
     draw(shader, *modelInstance.model, viewport, view, modelView, projection);
   }
