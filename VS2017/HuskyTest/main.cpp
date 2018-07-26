@@ -272,7 +272,6 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
         husky::Matrix44d inv = entity->transform.inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
         husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
-        rayDir = -rayDir; // Reverse Z
 
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {

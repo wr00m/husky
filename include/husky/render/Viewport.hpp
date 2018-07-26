@@ -19,6 +19,7 @@ public:
   double    aspectRatio() const;
   Vector3d  project(const Vector3d &worldPos, const Matrix44d &modelView, const Matrix44d &proj) const;
   Vector3d  unproject(const Vector3d &windowPos, const Matrix44d &modelView, const Matrix44d &proj) const;
+  Vector3d  unproject(const Vector3d &windowPos, const Matrix44d &mvpInv) const;
   Vector3d  getPickingRayDir(const Vector2d &windowPos, const Camera &cam) const;
 };
 
