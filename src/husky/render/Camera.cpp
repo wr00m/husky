@@ -13,11 +13,8 @@ Camera::Camera(const Vector3d &pos, const Quaterniond &rot)
   , rot(rot)
   , projMode(ProjectionMode::PERSP_FARINF_REVZ)
   , perspVerticalFovRad(60 * Math::deg2rad)
-  , perspAspectRatio(1)
-  , orthoLeft(-1)
-  , orthoRight(1)
-  , orthoBottom(-1)
-  , orthoTop(1)
+  , orthoHeight(20)
+  , aspectRatio(1)
   , nearDist(0.1)
   , farDist(1000)
   , proj()
@@ -50,16 +47,18 @@ Frustum Camera::frustum() const
 void Camera::buildProjMatrix()
 {
   if (projMode == ProjectionMode::ORTHO) {
-    proj = Matrix44d::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, nearDist, farDist, &projInv);
+    double hh = orthoHeight * 0.5;
+    double wh = hh * aspectRatio;
+    proj = Matrix44d::ortho(-wh, wh, -hh, hh, nearDist, farDist, &projInv);
   }
   else if (projMode == ProjectionMode::PERSP) {
-    proj = Matrix44d::perspective(perspVerticalFovRad, perspAspectRatio, nearDist, farDist, &projInv);
+    proj = Matrix44d::perspective(perspVerticalFovRad, aspectRatio, nearDist, farDist, &projInv);
   }
   else if (projMode == ProjectionMode::PERSP_FARINF) {
-    proj = Matrix44d::perspectiveInf(perspVerticalFovRad, perspAspectRatio, nearDist, 0, &projInv);
+    proj = Matrix44d::perspectiveInf(perspVerticalFovRad, aspectRatio, nearDist, 0, &projInv);
   }
   else if (projMode == ProjectionMode::PERSP_FARINF_REVZ) {
-    proj = Matrix44d::perspectiveInfRevZ(perspVerticalFovRad, perspAspectRatio, nearDist, &projInv);
+    proj = Matrix44d::perspectiveInfRevZ(perspVerticalFovRad, aspectRatio, nearDist, &projInv);
   }
   else {
     proj = Matrix44d::identity(); // This shouldn't happen...

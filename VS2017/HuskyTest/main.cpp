@@ -333,7 +333,7 @@ static void updateViewportAndRebuildFbo()
 {
   glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
   
-  cam.perspAspectRatio = viewport.aspectRatio();
+  cam.aspectRatio = viewport.aspectRatio();
   cam.buildProjMatrix();
 
   fboViewport.set(0, 0, viewport.width, viewport.height);
@@ -660,6 +660,12 @@ int main()
 
       ImGui::Text("fps: %d", (int)std::round(fps));
       ImGui::Text("cam.pos:\n  %f\n  %f\n  %f", cam.pos.x, cam.pos.y, cam.pos.z);
+
+      int projMode = (int)cam.projMode;
+      if (ImGui::Combo("cam.projMode", &projMode, "ORTHO\0PERSP\0PERSP_FARINF\0PERSP_FARINF_REVZ")) {
+        cam.projMode = (husky::ProjectionMode)projMode;
+        cam.buildProjMatrix();
+      }
 
       float fov = (float)cam.perspVerticalFovRad;
       if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {

@@ -30,11 +30,8 @@ public:
   Quaterniond rot;
   ProjectionMode projMode;
   double perspVerticalFovRad;
-  double perspAspectRatio;
-  double orthoLeft;
-  double orthoRight;
-  double orthoBottom;
-  double orthoTop;
+  double orthoHeight;
+  double aspectRatio;
   double nearDist;
   double farDist;
   Matrix44d proj;
