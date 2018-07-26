@@ -54,22 +54,20 @@ static double quatDiff(const husky::Quaterniond &a, const glm::dquat &g)
 
 static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
 {
-  husky::Matrix44d lookAtInv1;
-  husky::Matrix44d lookAt      = husky::Matrix44d::lookAt({ 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 }, &lookAtInv1);
-  husky::Matrix44d lookAtInv2  = lookAt.inverted();
+  husky::Matrix44d lookAtInv;
+  husky::Matrix44d lookAt      = husky::Matrix44d::lookAt({ 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 }, &lookAtInv);
   glm::dmat4x4     lookAtGlm   = glm::lookAt(glm::dvec3   { 2.0, 8.0, 4.0 }, { -5.0, 6.0, 7.0 }, { 0.0, 1.0, 1.0 });
   double           lookAtDiff  = matDiff(lookAt, lookAtGlm);
   assert(lookAtDiff < 1e-9);
-  double           lookAtInvDiff = matDiff(lookAtInv1, glm::make_mat4(lookAtInv2.m));
+  double           lookAtInvDiff = matDiff(lookAtInv, glm::make_mat4(lookAt.inverted().m));
   assert(lookAtInvDiff < 1e-14);
 
-  husky::Matrix44d orthoInv1;
-  husky::Matrix44d ortho       = husky::Matrix44d::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, &orthoInv1);
-  husky::Matrix44d orthoInv2   = ortho.inverted();
+  husky::Matrix44d orthoInv;
+  husky::Matrix44d ortho       = husky::Matrix44d::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, &orthoInv);
   glm::dmat4x4     orthoGlm    =              glm::ortho(0.0, 1.0, 2.0, 3.0, 4.0, 5.0);
   double           orthoDiff   = matDiff(ortho, orthoGlm);
   assert(orthoDiff < 1e-9);
-  double           orthoInvDiff = matDiff(orthoInv1, glm::make_mat4(orthoInv2.m));
+  double           orthoInvDiff = matDiff(orthoInv, glm::make_mat4(ortho.inverted().m));
   assert(orthoInvDiff < 1e-14);
 
   husky::Matrix44d frustumInv;

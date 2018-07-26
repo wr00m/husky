@@ -5,6 +5,14 @@
 
 namespace husky {
 
+enum class ProjectionMode
+{
+  ORTHO,
+  PERSP,
+  PERSP_FARINF,
+  PERSP_FARINF_REVZ,
+};
+
 class HUSKY_DLL Camera
 {
 public:
@@ -20,9 +28,15 @@ public:
 
   Vector3d pos;
   Quaterniond rot;
-  double vFovRad;
-  double aspectRatio;
+  ProjectionMode projMode;
+  double perspVerticalFovRad;
+  double perspAspectRatio;
+  double orthoLeft;
+  double orthoRight;
+  double orthoBottom;
+  double orthoTop;
   double nearDist;
+  double farDist;
   Matrix44d proj;
   Matrix44d projInv;
   Matrix44d view;

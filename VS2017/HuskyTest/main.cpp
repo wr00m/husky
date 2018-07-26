@@ -333,7 +333,7 @@ static void updateViewportAndRebuildFbo()
 {
   glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
   
-  cam.aspectRatio = viewport.aspectRatio();
+  cam.perspAspectRatio = viewport.aspectRatio();
   cam.buildProjMatrix();
 
   fboViewport.set(0, 0, viewport.width, viewport.height);
@@ -661,9 +661,9 @@ int main()
       ImGui::Text("fps: %d", (int)std::round(fps));
       ImGui::Text("cam.pos:\n  %f\n  %f\n  %f", cam.pos.x, cam.pos.y, cam.pos.z);
 
-      float fov = (float)cam.vFovRad;
+      float fov = (float)cam.perspVerticalFovRad;
       if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {
-        cam.vFovRad = fov;
+        cam.perspVerticalFovRad = fov;
         cam.buildProjMatrix();
       }
 
