@@ -183,9 +183,14 @@ private:
       glUniform1f(varLocation, mtl.lineWidth);
     }
 
-    if (shader.textureHandle != 0) {
+    if (mtl.textureHandle != 0) {
+      //glEnable(GL_TEXTURE_2D);
       glActiveTexture(GL_TEXTURE0 + 0);
-      glBindTexture(GL_TEXTURE_2D, shader.textureHandle);
+      glBindTexture(GL_TEXTURE_2D, mtl.textureHandle);
+    }
+    else {
+      glBindTexture(GL_TEXTURE_2D, 0);
+      //glDisable(GL_TEXTURE_2D);
     }
 
     if (renderData.vbo == 0) {

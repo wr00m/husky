@@ -13,7 +13,6 @@ public:
 
   Shader(GLuint shaderProgram)
     : shaderProgram(shaderProgram)
-    , textureHandle(0)
   {
     GLint varSize;
     GLenum varType;
@@ -67,5 +66,4 @@ public:
   GLuint shaderProgram;
   std::map<const std::string, GLint> uniformLocations;
   std::map<const std::string, GLint> attrLocations;
-  GLuint textureHandle; // TODO: Move to Material
 };

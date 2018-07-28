@@ -11,6 +11,7 @@
 #include <husky/math/Intersect.hpp>
 #include <husky/mesh/Model.hpp>
 #include <husky/math/EulerAngles.hpp>
+#include <husky/render/Renderer.hpp>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -512,57 +513,58 @@ int main()
 #endif
 
   GLuint textureHandle;
-  glGenTextures(1, &textureHandle);
-  glBindTexture(GL_TEXTURE_2D, textureHandle);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  {
+    glGenTextures(1, &textureHandle);
+    glBindTexture(GL_TEXTURE_2D, textureHandle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-  if (image.bytesPerPixel == 3) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+    if (image.bytesPerPixel == 3) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+    }
+    else if (image.bytesPerPixel == 4) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+    }
+    else {
+      husky::Log::warning("Unsupported image format");
+    }
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
-  else if (image.bytesPerPixel == 4) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-  }
-  else {
-    husky::Log::warning("Unsupported image format");
-  }
-  //glGenerateMipmap(GL_TEXTURE_2D);
 
   Shader defaultShader(defaultShaderProg);
-  defaultShader.textureHandle = textureHandle;
-
   Shader lineShader(lineShaderProg);
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::sphere(1.0), husky::Material({ 0, 1, 0 })));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::sphere(1.0), husky::Material({ 0, 1, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<Entity>("Sphere", defaultShader, lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 3, 3, 0 });
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 })));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, textureHandle)));
     entities.emplace_back(std::make_unique<Entity>("Cylinder", defaultShader, lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 0 });
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 })));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, textureHandle)));
     entities.emplace_back(std::make_unique<Entity>("Cone", defaultShader, lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 2 });
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 })));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<Entity>("Box", defaultShader, lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 })));
+    models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<Entity>("Torus", defaultShader, lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 0, 0, 0 });
   }

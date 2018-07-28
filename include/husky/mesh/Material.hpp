@@ -15,7 +15,7 @@ public:
   {
   }
 
-  Material(const Vector3f &diffuse)
+  Material(const Vector3f &diffuse, unsigned int textureHandle = 0)
     : name()
     , diffuse(diffuse)
     , specular(1.f, 1.f, 1.f)
@@ -27,6 +27,7 @@ public:
     , lineWidth(2.f)
     , wireframe(false)
     , twoSided(false)
+    , textureHandle(textureHandle)
   {
   }
 
@@ -41,6 +42,7 @@ public:
   float lineWidth;
   bool wireframe;
   bool twoSided;
+  unsigned int textureHandle;
 };
 
 }
