@@ -1,8 +1,12 @@
 #include <husky/mesh/Model.hpp>
+#include <husky/util/SharedResource.hpp>
 #include <husky/Log.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 namespace husky {
 
@@ -31,7 +35,7 @@ static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParen
   }
 }
 
-static Material getMaterial(const aiMaterial *material)
+static Material getMaterial(const fs::path &folderPath, const aiMaterial *material)
 {
   Material mtl;
 
@@ -115,6 +119,20 @@ static Material getMaterial(const aiMaterial *material)
     }
   }
 
+  {
+    if (material->GetTextureCount(aiTextureType::aiTextureType_DIFFUSE) > 0) {
+      aiString textureFilePath;
+      if (material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath) == aiReturn_SUCCESS) {
+        auto p = fs::u8path(textureFilePath.C_Str());
+        if (!p.is_absolute()) {
+          p = folderPath / p;
+        }
+        //auto img = SharedResource::loadImage(p.u8string());
+        Log::debug("Texture: %s", p.u8string().c_str());
+      }
+    }
+  }
+
   return mtl;
 }
 
@@ -168,6 +186,8 @@ static SimpleMesh getMesh(const aiMesh *mesh)
 
 Model Model::load(const std::string &filePath)
 {
+  const fs::path folderPath = fs::u8path(filePath).parent_path();
+
   Assimp::Importer importer;
 
   const aiScene *scene = importer.ReadFile(filePath,
@@ -181,10 +201,15 @@ Model Model::load(const std::string &filePath)
     return {};
   }
 
+  //for (unsigned int iTex = 0; iTex < scene->mNumTextures; iTex++) {
+  //  const aiTexture *tex = scene->mTextures[iTex];
+  //  tex->
+  //}
+
   Model mdl;
   mdl.materials.reserve(scene->mNumMaterials);
   for (unsigned int iMtl = 0; iMtl < scene->mNumMaterials; iMtl++) {
-    mdl.materials.emplace_back(getMaterial(scene->mMaterials[iMtl]));
+    mdl.materials.emplace_back(getMaterial(folderPath, scene->mMaterials[iMtl]));
   }
 
   std::vector<SimpleMesh> meshes;

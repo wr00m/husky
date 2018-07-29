@@ -575,7 +575,8 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
-    husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
+    //husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
+    husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
 
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<Entity>("TestModel", defaultShader, lineShader, models.back().get()));
