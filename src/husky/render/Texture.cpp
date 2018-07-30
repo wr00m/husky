@@ -5,7 +5,7 @@
 
 namespace husky {
 
-unsigned int Texture::uploadTexture(const husky::Image &image)
+unsigned int Texture::uploadTexture(const Image &image)
 {
   GLuint textureHandle;
 
@@ -25,8 +25,9 @@ unsigned int Texture::uploadTexture(const husky::Image &image)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
   }
   else {
-    husky::Log::warning("Unsupported image format");
+    Log::warning("Unsupported image format");
   }
+
   //glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 0);
 

@@ -8,11 +8,11 @@ Bone::Bone(const std::string &name)
 }
 
 Bone::Bone(const std::string &name, int parent)
-  : Bone(name, parent, husky::Matrix44f::identity())
+  : Bone(name, parent, Matrix44f::identity())
 {
 }
 
-Bone::Bone(const std::string &name, int parent, const husky::Matrix44d &mtx)
+Bone::Bone(const std::string &name, int parent, const Matrix44d &mtx)
   : name(name)
   , parent(parent)
   , mtx(mtx)

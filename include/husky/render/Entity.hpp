@@ -11,17 +11,17 @@ namespace husky {
 class HUSKY_DLL Entity
 {
 public:
-  Entity(const std::string &name, const Shader *shader, const Shader *lineShader, husky::Model *model);
+  Entity(const std::string &name, const Shader *shader, const Shader *lineShader, Model *model);
 
-  void draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const;
+  void draw(const Viewport &viewport, const Camera &cam, bool drawBbox) const;
 
   std::string name;
-  husky::Matrix44d transform = husky::Matrix44d::identity();
+  Matrix44d transform = Matrix44d::identity();
   const Shader *shader;
   const Shader *lineShader;
-  husky::ModelInstance modelInstance;
-  husky::BoundingBox bboxLocal;
-  husky::Model bboxModel;
+  ModelInstance modelInstance;
+  BoundingBox bboxLocal;
+  Model bboxModel;
 };
 
 }

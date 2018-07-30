@@ -24,7 +24,7 @@ static GLuint compileShader(GLenum shaderType, const std::string &shaderSrc)
     glGetShaderInfoLog(shader, logLength, nullptr, log.data());
 
     std::string s(log.begin(), log.end());
-    husky::Log::error(s.c_str());
+    Log::error(s.c_str());
 
     glDeleteShader(shader);
     return 0;
@@ -60,7 +60,7 @@ static GLuint compileShaderProgram(const std::string &vertSrc, const std::string
     glGetProgramInfoLog(program, logLength, nullptr, log.data());
 
     std::string s(log.begin(), log.end());
-    husky::Log::error(s.c_str());
+    Log::error(s.c_str());
 
     glDeleteProgram(program);
     return 0;

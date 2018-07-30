@@ -7,15 +7,15 @@ namespace husky {
 
 static void draw(
   const Shader &shader,
-  const husky::Material &mtl,
-  const husky::RenderData &renderData,
-  const husky::Viewport &viewport,
-  const husky::Matrix44f &view,
-  const husky::Matrix44f &modelView,
-  const husky::Matrix44f &projection)
+  const Material &mtl,
+  const RenderData &renderData,
+  const Viewport &viewport,
+  const Matrix44f &view,
+  const Matrix44f &modelView,
+  const Matrix44f &projection)
 {
   if (shader.shaderProgramHandle == 0) {
-    husky::Log::warning("Invalid shader program");
+    Log::warning("Invalid shader program");
     return;
   }
 
@@ -34,9 +34,9 @@ static void draw(
     glUniformMatrix4fv(varLocation, 1, GL_FALSE, modelView.m);
   }
 
-  const husky::Matrix33f normalMatrix = modelView.get3x3();
-  //const husky::Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
-  //const husky::Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
+  const Matrix33f normalMatrix = modelView.get3x3();
+  //const Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
+  //const Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
   if (shader.getUniformLocation("mtxNormal", varLocation)) {
     glUniformMatrix3fv(varLocation, 1, GL_FALSE, normalMatrix.m);
   }
@@ -50,8 +50,8 @@ static void draw(
   }
 
   if (shader.getUniformLocation("lightDir", varLocation)) {
-    husky::Vector3f lightDir(20, -40, 100); // TODO
-    lightDir = (view * husky::Vector4f(lightDir, 0.0)).xyz.normalized();
+    Vector3f lightDir(20, -40, 100); // TODO
+    lightDir = (view * Vector4f(lightDir, 0.0)).xyz.normalized();
     glUniform3fv(varLocation, 1, lightDir.val);
   }
 
@@ -98,12 +98,12 @@ static void draw(
   }
 
   if (renderData.vbo == 0) {
-    husky::Log::warning("renderData.vbo is 0");
+    Log::warning("renderData.vbo is 0");
     return;
   }
 
   if (renderData.vao == 0) {
-    husky::Log::warning("renderData.vao is 0");
+    Log::warning("renderData.vao is 0");
     return;
   }
 
@@ -112,42 +112,42 @@ static void draw(
 
   const void *attrPtr = nullptr;
 
-  if (shader.getAttributeLocation("vertPosition", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::POSITION, attrPtr)) {
+  if (shader.getAttributeLocation("vertPosition", varLocation) && renderData.getAttribPointer(RenderData::Attribute::POSITION, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertNormal", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::NORMAL, attrPtr)) {
+  if (shader.getAttributeLocation("vertNormal", varLocation) && renderData.getAttribPointer(RenderData::Attribute::NORMAL, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertTexCoord", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::TEXCOORD, attrPtr)) {
+  if (shader.getAttributeLocation("vertTexCoord", varLocation) && renderData.getAttribPointer(RenderData::Attribute::TEXCOORD, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 2, GL_FLOAT, GL_FALSE, renderData.vertByteCount, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertColor", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::COLOR, attrPtr)) {
+  if (shader.getAttributeLocation("vertColor", varLocation) && renderData.getAttribPointer(RenderData::Attribute::COLOR, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertBoneIndices", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::BONE_INDICES, attrPtr)) {
+  if (shader.getAttributeLocation("vertBoneIndices", varLocation) && renderData.getAttribPointer(RenderData::Attribute::BONE_INDICES, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE, renderData.vertByteCount, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertBoneWeights", varLocation) && renderData.getAttribPointer(husky::RenderData::Attribute::BONE_WEIGHTS, attrPtr)) {
+  if (shader.getAttributeLocation("vertBoneWeights", varLocation) && renderData.getAttribPointer(RenderData::Attribute::BONE_WEIGHTS, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
     glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, renderData.vertByteCount, attrPtr);
   }
 
   GLenum mode = GL_POINTS; // Default fallback
   switch (renderData.mode) {
-  case     husky::RenderData::Mode::POINTS:    mode = GL_POINTS;          break;
-  case     husky::RenderData::Mode::LINES:     mode = GL_LINES;           break;
-  case     husky::RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES;       break;
-  default: husky::Log::warning("Unsupported RenderData::Mode: %d", mode); break;
+  case     RenderData::Mode::POINTS:    mode = GL_POINTS;          break;
+  case     RenderData::Mode::LINES:     mode = GL_LINES;           break;
+  case     RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES;       break;
+  default: Log::warning("Unsupported RenderData::Mode: %d", mode); break;
   }
 
   glDrawElements(mode, (int)renderData.indices.size(), GL_UNSIGNED_SHORT, renderData.indices.data());
@@ -155,36 +155,36 @@ static void draw(
 
 static void draw( // TODO: Remove (render ModelInstance, not Model)
   const Shader &shader,
-  const husky::Model &model,
-  const husky::Viewport &viewport,
-  const husky::Matrix44f &view,
-  const husky::Matrix44f &modelView,
-  const husky::Matrix44f &projection)
+  const Model &model,
+  const Viewport &viewport,
+  const Matrix44f &view,
+  const Matrix44f &modelView,
+  const Matrix44f &projection)
 {
-  static const husky::Material fallbackMtl;
+  static const Material fallbackMtl;
 
   for (int iMesh = 0; iMesh < model.meshRenderDatas.size(); iMesh++) {
-    const husky::Material *mtl = nullptr;
+    const Material *mtl = nullptr;
     if (iMesh < model.meshMaterialIndices.size() && model.meshMaterialIndices[iMesh] >= 0 && model.meshMaterialIndices[iMesh] < model.materials.size()) {
       mtl = &model.materials[model.meshMaterialIndices[iMesh]];
     }
     else {
-      husky::Log::warning("No material");
+      Log::warning("No material");
       mtl = &fallbackMtl;
     }
 
-    const husky::RenderData &renderData = model.meshRenderDatas[iMesh];
+    const RenderData &renderData = model.meshRenderDatas[iMesh];
     draw(shader, *mtl, renderData, viewport, view, modelView, projection);
   }
 }
 
 static void draw(
   const Shader &shader,
-  const husky::ModelInstance &modelInstance,
-  const husky::Viewport &viewport,
-  const husky::Matrix44f &view,
-  const husky::Matrix44f &modelView,
-  const husky::Matrix44f &projection)
+  const ModelInstance &modelInstance,
+  const Viewport &viewport,
+  const Matrix44f &view,
+  const Matrix44f &modelView,
+  const Matrix44f &projection)
 {
   //glUseProgram(shader.shaderProgram);
 
@@ -192,7 +192,7 @@ static void draw(
 
   //if (shader.getUniformLocation("mtxBones", varLocation)) {
   //  // TODO
-  //  const std::vector<husky::Matrix44f> mtxBones = modelInstance.getAnimatedBoneMatrices();
+  //  const std::vector<Matrix44f> mtxBones = modelInstance.getAnimatedBoneMatrices();
   //  if (!mtxBones.empty()) {
   //    glUniformMatrix4fv(varLocation, mtxBones.size(), GL_FALSE, mtxBones.front().m);
   //  }
@@ -201,7 +201,7 @@ static void draw(
   draw(shader, *modelInstance.model, viewport, view, modelView, projection);
 }
 
-Entity::Entity(const std::string &name, const Shader *shader, const Shader *lineShader, husky::Model *model)
+Entity::Entity(const std::string &name, const Shader *shader, const Shader *lineShader, Model *model)
   : name(name)
   , shader(shader)
   , lineShader(lineShader)
@@ -209,23 +209,23 @@ Entity::Entity(const std::string &name, const Shader *shader, const Shader *line
 {
   for (const auto &renderData : model->meshRenderDatas) {
     for (int iVert = 0; iVert < renderData.vertCount; iVert++) {
-      husky::Vector3f pos = renderData.getValue<husky::Vector3f>(iVert, husky::RenderData::Attribute::POSITION);
+      Vector3f pos = renderData.getValue<Vector3f>(iVert, RenderData::Attribute::POSITION);
       pos += renderData.anchor;
       bboxLocal.expand(pos);
     }
   }
 
-  husky::Vector3d bboxSize = bboxLocal.size();
-  husky::SimpleMesh bboxMesh = husky::SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
-  bboxMesh.transform(husky::Matrix44d::translate(bboxLocal.center()));
-  bboxModel = { bboxMesh.getRenderDataWireframe(), husky::Material({ 1, 1, 1 }) };
+  Vector3d bboxSize = bboxLocal.size();
+  SimpleMesh bboxMesh = SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
+  bboxMesh.transform(Matrix44d::translate(bboxLocal.center()));
+  bboxModel = { bboxMesh.getRenderDataWireframe(), Material({ 1, 1, 1 }) };
 }
 
-void Entity::draw(const husky::Viewport &viewport, const husky::Camera &cam, bool drawBbox) const
+void Entity::draw(const Viewport &viewport, const Camera &cam, bool drawBbox) const
 {
-  const husky::Matrix44f view(cam.view);
-  const husky::Matrix44f modelView(cam.view * transform);
-  const husky::Matrix44f projection(cam.proj);
+  const Matrix44f view(cam.view);
+  const Matrix44f modelView(cam.view * transform);
+  const Matrix44f projection(cam.proj);
 
   husky::draw(*shader, modelInstance, viewport, view, modelView, projection);
 
