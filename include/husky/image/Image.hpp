@@ -11,6 +11,8 @@ public:
   static Image load(const std::string &filePath);
 
   Image();
+  Image(const Image &other) = delete;
+  Image(Image &&other);
   Image(int width, int height, int bytesPerPixel);
   virtual ~Image();
 

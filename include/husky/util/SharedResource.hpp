@@ -12,6 +12,7 @@ class HUSKY_DLL SharedResource
 public:
   static std::shared_ptr<const std::vector<std::uint8_t>> loadBytes(const std::string &filePath);
   static std::shared_ptr<const Image> loadImage(const std::string &filePath);
+  static void releaseAll();
 
 private:
   static std::map<std::string, std::shared_ptr<const std::vector<std::uint8_t>>> bytesMap;

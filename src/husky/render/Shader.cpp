@@ -1,0 +1,294 @@
+#pragma once
+
+#include <husky/render/Shader.hpp>
+#include <husky/Log.hpp>
+#include <glad/glad.h>
+#include <vector>
+
+namespace husky {
+
+static GLuint compileShader(GLenum shaderType, const std::string &shaderSrc)
+{
+  GLuint shader = glCreateShader(shaderType);
+  const char *cShaderSrc = shaderSrc.c_str();
+  glShaderSource(shader, 1, &cShaderSrc, NULL);
+  glCompileShader(shader);
+
+  GLint isCompiled = GL_FALSE;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+  if (isCompiled == GL_FALSE) {
+    GLint logLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::vector<GLchar> log(logLength, ' ');
+    glGetShaderInfoLog(shader, logLength, nullptr, log.data());
+
+    std::string s(log.begin(), log.end());
+    husky::Log::error(s.c_str());
+
+    glDeleteShader(shader);
+    return 0;
+  }
+
+  return shader;
+}
+
+static GLuint compileShaderProgram(const std::string &vertSrc, const std::string &geomSrc, const std::string &fragSrc)
+{
+  GLuint program = glCreateProgram();
+
+  GLuint vertShader = compileShader(GL_VERTEX_SHADER, vertSrc);
+  glAttachShader(program, vertShader);
+
+  if (!geomSrc.empty()) {
+    GLuint geomShader = compileShader(GL_GEOMETRY_SHADER, geomSrc);
+    glAttachShader(program, geomShader);
+  }
+
+  GLuint fragShader = compileShader(GL_FRAGMENT_SHADER, fragSrc);
+  glAttachShader(program, fragShader);
+
+  glLinkProgram(program);
+
+  GLint isLinked = GL_FALSE;
+  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+  if (isLinked == GL_FALSE) {
+    GLint logLength = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+
+    std::vector<GLchar> log(logLength);
+    glGetProgramInfoLog(program, logLength, nullptr, log.data());
+
+    std::string s(log.begin(), log.end());
+    husky::Log::error(s.c_str());
+
+    glDeleteProgram(program);
+    return 0;
+  }
+
+  return program;
+}
+
+Shader Shader::getDefaultLineShader()
+{
+  static const char *lineVertSrc =
+R"(#version 400 core
+uniform mat4 mtxModelView;
+uniform mat4 mtxProjection;
+in vec3 vertPosition;
+in vec4 vertColor;
+out vec4 vsColor;
+void main()
+{
+  vsColor = vertColor;
+  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
+})";
+
+  static const char *lineGeomSrc =
+R"(#version 400 core
+uniform vec2 viewportSize = vec2(1280, 720); // Pixels
+uniform float lineWidth = 2.0; // Pixels
+in vec4 vsColor[2];
+out vec4 gsColor;
+layout (lines) in;
+layout (triangle_strip, max_vertices = 4) out;
+void main()
+{
+  vec4 p0 = gl_in[0].gl_Position;
+  vec4 p1 = gl_in[1].gl_Position;
+  vec3 ndc0 = p0.xyz / p0.w;
+  vec3 ndc1 = p1.xyz / p1.w;
+
+  vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
+  vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
+  vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
+
+  gl_Position = vec4(p0.xy + lineScreenOffset * p0.w, p0.zw);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(p0.xy - lineScreenOffset * p0.w, p0.zw);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(p1.xy + lineScreenOffset * p1.w, p1.zw);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  gl_Position = vec4(p1.xy - lineScreenOffset * p1.w, p1.zw);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  EndPrimitive();
+})";
+
+  static const char *lineFragSrc =
+R"(#version 400 core
+in vec4 gsColor;
+out vec4 fsColor;
+void main()
+{
+  fsColor = gsColor;
+})";
+
+  return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);
+}
+
+Shader Shader::getDefaultShader(bool useBones)
+{
+  static const char *defaultVertSrc =
+R"(//#version 400 core
+#ifdef USE_BONES
+#ifndef MAX_BONES
+#define MAX_BONES 100 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
+#endif
+uniform mat4 mtxBones[MAX_BONES] = {
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
+};
+in ivec4 vertBoneIndices;
+in vec4 vertBoneWeights;
+#endif
+uniform mat4 mtxModelView;
+uniform mat3 mtxNormal;
+uniform mat4 mtxProjection;
+uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
+in vec3 vertPosition;
+in vec3 vertNormal;
+in vec2 vertTexCoord;
+in vec4 vertColor;
+out vec4 varPosition;
+out vec3 varNormal;
+out vec2 varTexCoord;
+out vec4 varColor;
+void main() {
+#ifdef USE_BONES
+  mat4 mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
+               + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
+               + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
+               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3]; // TODO
+  varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
+  varNormal = mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz;
+#else
+  varPosition = mtxModelView * vec4(vertPosition, 1.0);
+  varNormal = mtxNormal * vertNormal;
+#endif
+  varTexCoord = vertTexCoord * texCoordScale;
+  varColor = vertColor;
+  gl_Position = mtxProjection * varPosition;
+})";
+
+  static const char *defaultFragSrc =
+R"(#version 400 core
+uniform sampler2D tex;
+uniform vec3 lightDir = vec3(20.0, -40.0, 100.0);
+uniform vec3 lightAmbient = vec3(0.05, 0.05, 0.05);
+uniform vec3 lightDiffuse = vec3(1.0, 1.0, 1.0);
+uniform vec3 lightSpecular = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlAmbient = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlSpecular = vec3(1.0, 1.0, 1.0);
+uniform vec3 mtlEmissive = vec3(0.0, 0.0, 0.0);
+uniform float mtlShininess = 100.0;
+uniform float mtlShininessStrength = 1.0;
+in vec4 varPosition;
+in vec3 varNormal;
+in vec2 varTexCoord;
+in vec4 varColor;
+out vec4 fragColor;
+void main() {
+  vec3 v = varPosition.xyz;
+  vec3 N = varNormal;
+  vec3 L = lightDir;
+  vec3 E = normalize(-v);
+  vec3 R = normalize(-reflect(L, N));
+  vec3 ambientColor = (lightAmbient * mtlAmbient);
+  float diffuseIntensity = clamp(dot(N, L), 0.0, 1.0);
+  vec3 diffuseColor = diffuseIntensity * lightDiffuse * mtlDiffuse;
+  float specularIntensity = clamp(pow(max(dot(R, E), 0.0), mtlShininess) * mtlShininessStrength, 0.0, 1.0);
+  vec3 specularColor = specularIntensity * lightSpecular * mtlSpecular;
+  vec4 texColor = texture(tex, varTexCoord);
+  //texColor = vec4(1.0);
+  fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb) + specularColor + mtlEmissive;
+  fragColor.a = varColor.a * texColor.a;
+})";
+
+  if (useBones) {
+    return Shader(std::string("#version 400 core\n#define USE_BONES\n") + defaultVertSrc, "", defaultFragSrc);
+  }
+  else {
+    return Shader(std::string("#version 400 core\n") + defaultVertSrc, "", defaultFragSrc);
+  }
+}
+
+Shader::Shader()
+  : Shader(0)
+{
+}
+
+Shader::Shader(unsigned int shaderProgramHandle)
+  : shaderProgramHandle(shaderProgramHandle)
+{
+  GLint varSize;
+  GLenum varType;
+  static constexpr GLsizei varNameLengthMax = 128;
+  GLchar varName[varNameLengthMax];
+  GLsizei varNameLength;
+
+  // Get active uniforms
+  int uniformCount;
+  glGetProgramiv(shaderProgramHandle, GL_ACTIVE_UNIFORMS, &uniformCount);
+  for (int iUniform = 0; iUniform < uniformCount; iUniform++) {
+    glGetActiveUniform(shaderProgramHandle, (GLuint)iUniform, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
+    uniformLocations[varName] = glGetUniformLocation(shaderProgramHandle, varName);
+  }
+
+  // Get active (vertex) attributes
+  int attrCount;
+  glGetProgramiv(shaderProgramHandle, GL_ACTIVE_ATTRIBUTES, &attrCount);
+  for (int iAttr = 0; iAttr < attrCount; iAttr++) {
+    glGetActiveAttrib(shaderProgramHandle, (GLuint)iAttr, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
+    attrLocations[varName] = glGetAttribLocation(shaderProgramHandle, varName);
+  }
+}
+
+Shader::Shader(const std::string &vertSrc, const std::string &geomSrc, const std::string &fragSrc)
+  : Shader(compileShaderProgram(vertSrc, geomSrc, fragSrc))
+{
+}
+
+bool Shader::getUniformLocation(const std::string &uniformName, int &location) const
+{
+  auto it = uniformLocations.find(uniformName);
+  if (it != uniformLocations.end()) {
+    location = it->second;
+    return true;
+  }
+  else {
+    location = -1;
+    return false;
+  }
+}
+
+bool Shader::getAttributeLocation(const std::string &attrName, int &location) const
+{
+  auto it = attrLocations.find(attrName);
+  if (it != attrLocations.end()) {
+    location = it->second;
+    return true;
+  }
+  else {
+    location = -1;
+    return false;
+  }
+}
+
+}

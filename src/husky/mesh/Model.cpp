@@ -1,4 +1,5 @@
 #include <husky/mesh/Model.hpp>
+#include <husky/render/Texture.hpp>
 #include <husky/util/SharedResource.hpp>
 #include <husky/Log.hpp>
 #include <assimp/Importer.hpp>
@@ -43,7 +44,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     aiString name;
     if (material->Get(AI_MATKEY_NAME, name) == aiReturn_SUCCESS) {
       mtl.name = name.C_Str();
-      //Log::info("mtl.name: %s", mtl.name.c_str());
     }
   }
 
@@ -51,7 +51,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     aiColor3D diffuseColor;
     if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) == aiReturn_SUCCESS) {
       mtl.diffuse.set(diffuseColor.r, diffuseColor.g, diffuseColor.b);
-      //Log::info("mtl.diffuseColor: %f %f %f", mtl.diffuseColor.r, mtl.diffuseColor.g, mtl.diffuseColor.b);
     }
   }
 
@@ -59,7 +58,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     aiColor3D specularColor;
     if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) == aiReturn_SUCCESS) {
       mtl.specular.set(specularColor.r, specularColor.g, specularColor.b);
-      //Log::info("mtl.specularColor: %f %f %f", mtl.specularColor.r, mtl.specularColor.g, mtl.specularColor.b);
     }
   }
 
@@ -67,7 +65,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     aiColor3D ambientColor;
     if (material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor) == aiReturn_SUCCESS) {
       mtl.ambient.set(ambientColor.r, ambientColor.g, ambientColor.b);
-      //Log::info("mtl.ambientColor: %f %f %f", mtl.ambientColor.r, mtl.ambientColor.g, mtl.ambientColor.b);
     }
   }
 
@@ -75,7 +72,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     aiColor3D emissiveColor;
     if (material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor) == aiReturn_SUCCESS) {
       mtl.emissive.set(emissiveColor.r, emissiveColor.g, emissiveColor.b);
-      //Log::info("mtl.emissiveColor: %f %f %f", mtl.emissiveColor.r, mtl.emissiveColor.g, mtl.emissiveColor.b);
     }
   }
 
@@ -83,7 +79,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     float opacity;
     if (material->Get(AI_MATKEY_OPACITY, opacity) == aiReturn_SUCCESS) {
       mtl.opacity = opacity;
-      //Log::info("mtl.opacity: %f", mtl.opacity);
     }
   }
 
@@ -91,7 +86,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     float shininess;
     if (material->Get(AI_MATKEY_SHININESS, shininess) == aiReturn_SUCCESS) {
       mtl.shininess = shininess;
-      //Log::info("mtl.shininess: %f", mtl.shininess);
     }
   }
 
@@ -99,7 +93,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     float shininessStrength;
     if (material->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength) == aiReturn_SUCCESS) {
       mtl.shininessStrength = shininessStrength;
-      //Log::info("mtl.shininessStrength: %f", mtl.shininessStrength);
     }
   }
 
@@ -107,7 +100,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     int wireframe;
     if (material->Get(AI_MATKEY_ENABLE_WIREFRAME, wireframe) == aiReturn_SUCCESS) {
       mtl.wireframe = (bool)wireframe;
-      //Log::info("mtl.wireframe: %d", mtl.wireframe);
     }
   }
 
@@ -115,7 +107,6 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
     int twoSided;
     if (material->Get(AI_MATKEY_TWOSIDED, twoSided) == aiReturn_SUCCESS) {
       mtl.twoSided = (bool)twoSided;
-      //Log::info("mtl.twoSided: %d", mtl.twoSided);
     }
   }
 
@@ -127,8 +118,8 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
         if (!p.is_absolute()) {
           p = folderPath / p;
         }
-        //auto img = SharedResource::loadImage(p.u8string());
-        Log::debug("Texture: %s", p.u8string().c_str());
+        auto img = SharedResource::loadImage(p.u8string());
+        mtl.textureHandle = Texture::uploadTexture(*img);
       }
     }
   }

@@ -42,4 +42,10 @@ std::shared_ptr<const Image> SharedResource::loadImage(const std::string &filePa
   return image;
 }
 
+void SharedResource::releaseAll()
+{
+  bytesMap.clear();
+  imageMap.clear();
+}
+
 }

@@ -29,6 +29,12 @@ Image::Image()
 {
 }
 
+Image::Image(Image &&other)
+  : Image(other.width, other.height, other.bytesPerPixel, other.bytes)
+{
+  other.bytes = nullptr;
+}
+
 Image::Image(int width, int height, int bytesPerPixel)
   : Image(width, height, bytesPerPixel, nullptr)
 {

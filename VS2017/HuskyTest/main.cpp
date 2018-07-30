@@ -5,161 +5,18 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Entity.hpp"
-#include "UnitTest.hpp"
+#include <husky/render/Camera.hpp>
+#include <husky/render/Entity.hpp>
 #include <husky/image/Image.hpp>
 #include <husky/math/Intersect.hpp>
 #include <husky/mesh/Model.hpp>
 #include <husky/math/EulerAngles.hpp>
-#include <husky/render/Renderer.hpp>
+#include <husky/render/Texture.hpp>
+#include <husky/util/SharedResource.hpp>
+#include "UnitTest.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
-
-static const char *lineVertSrc =
-R"(#version 400 core
-uniform mat4 mtxModelView;
-uniform mat4 mtxProjection;
-in vec3 vertPosition;
-in vec4 vertColor;
-out vec4 vsColor;
-void main()
-{
-  vsColor = vertColor;
-  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
-})";
-
-static const char *lineGeomSrc =
-R"(#version 400 core
-uniform vec2 viewportSize = vec2(1280, 720); // Pixels
-uniform float lineWidth = 2.0; // Pixels
-in vec4 vsColor[2];
-out vec4 gsColor;
-layout (lines) in;
-layout (triangle_strip, max_vertices = 4) out;
-void main()
-{
-  vec4 p0 = gl_in[0].gl_Position;
-  vec4 p1 = gl_in[1].gl_Position;
-  vec3 ndc0 = p0.xyz / p0.w;
-  vec3 ndc1 = p1.xyz / p1.w;
-
-  vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
-  vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
-  vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
-
-  gl_Position = vec4(p0.xy + lineScreenOffset * p0.w, p0.zw);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = vec4(p0.xy - lineScreenOffset * p0.w, p0.zw);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = vec4(p1.xy + lineScreenOffset * p1.w, p1.zw);
-  gsColor = vsColor[1];
-  EmitVertex();
-
-  gl_Position = vec4(p1.xy - lineScreenOffset * p1.w, p1.zw);
-  gsColor = vsColor[1];
-  EmitVertex();
-
-  EndPrimitive();
-})";
-
-static const char *lineFragSrc =
-R"(#version 400 core
-in vec4 gsColor;
-out vec4 fsColor;
-void main()
-{
-  fsColor = gsColor;
-}
-)";
-
-static const char *defaultVertSrc =
-R"(//#version 400 core
-#ifdef USE_BONES
-#ifndef MAX_BONES
-#define MAX_BONES 100 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
-#endif
-uniform mat4 mtxBones[MAX_BONES] = {
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-};
-in ivec4 vertBoneIndices;
-in vec4 vertBoneWeights;
-#endif
-uniform mat4 mtxModelView;
-uniform mat3 mtxNormal;
-uniform mat4 mtxProjection;
-uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
-in vec3 vertPosition;
-in vec3 vertNormal;
-in vec2 vertTexCoord;
-in vec4 vertColor;
-out vec4 varPosition;
-out vec3 varNormal;
-out vec2 varTexCoord;
-out vec4 varColor;
-void main() {
-#ifdef USE_BONES
-  mat4 mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
-               + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
-               + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
-               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3]; // TODO
-  varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
-  varNormal = mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz;
-#else
-  varPosition = mtxModelView * vec4(vertPosition, 1.0);
-  varNormal = mtxNormal * vertNormal;
-#endif
-  varTexCoord = vertTexCoord * texCoordScale;
-  varColor = vertColor;
-  gl_Position = mtxProjection * varPosition;
-})";
-
-static const char *defaultFragSrc =
-R"(#version 400 core
-uniform sampler2D tex;
-uniform vec3 lightDir = vec3(20.0, -40.0, 100.0);
-uniform vec3 lightAmbient = vec3(0.05, 0.05, 0.05);
-uniform vec3 lightDiffuse = vec3(1.0, 1.0, 1.0);
-uniform vec3 lightSpecular = vec3(1.0, 1.0, 1.0);
-uniform vec3 mtlAmbient = vec3(1.0, 1.0, 1.0);
-uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
-uniform vec3 mtlSpecular = vec3(1.0, 1.0, 1.0);
-uniform vec3 mtlEmissive = vec3(0.0, 0.0, 0.0);
-uniform float mtlShininess = 100.0;
-uniform float mtlShininessStrength = 1.0;
-in vec4 varPosition;
-in vec3 varNormal;
-in vec2 varTexCoord;
-in vec4 varColor;
-out vec4 fragColor;
-void main() {
-  vec3 v = varPosition.xyz;
-  vec3 N = varNormal;
-  vec3 L = lightDir;
-  vec3 E = normalize(-v);
-  vec3 R = normalize(-reflect(L, N));
-  vec3 ambientColor = (lightAmbient * mtlAmbient);
-  float diffuseIntensity = clamp(dot(N, L), 0.0, 1.0);
-  vec3 diffuseColor = diffuseIntensity * lightDiffuse * mtlDiffuse;
-  float specularIntensity = clamp(pow(max(dot(R, E), 0.0), mtlShininess) * mtlShininessStrength, 0.0, 1.0);
-  vec3 specularColor = specularIntensity * lightSpecular * mtlSpecular;
-  vec4 texColor = texture(tex, varTexCoord);
-  fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb) + specularColor + mtlEmissive;
-  fragColor.a = varColor.a * texColor.a;
-})";
 
 static void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
@@ -187,7 +44,7 @@ static double prevTime = 0.0;
 static double frameTime = (1.0 / 60.0);
 static bool mouseDragRight = false;
 static std::vector<std::unique_ptr<husky::Model>> models;
-static std::vector<std::unique_ptr<Entity>> entities;
+static std::vector<std::unique_ptr<husky::Entity>> entities;
 static int iSelectedEntity = -1;
 static GLuint fbo = 0;
 static husky::Viewport fboViewport;
@@ -379,68 +236,6 @@ static void initRenderDataGPU(husky::Model &mdl)
   }
 }
 
-static GLuint compileShader(GLenum shaderType, const std::string &shaderSrc)
-{
-  GLuint shader = glCreateShader(shaderType);
-  const char *cShaderSrc = shaderSrc.c_str();
-  glShaderSource(shader, 1, &cShaderSrc, NULL);
-  glCompileShader(shader);
-
-  GLint isCompiled = GL_FALSE;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-  if (isCompiled == GL_FALSE) {
-    GLint logLength = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-
-    std::vector<GLchar> log(logLength, ' ');
-    glGetShaderInfoLog(shader, logLength, nullptr, log.data());
-    
-    std::string s(log.begin(), log.end());
-    husky::Log::error(s.c_str());
-
-    glDeleteShader(shader);
-    return 0;
-  }
-
-  return shader;
-}
-
-static GLuint compileShaderProgram(const std::string &vertSrc, const std::string &geomSrc, const std::string &fragSrc)
-{
-  GLuint program = glCreateProgram();
-
-  GLuint vertShader = compileShader(GL_VERTEX_SHADER, vertSrc);
-  glAttachShader(program, vertShader);
-
-  if (!geomSrc.empty()) {
-    GLuint geomShader = compileShader(GL_GEOMETRY_SHADER, geomSrc);
-    glAttachShader(program, geomShader);
-  }
-
-  GLuint fragShader = compileShader(GL_FRAGMENT_SHADER, fragSrc);
-  glAttachShader(program, fragShader);
-
-  glLinkProgram(program);
-
-  GLint isLinked = GL_FALSE;
-  glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-  if (isLinked == GL_FALSE) {
-    GLint logLength = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-
-    std::vector<GLchar> log(logLength);
-    glGetProgramInfoLog(program, logLength, nullptr, log.data());
-
-    std::string s(log.begin(), log.end());
-    husky::Log::error(s.c_str());
-
-    glDeleteProgram(program);
-    return 0;
-  }
-
-  return program;
-}
-
 int main()
 {
   runUnitTests();
@@ -491,9 +286,9 @@ int main()
 
   updateViewportAndRebuildFbo();
 
-  GLuint defaultShaderProg = compileShaderProgram(std::string("#version 400 core\n") + defaultVertSrc, "", defaultFragSrc);
-  GLuint defaultShaderProgBone = compileShaderProgram(std::string("#version 400 core\n#define USE_BONES\n") + defaultVertSrc, "", defaultFragSrc);
-  GLuint lineShaderProg = compileShaderProgram(lineVertSrc, lineGeomSrc, lineFragSrc);
+  const husky::Shader defaultShader = husky::Shader::getDefaultShader(false);
+  const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true);
+  const husky::Shader lineShader = husky::Shader::getDefaultLineShader();
 
 #if 1
   husky::Image image(2, 2, sizeof(husky::Vector4b));
@@ -512,60 +307,35 @@ int main()
   image.save("C:/tmp/imgout/test.png");
 #endif
 
-  GLuint textureHandle;
-  {
-    glGenTextures(1, &textureHandle);
-    glBindTexture(GL_TEXTURE_2D, textureHandle);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    if (image.bytesPerPixel == 3) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
-    }
-    else if (image.bytesPerPixel == 4) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-    }
-    else {
-      husky::Log::warning("Unsupported image format");
-    }
-    //glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-  }
-
-  Shader defaultShader(defaultShaderProg);
-  Shader lineShader(lineShaderProg);
+  GLuint textureHandle = husky::Texture::uploadTexture(image);
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::sphere(1.0), husky::Material({ 0, 1, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<Entity>("Sphere", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Sphere", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 3, 3, 0 });
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, textureHandle)));
-    entities.emplace_back(std::make_unique<Entity>("Cylinder", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Cylinder", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 0 });
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, textureHandle)));
-    entities.emplace_back(std::make_unique<Entity>("Cone", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Cone", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 2 });
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<Entity>("Box", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Box", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::SimpleMesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<Entity>("Torus", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Torus", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::translate({ 0, 0, 0 });
   }
 
@@ -579,7 +349,7 @@ int main()
     husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
 
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
-    entities.emplace_back(std::make_unique<Entity>("TestModel", defaultShader, lineShader, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, &lineShader, models.back().get()));
     entities.back()->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
   }
 
@@ -725,6 +495,8 @@ int main()
 
   glfwDestroyWindow(window);
   glfwTerminate();
+
+  husky::SharedResource::releaseAll();
 
   return 0;
 }

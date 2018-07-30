@@ -103,7 +103,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\glad\glad.c" />
     <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\Log.cpp" />
     <ClCompile Include="..\..\src\husky\math\Frustum.cpp" />
@@ -173,14 +174,17 @@
     <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
     <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
+    <ClCompile Include="..\..\src\husky\render\Entity.cpp" />
     <ClCompile Include="..\..\src\husky\render\RenderData.cpp" />
-    <ClCompile Include="..\..\src\husky\render\Renderer.cpp" />
+    <ClCompile Include="..\..\src\husky\render\Shader.cpp" />
+    <ClCompile Include="..\..\src\husky\render\Texture.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Viewport.cpp" />
     <ClCompile Include="..\..\src\husky\util\SharedResource.cpp" />
     <ClCompile Include="..\..\src\husky\util\StringUtil.cpp" />
     <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\glad\glad.h" />
     <ClInclude Include="..\..\include\husky\Common.hpp" />
     <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\Log.hpp" />
@@ -204,11 +208,14 @@
     <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
     <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
+    <ClInclude Include="..\..\include\husky\render\Entity.hpp" />
     <ClInclude Include="..\..\include\husky\render\RenderData.hpp" />
-    <ClInclude Include="..\..\include\husky\render\Renderer.hpp" />
+    <ClInclude Include="..\..\include\husky\render\Shader.hpp" />
+    <ClInclude Include="..\..\include\husky\render\Texture.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Viewport.hpp" />
     <ClInclude Include="..\..\include\husky\util\SharedResource.hpp" />
     <ClInclude Include="..\..\include\husky\util\StringUtil.hpp" />
+    <ClInclude Include="..\..\include\KHR\khrplatform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
