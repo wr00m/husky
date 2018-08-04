@@ -291,17 +291,15 @@ int main()
   const husky::Shader lineShader = husky::Shader::getDefaultLineShader();
 
 #if 1
-  husky::Image image(2, 2, sizeof(husky::Vector4b));
+  husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
   image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
-#elif 0
-  husky::Image image(2, 2, sizeof(husky::Vector4b));
-  image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
-  image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
-  image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
-  image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
+  //image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
+  //image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
+  //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
+  //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
 #else
   husky::Image image = husky::Image::load("C:/tmp/test.jpg");
   image.save("C:/tmp/imgout/test.png");

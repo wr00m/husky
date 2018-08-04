@@ -16,7 +16,15 @@ Image Image::load(const std::string &filePath)
 {
   int width, height, bytesPerPixel;
   if (stbi_uc *bytes = stbi_load(filePath.c_str(), &width, &height, &bytesPerPixel, STBI_default)) {
-    return { width, height, bytesPerPixel, bytes };
+    if (bytesPerPixel == 3) {
+      return { width, height, ImageFormat::RGB8, bytes };
+    }
+    else if (bytesPerPixel == 4) {
+      return { width, height, ImageFormat::RGBA8, bytes };
+    }
+    else {
+      return {}; // Invalid
+    }
   }
   else {
     Log::warning("Failed to load image: %s", filePath.c_str());
@@ -25,32 +33,41 @@ Image Image::load(const std::string &filePath)
 }
 
 Image::Image()
-  : Image(0, 0, 0) // Invalid
+  : Image(0, 0, ImageFormat::UNDEFINED) // Invalid
 {
 }
 
 Image::Image(Image &&other)
-  : Image(other.width, other.height, other.bytesPerPixel, other.bytes)
+  : Image(other.width, other.height, other.format, other.bytes)
 {
-  other.bytes = nullptr;
+  other.bytes = nullptr; // Assume ownership of byte array
 }
 
-Image::Image(int width, int height, int bytesPerPixel)
-  : Image(width, height, bytesPerPixel, nullptr)
+Image::Image(int width, int height, ImageFormat format)
+  : Image(width, height, format, nullptr)
 {
 }
 
-Image::Image(int width, int height, int bytesPerPixel, std::uint8_t *stbBytes)
+static constexpr int getBytesPerPixel(ImageFormat format)
+{
+  switch (format) {
+  case ImageFormat::RGB8      : return 3;
+  case ImageFormat::RGBA8     : return 4;
+  case ImageFormat::UNDEFINED : return 0;
+  default                     : return 0;
+  }
+}
+
+Image::Image(int width, int height, ImageFormat format, std::uint8_t *stbBytes)
   : width(width)
   , height(height)
-  , bytesPerPixel(bytesPerPixel)
-  , totalByteCount(size_t(width) * size_t(height) * size_t(bytesPerPixel))
+  , format(format)
+  , numBytesPerPixel(getBytesPerPixel(format))
+  , numBytesTotal(size_t(width) * size_t(height) * numBytesPerPixel)
+  , bytes(stbBytes) // Assume ownership of byte array
 {
-  if (stbBytes != nullptr) {
-    bytes = stbBytes; // Assume ownership of byte array
-  }
-  else {
-    bytes = static_cast<std::uint8_t*>(stbi__malloc(totalByteCount)); // Allocate byte array
+  if (bytes == nullptr) {
+    bytes = static_cast<std::uint8_t*>(stbi__malloc(numBytesTotal)); // Allocate byte array
   }
 }
 
@@ -68,16 +85,16 @@ bool Image::save(const std::string &filePath) const
   bool ok = true;
 
   if (ext == ".png") {
-    ok = stbi_write_png(filePath.c_str(), width, height, bytesPerPixel, bytes, 0);
+    ok = stbi_write_png(filePath.c_str(), width, height, numBytesPerPixel, bytes, 0);
   }
   else if (ext == ".jpg" || ext == ".jpeg") {
-    ok = stbi_write_jpg(filePath.c_str(), width, height, bytesPerPixel, bytes, 90);
+    ok = stbi_write_jpg(filePath.c_str(), width, height, numBytesPerPixel, bytes, 90);
   }
   else if (ext == ".bmp") {
-    ok = stbi_write_bmp(filePath.c_str(), width, height, bytesPerPixel, bytes);
+    ok = stbi_write_bmp(filePath.c_str(), width, height, numBytesPerPixel, bytes);
   }
   else if (ext == ".tga") {
-    ok = stbi_write_tga(filePath.c_str(), width, height, bytesPerPixel, bytes);
+    ok = stbi_write_tga(filePath.c_str(), width, height, numBytesPerPixel, bytes);
   }
   else {
     Log::warning("Unsupported image file extension: %s", ext.c_str());
@@ -93,7 +110,7 @@ bool Image::save(const std::string &filePath) const
 
 bool Image::valid() const
 {
-  return (width > 0 && height > 0 && bytesPerPixel > 0 && totalByteCount > 0 && bytes != nullptr);
+  return (width > 0 && height > 0 && format != ImageFormat::UNDEFINED && numBytesPerPixel > 0 && numBytesTotal > 0 && bytes != nullptr);
 }
 
 const std::uint8_t* Image::data() const

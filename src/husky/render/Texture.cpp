@@ -18,10 +18,10 @@ unsigned int Texture::uploadTexture(const Image &image)
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-  if (image.bytesPerPixel == 3) {
+  if (image.format == ImageFormat::RGB8) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
   }
-  else if (image.bytesPerPixel == 4) {
+  else if (image.format == ImageFormat::RGBA8) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
   }
   else {
