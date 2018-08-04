@@ -25,7 +25,9 @@ unsigned int Texture::uploadTexture(const Image &image)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
   }
   else {
-    Log::warning("Unsupported image format");
+    static constexpr unsigned int checkerboard[4] = { 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerboard);
+    Log::warning("Unsupported image format, using default checkerboard texture");
   }
 
   //glGenerateMipmap(GL_TEXTURE_2D);
