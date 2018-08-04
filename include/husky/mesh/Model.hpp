@@ -1,6 +1,6 @@
 #pragma once
 
-#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Mesh.hpp>
 #include <husky/mesh/Material.hpp>
 #include <husky/mesh/Animation.hpp>
 #include <string>
@@ -14,7 +14,7 @@ public:
 
   Model();
   Model(const RenderData &&renderData, const Material &mtl);
-  Model(const SimpleMesh &mesh, const Material &mtl);
+  Model(const Mesh &mesh, const Material &mtl);
 
   void addRenderData(const RenderData &&renderData, int mtlIndex);
   void addRenderData(const RenderData &&renderData, const Material &mtl);

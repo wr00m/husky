@@ -11,7 +11,7 @@ namespace fs = std::experimental::filesystem;
 
 namespace husky {
 
-static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, const std::vector<SimpleMesh> &meshes, const std::vector<unsigned int> &meshMaterialIndices, Model &mdl)
+static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParent, const std::vector<Mesh> &meshes, const std::vector<unsigned int> &meshMaterialIndices, Model &mdl)
 {
   const aiMatrix4x4 &t = node->mTransformation;
   Matrix44d mat(
@@ -26,7 +26,7 @@ static void getNodeMeshesRecursive(const aiNode *node, const Matrix44d *matParen
   }
 
   for (unsigned int iMesh = 0; iMesh < node->mNumMeshes; iMesh++) {
-    SimpleMesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
+    Mesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
     m.transform(mat);
     mdl.addRenderData(m.getRenderData(), meshMaterialIndices[iMesh]);
   }
@@ -127,11 +127,11 @@ static Material getMaterial(const fs::path &folderPath, const aiMaterial *materi
   return mtl;
 }
 
-static SimpleMesh getMesh(const aiMesh *mesh)
+static Mesh getMesh(const aiMesh *mesh)
 {
   assert(mesh->HasPositions());
 
-  SimpleMesh m;
+  Mesh m;
 
   for (unsigned int iVert = 0; iVert < mesh->mNumVertices; iVert++)
   {
@@ -203,7 +203,7 @@ Model Model::load(const std::string &filePath)
     mdl.materials.emplace_back(getMaterial(folderPath, scene->mMaterials[iMtl]));
   }
 
-  std::vector<SimpleMesh> meshes;
+  std::vector<Mesh> meshes;
   std::vector<unsigned int> meshMaterialIndices;
   meshes.reserve(scene->mNumMeshes);
   for (unsigned int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
@@ -255,7 +255,7 @@ Model::Model(const RenderData &&renderData, const Material &mtl)
   addRenderData(std::move(renderData), mtl);
 }
 
-Model::Model(const SimpleMesh &mesh, const Material &mtl)
+Model::Model(const Mesh &mesh, const Material &mtl)
   : Model(std::move(mesh.getRenderData()), mtl)
 {
 }

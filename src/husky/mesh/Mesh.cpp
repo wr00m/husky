@@ -1,14 +1,14 @@
-#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Mesh.hpp>
 #include <husky/math/Math.hpp>
 #include <husky/Log.hpp>
 
 namespace husky {
 
-SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
+Mesh Mesh::box(double sizeX, double sizeY, double sizeZ)
 {
   const Vector3d h(sizeX * 0.5, sizeY * 0.5, sizeZ * 0.5); // Half size
 
-  SimpleMesh m;
+  Mesh m;
 
   m.addQuad( // X+
     m.addVert({  h.x, -h.y, -h.z }, {  1,  0,  0 }, { 0, 0 }),
@@ -49,9 +49,9 @@ SimpleMesh SimpleMesh::box(double sizeX, double sizeY, double sizeZ)
   return m;
 }
 
-SimpleMesh SimpleMesh::cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount)
+Mesh Mesh::cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount)
 {
-  SimpleMesh m;
+  Mesh m;
 
   double coneAngle = std::atan2(radiusBottom - radiusTop, height); // Slope
   Vector2d nCone(std::cos(coneAngle), std::sin(coneAngle));
@@ -75,13 +75,13 @@ SimpleMesh SimpleMesh::cylinder(double radiusBottom, double radiusTop, double he
   }
 
   if (capBottom) {
-    SimpleMesh mDisk = disk(radiusBottom, uSegmentCount);
+    Mesh mDisk = disk(radiusBottom, uSegmentCount);
     mDisk.transform(Matrix44d::rotate(Math::pi, { 1, 0, 0 }));
     m.addMesh(mDisk);
   }
 
   if (capTop) {
-    SimpleMesh mDisk = disk(radiusTop, uSegmentCount);
+    Mesh mDisk = disk(radiusTop, uSegmentCount);
     mDisk.transform(Matrix44d::translate({ 0, 0, height }));
     m.addMesh(mDisk);
   }
@@ -89,14 +89,14 @@ SimpleMesh SimpleMesh::cylinder(double radiusBottom, double radiusTop, double he
   return m;
 }
 
-SimpleMesh SimpleMesh::cylinder(double radius, double height, bool capBottom, bool capTop, int uSegmentCount)
+Mesh Mesh::cylinder(double radius, double height, bool capBottom, bool capTop, int uSegmentCount)
 {
   return cylinder(radius, radius, height, capBottom, capTop, uSegmentCount, 1);
 }
 
-SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, int uSegmentCount)
+Mesh Mesh::cone(double radiusBottom, double height, bool capBottom, int uSegmentCount)
 {
-  SimpleMesh m;
+  Mesh m;
 
   int iCenterVert = m.addVert({ 0, 0, height }, { 0, 0, 1 }, { 0.5, 1 });
 
@@ -117,7 +117,7 @@ SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, 
   }
 
   if (capBottom) {
-    SimpleMesh mDisk = disk(radiusBottom, uSegmentCount);
+    Mesh mDisk = disk(radiusBottom, uSegmentCount);
     mDisk.transform(Matrix44d::rotate(Math::pi, { 1, 0, 0 }));
     m.addMesh(mDisk);
   }
@@ -125,9 +125,9 @@ SimpleMesh SimpleMesh::cone(double radiusBottom, double height, bool capBottom, 
   return m;
 }
 
-SimpleMesh SimpleMesh::disk(double radius, int uSegmentCount)
+Mesh Mesh::disk(double radius, int uSegmentCount)
 {
-  SimpleMesh m;
+  Mesh m;
 
   int iCenterVert = m.addVert({ 0, 0, 0 }, { 0, 0, 1 }, { 0.5, 0.5 });
 
@@ -146,9 +146,9 @@ SimpleMesh SimpleMesh::disk(double radius, int uSegmentCount)
   return m;
 }
 
-SimpleMesh SimpleMesh::sphere(double radius, int uSegmentCount, int vSegmentCount)
+Mesh Mesh::sphere(double radius, int uSegmentCount, int vSegmentCount)
 {
-  SimpleMesh m;
+  Mesh m;
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
     const double u = iu / double(uSegmentCount); // [0:1]
@@ -168,7 +168,7 @@ SimpleMesh SimpleMesh::sphere(double radius, int uSegmentCount, int vSegmentCoun
       if (iu > 0 && iv > 0) {
         assert(m.numVerts() >= 4);
 
-        SimpleMesh::Quad q;
+        Mesh::Quad q;
         q[0] = m.numVerts() - 1;
         q[1] = q[0] - (vSegmentCount + 1);
         q[2] = q[0] - (vSegmentCount + 2);
@@ -182,9 +182,9 @@ SimpleMesh SimpleMesh::sphere(double radius, int uSegmentCount, int vSegmentCoun
   return m;
 }
 
-SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmentCount, int vSegmentCount)
+Mesh Mesh::torus(double circleRadius, double tubeRadius, int uSegmentCount, int vSegmentCount)
 {
-  SimpleMesh m;
+  Mesh m;
 
   for (int iu = 0; iu <= uSegmentCount; iu++) {
     const double u = iu / double(uSegmentCount); // [0,1]
@@ -204,7 +204,7 @@ SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmen
       if (iu > 0 && iv > 0) {
         assert(m.numVerts() >= 4);
 
-        SimpleMesh::Quad q;
+        Mesh::Quad q;
         q[0] = m.numVerts() - 1;
         q[1] = q[0] - 1;
         q[2] = q[0] - (vSegmentCount + 2);
@@ -218,36 +218,36 @@ SimpleMesh SimpleMesh::torus(double circleRadius, double tubeRadius, int uSegmen
   return m;
 }
 
-int SimpleMesh::numVerts() const { return int(vertPosition.size()); }
-int SimpleMesh::numTriangles() const { return int(tris.size()); }
-int SimpleMesh::numQuads() const { return int(quads.size()); }
-int SimpleMesh::numBones() const { return int(bones.size()); }
-int SimpleMesh::addVert(const Vector3d &pos) { vertPosition.emplace_back(pos); return int(vertPosition.size() - 1); }
-int SimpleMesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord) { int iVert = addVert(pos); setNormal(iVert, nor); setTexCoord(iVert, texCoord); return iVert; }
-void SimpleMesh::addTriangle(const Triangle &t) { tris.emplace_back(t); }
-void SimpleMesh::addTriangle(int v0, int v1, int v2) { addTriangle({ v0, v1, v2 }); }
-const SimpleMesh::Triangle& SimpleMesh::addTriangle(const Position &p0, const Position &p1, const Position &p2) { addTriangle({ addVert(p0), addVert(p1), addVert(p2) }); return tris.back(); }
-void SimpleMesh::addQuad(const Quad &q) { quads.emplace_back(q); }
-void SimpleMesh::addQuad(int v0, int v1, int v2, int v3) { addQuad({ v0, v1, v2, v3 }); }
-const SimpleMesh::Quad& SimpleMesh::addQuad(const Position &p0, const Position &p1, const Position &p2, const Position &p3) { addQuad({ addVert(p0), addVert(p1), addVert(p2), addVert(p3) }); return quads.back(); }
-int SimpleMesh::addBone(const Bone &bone) { bones.emplace_back(bone); return int(bones.size() - 1); }
-bool SimpleMesh::hasNormals() const { return !vertNormal.empty(); }
-bool SimpleMesh::hasTangents() const { return !vertTangent.empty(); }
-bool SimpleMesh::hasTexCoord() const { return !vertTexCoord.empty(); }
-bool SimpleMesh::hasColors() const { return !vertColor.empty(); }
-bool SimpleMesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
-void SimpleMesh::setPosition(int iVert, const Position &pos) { vertPosition[iVert] = pos; }
-void SimpleMesh::setNormal(int iVert, const Normal &nor) { vertNormal.resize(vertPosition.size()); vertNormal[iVert] = nor; }
-void SimpleMesh::setTangent(int iVert, const Tangent &tangent) { vertTangent.resize(vertPosition.size()); vertTangent[iVert] = tangent; }
-void SimpleMesh::setTexCoord(int iVert, const TexCoord &texCoord) { vertTexCoord.resize(vertPosition.size()); vertTexCoord[iVert] = texCoord; }
-void SimpleMesh::setColor(int iVert, const Color &color) { vertColor.resize(vertPosition.size(), Color(255)); vertColor[iVert] = color; }
-void SimpleMesh::setBoneWeights(int iVert, const std::vector<BoneWeight> &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
-void SimpleMesh::addBoneWeight(int iVert, const BoneWeight &weight) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert].emplace_back(weight); }
-const SimpleMesh::Triangle& SimpleMesh::getTriangle(int iTri) const { return tris[iTri]; }
-const SimpleMesh::Quad& SimpleMesh::getQuad(int iQuad) const { return quads[iQuad]; }
-void SimpleMesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
+int Mesh::numVerts() const { return int(vertPosition.size()); }
+int Mesh::numTriangles() const { return int(tris.size()); }
+int Mesh::numQuads() const { return int(quads.size()); }
+int Mesh::numBones() const { return int(bones.size()); }
+int Mesh::addVert(const Vector3d &pos) { vertPosition.emplace_back(pos); return int(vertPosition.size() - 1); }
+int Mesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord) { int iVert = addVert(pos); setNormal(iVert, nor); setTexCoord(iVert, texCoord); return iVert; }
+void Mesh::addTriangle(const Triangle &t) { tris.emplace_back(t); }
+void Mesh::addTriangle(int v0, int v1, int v2) { addTriangle({ v0, v1, v2 }); }
+const Mesh::Triangle& Mesh::addTriangle(const Position &p0, const Position &p1, const Position &p2) { addTriangle({ addVert(p0), addVert(p1), addVert(p2) }); return tris.back(); }
+void Mesh::addQuad(const Quad &q) { quads.emplace_back(q); }
+void Mesh::addQuad(int v0, int v1, int v2, int v3) { addQuad({ v0, v1, v2, v3 }); }
+const Mesh::Quad& Mesh::addQuad(const Position &p0, const Position &p1, const Position &p2, const Position &p3) { addQuad({ addVert(p0), addVert(p1), addVert(p2), addVert(p3) }); return quads.back(); }
+int Mesh::addBone(const Bone &bone) { bones.emplace_back(bone); return int(bones.size() - 1); }
+bool Mesh::hasNormals() const { return !vertNormal.empty(); }
+bool Mesh::hasTangents() const { return !vertTangent.empty(); }
+bool Mesh::hasTexCoord() const { return !vertTexCoord.empty(); }
+bool Mesh::hasColors() const { return !vertColor.empty(); }
+bool Mesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
+void Mesh::setPosition(int iVert, const Position &pos) { vertPosition[iVert] = pos; }
+void Mesh::setNormal(int iVert, const Normal &nor) { vertNormal.resize(vertPosition.size()); vertNormal[iVert] = nor; }
+void Mesh::setTangent(int iVert, const Tangent &tangent) { vertTangent.resize(vertPosition.size()); vertTangent[iVert] = tangent; }
+void Mesh::setTexCoord(int iVert, const TexCoord &texCoord) { vertTexCoord.resize(vertPosition.size()); vertTexCoord[iVert] = texCoord; }
+void Mesh::setColor(int iVert, const Color &color) { vertColor.resize(vertPosition.size(), Color(255)); vertColor[iVert] = color; }
+void Mesh::setBoneWeights(int iVert, const std::vector<BoneWeight> &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
+void Mesh::addBoneWeight(int iVert, const BoneWeight &weight) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert].emplace_back(weight); }
+const Mesh::Triangle& Mesh::getTriangle(int iTri) const { return tris[iTri]; }
+const Mesh::Quad& Mesh::getQuad(int iQuad) const { return quads[iQuad]; }
+void Mesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
 
-void SimpleMesh::addMesh(const SimpleMesh &m)
+void Mesh::addMesh(const Mesh &m)
 {
   vertPosition.reserve(numVerts() + m.numVerts());
   if (hasNormals() || m.hasNormals()) { vertNormal.reserve(vertPosition.capacity()); }
@@ -298,7 +298,7 @@ void SimpleMesh::addMesh(const SimpleMesh &m)
   }
 }
 
-void SimpleMesh::triangulateQuads()
+void Mesh::triangulateQuads()
 {
   for (const Quad &q : quads) {
     addTriangle(q[0], q[1], q[2]);
@@ -308,7 +308,7 @@ void SimpleMesh::triangulateQuads()
   quads.clear();
 }
 
-void SimpleMesh::recalculateVertexNormals()
+void Mesh::recalculateVertexNormals()
 {
   // Initialize vertex normals to zero
   vertNormal.assign(vertPosition.size(), { 0, 0, 0 });
@@ -350,7 +350,7 @@ void SimpleMesh::recalculateVertexNormals()
   }
 }
 
-void SimpleMesh::normalizeBoneWeights()
+void Mesh::normalizeBoneWeights()
 {
   if (!hasBoneWeights()) {
     return;
@@ -374,7 +374,7 @@ void SimpleMesh::normalizeBoneWeights()
   }
 }
 
-void SimpleMesh::transform(const Matrix44d &m)
+void Mesh::transform(const Matrix44d &m)
 {
   if (numVerts() > 0) {
     const Matrix33d nm = m.get3x3(); // Normal matrix
@@ -386,7 +386,7 @@ void SimpleMesh::transform(const Matrix44d &m)
   }
 }
 
-RenderData SimpleMesh::getRenderData() const
+RenderData Mesh::getRenderData() const
 {
   RenderData r(RenderData::Mode::TRIANGLES);
   r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
@@ -441,7 +441,7 @@ RenderData SimpleMesh::getRenderData() const
   return r;
 }
 
-RenderData SimpleMesh::getRenderDataWireframe() const
+RenderData Mesh::getRenderDataWireframe() const
 {
   RenderData r(RenderData::Mode::LINES);
   r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));

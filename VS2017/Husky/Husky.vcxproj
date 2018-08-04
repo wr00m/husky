@@ -170,8 +170,8 @@
     <ClCompile Include="..\..\src\husky\mesh\Animation.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Bone.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\BoundingBox.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\Mesh.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
-    <ClCompile Include="..\..\src\husky\mesh\SimpleMesh.cpp" />
     <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\husky\render\Entity.cpp" />
@@ -204,8 +204,8 @@
     <ClInclude Include="..\..\include\husky\mesh\Bone.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\BoundingBox.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
+    <ClInclude Include="..\..\include\husky\mesh\Mesh.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
-    <ClInclude Include="..\..\include\husky\mesh\SimpleMesh.hpp" />
     <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
     <ClInclude Include="..\..\include\husky\render\Entity.hpp" />

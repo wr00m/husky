@@ -1,5 +1,5 @@
 #include <husky/render/Entity.hpp>
-#include <husky/mesh/SimpleMesh.hpp>
+#include <husky/mesh/Mesh.hpp>
 #include <husky/Log.hpp>
 #include <glad/glad.h>
 
@@ -216,7 +216,7 @@ Entity::Entity(const std::string &name, const Shader *shader, const Shader *line
   }
 
   Vector3d bboxSize = bboxLocal.size();
-  SimpleMesh bboxMesh = SimpleMesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
+  Mesh bboxMesh = Mesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
   bboxMesh.transform(Matrix44d::translate(bboxLocal.center()));
   bboxModel = { bboxMesh.getRenderDataWireframe(), Material({ 1, 1, 1 }) };
 }

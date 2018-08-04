@@ -7,17 +7,17 @@
 
 namespace husky {
 
-class HUSKY_DLL SimpleMesh
+class HUSKY_DLL Mesh
 {
 public:
-  static SimpleMesh box(double sizeX, double sizeY, double sizeZ);
-  static SimpleMesh cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount);
-  static SimpleMesh cylinder(double radius, double height, bool capBottom = true, bool capTop = true, int uSegmentCount = 16);
-  static SimpleMesh cone(double radiusBottom, double height, bool capBottom = true, int uSegmentCount = 16);
-  static SimpleMesh disk(double radius, int uSegmentCount = 16);
-  static SimpleMesh sphere(double radius, int uSegmentCount = 32, int vSegmentCount = 16);
-  static SimpleMesh torus(double circleRadius, double tubeRadius, int uSegmentCount = 32, int vSegmentCount = 16);
-  //static SimpleMesh capsule();
+  static Mesh box(double sizeX, double sizeY, double sizeZ);
+  static Mesh cylinder(double radiusBottom, double radiusTop, double height, bool capBottom, bool capTop, int uSegmentCount, int vSegmentCount);
+  static Mesh cylinder(double radius, double height, bool capBottom = true, bool capTop = true, int uSegmentCount = 16);
+  static Mesh cone(double radiusBottom, double height, bool capBottom = true, int uSegmentCount = 16);
+  static Mesh disk(double radius, int uSegmentCount = 16);
+  static Mesh sphere(double radius, int uSegmentCount = 32, int vSegmentCount = 16);
+  static Mesh torus(double circleRadius, double tubeRadius, int uSegmentCount = 32, int vSegmentCount = 16);
+  //static Mesh capsule();
 
   typedef Vector3d Position;
   typedef Vector3d Normal;
@@ -62,7 +62,7 @@ public:
   const Triangle& getTriangle(int iTri) const;
   const Quad& getQuad(int iQuad) const;
   void setAllColors(const Color &color);
-  void addMesh(const SimpleMesh &otherMesh);
+  void addMesh(const Mesh &otherMesh);
   void triangulateQuads();
   void recalculateVertexNormals();
   void normalizeBoneWeights();
