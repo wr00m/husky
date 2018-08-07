@@ -1,7 +1,8 @@
 #pragma once
 
 #include <husky/math/Matrix44.hpp>
-#include <vector>
+#include <husky/math/Box.hpp>
+#include <husky/math/Sphere.hpp>
 
 namespace husky {
 
@@ -15,8 +16,8 @@ public:
   Frustum(const Matrix44d &mtxProjection, const Matrix44d &mtxModelView);
 
   IntersectionResult touches(const Vector3d &pt) const;
-  IntersectionResult touches(const Vector3d &boxMin, const Vector3d &boxMax) const;
-  IntersectionResult touches(const Vector3d &sphereCenter, double sphereRadius) const;
+  IntersectionResult touches(const Box &box, const Matrix44d *boxTransform = nullptr) const;
+  IntersectionResult touches(const Sphere &sphere) const;
   IntersectionResult touches(const std::vector<Vector3d> &polyPts) const;
 
 private:

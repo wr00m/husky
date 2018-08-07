@@ -30,11 +30,12 @@ public:
   std::vector<std::uint8_t> bytes;
   std::vector<int> attrByteOffsets;
   std::vector<std::uint16_t> indices;
-  unsigned int vbo = 0; // TODO: Remove
-  unsigned int vao = 0; // TODO: Remove
+  unsigned int vbo = 0; // TODO: Remove?
+  unsigned int vao = 0; // TODO: Remove?
 
   RenderData();
   RenderData(Mode mode);
+  //~RenderData(); // TODO: Cleanup here?
 
   void init(int vertCount);
   void addPoint(int v0);
@@ -42,6 +43,7 @@ public:
   void addTriangle(int v0, int v1, int v2);
   void addAttr(Attribute attr, int attrByteCount);
   bool getAttribPointer(Attribute attr, const void *&ptr) const;
+  void uploadToGpu(); // TODO: Remove?
 
   template<typename T>
   bool setValue(int vertIndex, Attribute attr, const T &value)

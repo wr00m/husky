@@ -26,7 +26,7 @@ public:
   static Matrix44<T> perspectiveInfRevZ(T vFovRad, T aspectRatio, T near, Matrix44<T> *inv = nullptr);
   static Matrix44<T> frustum(T left, T right, T bottom, T top, T near, T far, Matrix44<T> *inv = nullptr);
   static Matrix44<T> lookAt(const Vector3<T> &camPos, const Vector3<T> &lookAtPos, const Vector3<T> &upDir, Matrix44<T> *inv = nullptr);
-  static Matrix44<T> compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans);
+  static Matrix44<T> compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans, Matrix44<T> *inv = nullptr);
 
   Matrix44();
   Matrix44(T m00, T m01, T m02, T m03, T m10, T m11, T m12, T m13, T m20, T m21, T m22, T m23, T m30, T m31, T m32, T m33);

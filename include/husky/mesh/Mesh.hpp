@@ -1,11 +1,33 @@
 #pragma once
 
 #include <husky/math/Matrix44.hpp>
-#include <husky/mesh/Bone.hpp>
 #include <husky/render/RenderData.hpp>
+#include <map>
 #include <vector>
 
 namespace husky {
+
+class HUSKY_DLL Bone
+{
+public:
+  Bone();
+  Bone(const std::string &name);
+  Bone(const std::string &name, const Matrix44d &mtxMeshToBone);
+
+  std::string name;
+  Matrix44d mtxMeshToBone;
+  //std::map<int, double> vertexWeights;
+};
+
+class HUSKY_DLL BoneWeight
+{
+public:
+  BoneWeight();
+  BoneWeight(int boneIndex, double weight);
+
+  int boneIndex;
+  double weight;
+};
 
 class HUSKY_DLL Mesh
 {
@@ -24,15 +46,9 @@ public:
   typedef Vector3d Tangent;
   typedef Vector2d TexCoord;
   typedef Vector4b Color;
-  //typedef std::vector<int> LineStrip;
+  typedef Vector2i Line;
   typedef Vector3i Triangle;
   typedef Vector4i Quad;
-
-  struct BoneWeight
-  {
-    int boneIndex;
-    double weight;
-  };
 
   int numVerts() const;
   int numTriangles() const;
@@ -40,6 +56,9 @@ public:
   int numBones() const;
   int addVert(const Vector3d &pos);
   int addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord);
+  void addLine(const Line &l);
+  void addLine(int v0, int v1);
+  const Line& addLine(const Position &p0, const Position &p1);
   void addTriangle(const Triangle &t);
   void addTriangle(int v0, int v1, int v2);
   const Triangle& addTriangle(const Position &p0, const Position &p1, const Position &p2);
@@ -52,6 +71,13 @@ public:
   bool hasTexCoord() const;
   bool hasColors() const;
   bool hasBoneWeights() const;
+  bool hasLines() const;
+  bool hasFaces() const;
+  Position  getPosition(int iVert) const;
+  Normal    getNormal(int iVert) const;
+  Tangent   getTangent(int iVert) const;
+  TexCoord  getTexCoord(int iVert) const;
+  Color     getColor(int iVert) const;
   void setPosition(int iVert, const Position &pos);
   void setNormal(int iVert, const Normal &nor);
   void setTangent(int iVert, const Tangent &tangent);
@@ -59,6 +85,7 @@ public:
   void setColor(int iVert, const Color &color);
   void setBoneWeights(int iVert, const std::vector<BoneWeight> &weights);
   void addBoneWeight(int iVert, const BoneWeight &weight);
+  const Line& getLine(int iLine) const;
   const Triangle& getTriangle(int iTri) const;
   const Quad& getQuad(int iQuad) const;
   void setAllColors(const Color &color);
@@ -66,21 +93,22 @@ public:
   void triangulateQuads();
   void recalculateVertexNormals();
   void normalizeBoneWeights();
+  void translate(const Vector3d &delta);
   void transform(const Matrix44d &m);
+  void convertFacesToWireframeLines();
   RenderData getRenderData() const;
-  RenderData getRenderDataWireframe() const;
 
 private:
-  std::vector<Vector3d> vertPosition;
-  std::vector<Vector3d> vertNormal;
-  std::vector<Vector3d> vertTangent;
-  std::vector<Vector2d> vertTexCoord;
-  std::vector<Vector4b> vertColor;
+  std::vector<Position> vertPosition;
+  std::vector<Normal>   vertNormal;
+  std::vector<Tangent>  vertTangent;
+  std::vector<TexCoord> vertTexCoord;
+  std::vector<Color>    vertColor;
   std::vector<std::vector<BoneWeight>> vertBoneWeights;
-  //std::vector<LineStrip> lineStrips;
-  std::vector<Vector3i> tris;
-  std::vector<Vector4i> quads;
-  std::vector<Bone> bones;
+  std::vector<Line>     lines;
+  std::vector<Triangle> tris;
+  std::vector<Quad>     quads;
+  std::vector<Bone>     bones;
 };
 
 }

@@ -21,19 +21,22 @@ template<typename T>
 Matrix44<T> Matrix44<T>::scale(const Vector3<T> &s)
 {
   return {
-    s.x,   0,   0, 0,
-      0, s.y,   0, 0,
-      0,   0, s.z, 0,
-      0,   0,   0, 1
+    s.x,   0,   0,   0,
+      0, s.y,   0,   0,
+      0,   0, s.z,   0,
+      0,   0,   0,   1
   };
 }
 
 template<typename T>
 Matrix44<T> Matrix44<T>::translate(const Vector3<T> &pos)
 {
-  Matrix44<T> res = identity();
-  res.col[3].xyz = pos;
-  return res;
+  return {
+        1,     0,     0,     0,
+        0,     1,     0,     0,
+        0,     0,     1,     0,
+    pos.x, pos.y, pos.z,     1
+  };
 }
 
 template<typename T>
@@ -192,13 +195,19 @@ Matrix44<T> Matrix44<T>::lookAt(const Vector3<T> &camPos, const Vector3<T> &look
 }
 
 template<typename T>
-Matrix44<T> Matrix44<T>::compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans)
+Matrix44<T> Matrix44<T>::compose(const Vector3<T> &scale, const Matrix33<T> &rot, const Vector3<T> &trans, Matrix44<T> *inv)
 {
   Matrix44<T> m;
   m.col[0].xyz = rot.col[0] * scale[0];
   m.col[1].xyz = rot.col[1] * scale[1];
   m.col[2].xyz = rot.col[2] * scale[2];
   m.col[3] = { trans, T(1) };
+
+  if (inv != nullptr) {
+    *inv = Matrix44<T>(Matrix33<T>(rot.col[0] / scale[0], rot.col[1] / scale[1], rot.col[2] / scale[2]).transposed()) * Matrix44<T>::translate(-trans);
+    //*inv = Matrix44<T>::scale({ T(1) / scale.x, T(1) / scale.y, T(1) / scale.z }) * Matrix44<T>(rot.transposed()) * Matrix44<T>::translate(-trans);
+  }
+
   return m;
 }
 

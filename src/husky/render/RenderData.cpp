@@ -1,4 +1,5 @@
 #include <husky/render/RenderData.hpp>
+#include <glad/glad.h>
 
 namespace husky {
 
@@ -59,6 +60,16 @@ bool RenderData::getAttribPointer(Attribute attr, const void *&ptr) const
     ptr = nullptr;
     return false;
   }
+}
+
+void RenderData::uploadToGpu()
+{
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, bytes.size(), bytes.data(), GL_STATIC_DRAW);
+
+  glGenVertexArrays(1, &vao);
+  //glBindVertexArray(vao);
 }
 
 }

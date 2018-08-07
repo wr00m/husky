@@ -142,6 +142,15 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
 
   // TODO: Test Quaternion::fromRotationMatrix()
 
+  husky::Matrix44d compInv;
+  husky::Matrix44d comp = husky::Matrix44d::compose({ 2, 3, 4 }, husky::Matrix33d::rotate(husky::Math::pi, husky::Vector3d(1, 1, 1).normalized()), { -10, 20, -30 }, &compInv);
+  double compInvDiff = matDiff(compInv, glm::make_mat4(comp.inverted().m));
+  assert(compInvDiff < 1e-9);
+  double compInvDiff2 = matDiff(comp * compInv, glm::dmat4(1)); // Identity matrix
+  assert(compInvDiff2 < 1e-9);
+
+  // TODO: Test Transform class (primarily ctors)
+
   husky::Matrix44d eulerAnglesMtx = husky::Matrix44d::rotate(3.0, husky::Vector3d(3, 2, 1).normalized());
   glm::dmat4 eulerAnglesMtxGlm = glm::rotate(3.0, glm::normalize(glm::dvec3(3, 2, 1)));
   double eulerAnglesMtxDiff = matDiff(eulerAnglesMtx, eulerAnglesMtxGlm);

@@ -75,9 +75,9 @@ Matrix44d Animation::getNodeTransform(const std::string &nodeName, double time, 
   return transform;
 }
 
-Matrix44d Animation::getBoneTransform(const Bone &bone, double time) const
-{
-  return getNodeTransform(bone.name, time, bone.mtx);
-}
+//Matrix44d Animation::getBoneTransform(const Bone &bone, double time) const
+//{
+//  return getNodeTransform(bone.name, time, bone.mtx);
+//}
 
 }

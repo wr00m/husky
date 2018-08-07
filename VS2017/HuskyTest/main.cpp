@@ -127,7 +127,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
         husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
 
         // TODO: Each entity should provide its bounding box in world coordinates (better performance than inverting the picking ray for each entity)
-        husky::Matrix44d inv = entity->transform.inverted();
+        husky::Matrix44d inv = entity->getTransform().inverted();
         husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
         husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
 
@@ -224,18 +224,6 @@ static void windowSizeCallback(GLFWwindow *win, int width, int height)
   updateViewportAndRebuildFbo();
 }
 
-static void initRenderDataGPU(husky::Model &mdl)
-{
-  for (husky::RenderData &renderData : mdl.meshRenderDatas) {
-    glGenBuffers(1, &renderData.vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, renderData.vbo);
-    glBufferData(GL_ARRAY_BUFFER, renderData.bytes.size(), renderData.bytes.data(), GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &renderData.vao);
-    //glBindVertexArray(renderData.vao);
-  }
-}
-
 int main()
 {
   runUnitTests();
@@ -286,9 +274,8 @@ int main()
 
   updateViewportAndRebuildFbo();
 
-  const husky::Shader defaultShader = husky::Shader::getDefaultShader(false);
-  const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true);
-  const husky::Shader lineShader = husky::Shader::getDefaultLineShader();
+  static const husky::Shader defaultShader = husky::Shader::getDefaultShader(false);
+  static const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true);
 
 #if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -309,32 +296,37 @@ int main()
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::sphere(1.0), husky::Material({ 0, 1, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<husky::Entity>("Sphere", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::translate({ 3, 3, 0 });
+    entities.emplace_back(std::make_unique<husky::Entity>("Sphere", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::translate({ 3, 3, 0 }));
+    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, textureHandle)));
-    entities.emplace_back(std::make_unique<husky::Entity>("Cylinder", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 0 });
+    entities.emplace_back(std::make_unique<husky::Entity>("Cylinder", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 0 }));
+    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, textureHandle)));
-    entities.emplace_back(std::make_unique<husky::Entity>("Cone", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::translate({ 4, -2, 2 });
+    entities.emplace_back(std::make_unique<husky::Entity>("Cone", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 2 }));
+    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<husky::Entity>("Box", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::translate({ -4, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 });
+    entities.emplace_back(std::make_unique<husky::Entity>("Box", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::translate({ -20, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 }));
+    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, textureHandle)));
-    entities.emplace_back(std::make_unique<husky::Entity>("Torus", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::translate({ 0, 0, 0 });
+    entities.emplace_back(std::make_unique<husky::Entity>("Torus", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::translate({ 0, 0, 0 }));
+    entities.back()->calcBbox();
   }
 
   {
@@ -343,17 +335,13 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
-    //husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
-    husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
+    husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
+    //husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
 
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
-    entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, &lineShader, models.back().get()));
-    entities.back()->transform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 });
-  }
-
-  for (auto &entity : entities) {
-    initRenderDataGPU(*entity->modelInstance.model); // TODO: Remove
-    initRenderDataGPU(entity->bboxModel); // TODO: Remove
+    entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
+    entities.back()->calcBbox();
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]
@@ -393,8 +381,7 @@ int main()
         bool isSelected = (iEntity == iSelectedEntity);
         entity->draw(viewport, cam, isSelected);
 
-        // TODO: Don't test frustum intersection with *local* bounding box!
-        if ((bool)frustum.touches(entity->bboxLocal.min, entity->bboxLocal.max)) {
+        if ((bool)frustum.touches(entity->bboxLocal, &entity->getTransform())) {
           viewEntities.emplace_back(iEntity);
         }
       }
@@ -451,13 +438,13 @@ int main()
         
         if (ImGui::Button("Zoom to selected")) {
           // TODO
-          //husky::Vector3d boundingSphereCenterPt = selectedEntity->bboxLocal.center();
-          //double boundingSphereRadius = (selectedEntity->bboxLocal.max - selectedEntity->bboxLocal.min).length() * 0.5;
+          //husky::Vector3d SphereCenterPt = selectedEntity->bboxLocal.center();
+          //double SphereRadius = (selectedEntity->bboxLocal.max - selectedEntity->bboxLocal.min).length() * 0.5;
         }
         
         husky::Vector3d scale, trans;
         husky::Matrix33d rot;
-        selectedEntity->transform.decompose(scale, rot, trans);
+        selectedEntity->getTransform().decompose(scale, rot, trans);
 
         husky::EulerAnglesf eulerAngles = (husky::EulerAnglesf)husky::EulerAnglesd(husky::RotationOrder::ZXY, rot);
         float yaw   = (float)eulerAngles.yaw;
@@ -471,7 +458,7 @@ int main()
 
         if (rotated) {
           eulerAngles.angles.set(yaw, pitch, roll);
-          selectedEntity->transform = husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans);
+          selectedEntity->setTransform(husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans));
         }
       }
 

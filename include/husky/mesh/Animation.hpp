@@ -1,6 +1,6 @@
 #pragma once
 
-#include <husky/mesh/Bone.hpp>
+#include <husky/math/Matrix44.hpp>
 #include <husky/math/Quaternion.hpp>
 #include <map>
 #include <vector>
@@ -23,7 +23,7 @@ class HUSKY_DLL Animation
 public:
   Animation(const std::string &name, double durationTicks, double ticksPerSecond);
 
-  Matrix44d getBoneTransform(const Bone &bone, double time) const;
+  //Matrix44d getBoneTransform(const Bone &bone, double time) const;
 
   std::string name;
   double durationTicks;

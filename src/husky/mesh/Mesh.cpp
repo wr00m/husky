@@ -1,8 +1,37 @@
 #include <husky/mesh/Mesh.hpp>
 #include <husky/math/Math.hpp>
 #include <husky/Log.hpp>
+#include <set>
 
 namespace husky {
+
+Bone::Bone()
+  : Bone("")
+{
+}
+
+Bone::Bone(const std::string &name)
+  : Bone(name, Matrix44d::identity())
+{
+}
+
+Bone::Bone(const std::string &name, const Matrix44d &mtxMeshToBone)
+  : name(name)
+  , mtxMeshToBone(mtxMeshToBone)
+{
+}
+
+BoneWeight::BoneWeight()
+  : boneIndex(0)
+  , weight(0)
+{
+}
+
+BoneWeight::BoneWeight(int boneIndex, double weight)
+  : boneIndex(boneIndex)
+  , weight(weight)
+{
+}
 
 Mesh Mesh::box(double sizeX, double sizeY, double sizeZ)
 {
@@ -224,6 +253,9 @@ int Mesh::numQuads() const { return int(quads.size()); }
 int Mesh::numBones() const { return int(bones.size()); }
 int Mesh::addVert(const Vector3d &pos) { vertPosition.emplace_back(pos); return int(vertPosition.size() - 1); }
 int Mesh::addVert(const Vector3d &pos, const Vector3d &nor, const Vector2d &texCoord) { int iVert = addVert(pos); setNormal(iVert, nor); setTexCoord(iVert, texCoord); return iVert; }
+void Mesh::addLine(const Line &l) { lines.emplace_back(l); }
+void Mesh::addLine(int v0, int v1) { addLine({ v0, v1 }); }
+const Mesh::Line& Mesh::addLine(const Position &p0, const Position &p1) { addLine({ addVert(p0), addVert(p1) }); return lines.back(); }
 void Mesh::addTriangle(const Triangle &t) { tris.emplace_back(t); }
 void Mesh::addTriangle(int v0, int v1, int v2) { addTriangle({ v0, v1, v2 }); }
 const Mesh::Triangle& Mesh::addTriangle(const Position &p0, const Position &p1, const Position &p2) { addTriangle({ addVert(p0), addVert(p1), addVert(p2) }); return tris.back(); }
@@ -236,6 +268,13 @@ bool Mesh::hasTangents() const { return !vertTangent.empty(); }
 bool Mesh::hasTexCoord() const { return !vertTexCoord.empty(); }
 bool Mesh::hasColors() const { return !vertColor.empty(); }
 bool Mesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
+bool Mesh::hasLines() const { return !lines.empty(); }
+bool Mesh::hasFaces() const { return !tris.empty() || !quads.empty(); }
+Mesh::Position Mesh::getPosition(int iVert) const { return vertPosition[iVert]; }
+Mesh::Normal Mesh::getNormal(int iVert) const { return vertNormal[iVert]; }
+Mesh::Tangent Mesh::getTangent(int iVert) const { return vertTangent[iVert]; }
+Mesh::TexCoord Mesh::getTexCoord(int iVert) const { return vertTexCoord[iVert]; }
+Mesh::Color Mesh::getColor(int iVert) const { return vertColor[iVert]; }
 void Mesh::setPosition(int iVert, const Position &pos) { vertPosition[iVert] = pos; }
 void Mesh::setNormal(int iVert, const Normal &nor) { vertNormal.resize(vertPosition.size()); vertNormal[iVert] = nor; }
 void Mesh::setTangent(int iVert, const Tangent &tangent) { vertTangent.resize(vertPosition.size()); vertTangent[iVert] = tangent; }
@@ -243,6 +282,7 @@ void Mesh::setTexCoord(int iVert, const TexCoord &texCoord) { vertTexCoord.resiz
 void Mesh::setColor(int iVert, const Color &color) { vertColor.resize(vertPosition.size(), Color(255)); vertColor[iVert] = color; }
 void Mesh::setBoneWeights(int iVert, const std::vector<BoneWeight> &weights) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert] = weights; }
 void Mesh::addBoneWeight(int iVert, const BoneWeight &weight) { vertBoneWeights.resize(vertPosition.size()); vertBoneWeights[iVert].emplace_back(weight); }
+const Mesh::Line& Mesh::getLine(int iLine) const { return lines[iLine]; }
 const Mesh::Triangle& Mesh::getTriangle(int iTri) const { return tris[iTri]; }
 const Mesh::Quad& Mesh::getQuad(int iQuad) const { return quads[iQuad]; }
 void Mesh::setAllColors(const Color &color) { vertColor.assign(vertPosition.size(), color); }
@@ -275,7 +315,7 @@ void Mesh::addMesh(const Mesh &m)
     if (m.hasBoneWeights()) {
       for (const auto &boneWeights : m.vertBoneWeights) {
         for (const BoneWeight &boneWeight : boneWeights) {
-          addBoneWeight(iVert, { boneWeight.boneIndex + boneOffset, boneWeight.weight });
+          addBoneWeight(iVert, BoneWeight(boneWeight.boneIndex + boneOffset, boneWeight.weight));
         }
       }
     }
@@ -291,10 +331,6 @@ void Mesh::addMesh(const Mesh &m)
 
   for (const Bone &bone : m.bones) {
     addBone(bone);
-
-    if (bones.back().parent != -1) {
-      bones.back().parent += boneOffset;
-    }
   }
 }
 
@@ -374,6 +410,13 @@ void Mesh::normalizeBoneWeights()
   }
 }
 
+void Mesh::translate(const Vector3d &delta) // More efficient than transform()
+{
+  for (Position &pos : vertPosition) {
+    pos += delta;
+  }
+}
+
 void Mesh::transform(const Matrix44d &m)
 {
   if (numVerts() > 0) {
@@ -386,8 +429,85 @@ void Mesh::transform(const Matrix44d &m)
   }
 }
 
+class LineComp
+{
+public:
+  bool operator()(const Mesh::Line &a, const Mesh::Line &b) const
+  {
+    if (a[0] < b[0]) return true;
+    else if (a[0] > b[0]) return false;
+    else if (a[1] < b[1]) return true;
+    else return false;
+  }
+};
+
+void Mesh::convertFacesToWireframeLines()
+{
+  std::set<Line, LineComp> uniqueLines;
+
+  for (const Triangle &t : tris) {
+    uniqueLines.emplace(t[0], t[1]);
+    uniqueLines.emplace(t[1], t[2]);
+    uniqueLines.emplace(t[2], t[0]);
+  }
+  tris.clear();
+
+  for (const Quad &q : quads) {
+    uniqueLines.emplace(q[0], q[1]);
+    uniqueLines.emplace(q[1], q[2]);
+    uniqueLines.emplace(q[2], q[3]);
+    uniqueLines.emplace(q[3], q[0]);
+  }
+  quads.clear();
+
+  for (const Line &line : uniqueLines) {
+    addLine(line);
+  }
+}
+
 RenderData Mesh::getRenderData() const
 {
+  if (hasLines()) {
+    if (hasFaces()) {
+      Log::warning("Mesh has both lines and faces");
+    }
+    else {
+      RenderData r(RenderData::Mode::LINES);
+      r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
+      r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+      r.init(numVerts());
+
+      if (numVerts() > 0) {
+        r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+
+        for (int i = 0; i < numVerts(); i++) {
+          r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+          r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        }
+
+        for (const Line &l : lines) {
+          r.addLine(l[0], l[1]);
+        }
+
+        for (const Triangle &t : tris) {
+          r.addLine(t[0], t[1]);
+          r.addLine(t[1], t[2]);
+          r.addLine(t[2], t[0]);
+        }
+
+        for (const Quad &q : quads) {
+          r.addLine(q[0], q[1]);
+          r.addLine(q[1], q[2]);
+          r.addLine(q[2], q[3]);
+          r.addLine(q[3], q[0]);
+        }
+      }
+
+      r.uploadToGpu();
+      return r;
+    }
+  }
+
   RenderData r(RenderData::Mode::TRIANGLES);
   r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
   r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
@@ -410,7 +530,7 @@ RenderData Mesh::getRenderData() const
 
       if (hasBoneWeights()) {
         const auto &boneWeights = vertBoneWeights[i];
-        Vector4b inds; // = { 0, 1, 2, 3 };
+        Vector4b indices; // = { 0, 1, 2, 3 };
         Vector4b weights; // = { 255, 0, 0, 0 };
 
         for (int j = 0; j < boneWeights.size(); j++) {
@@ -419,11 +539,11 @@ RenderData Mesh::getRenderData() const
             break;
           }
 
-          inds[j] = (std::uint8_t)boneWeights[j].boneIndex;
+          indices[j] = (std::uint8_t)boneWeights[j].boneIndex;
           weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
         }
 
-        r.setValue(i, RenderData::Attribute::BONE_INDICES, inds);
+        r.setValue(i, RenderData::Attribute::BONE_INDICES, indices);
         r.setValue(i, RenderData::Attribute::BONE_WEIGHTS, weights);
       }
     }
@@ -438,38 +558,7 @@ RenderData Mesh::getRenderData() const
     }
   }
 
-  return r;
-}
-
-RenderData Mesh::getRenderDataWireframe() const
-{
-  RenderData r(RenderData::Mode::LINES);
-  r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-  r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-  r.init(numVerts());
-
-  if (numVerts() > 0) {
-    r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
-
-    for (int i = 0; i < numVerts(); i++) {
-      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-      r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
-    }
-
-    for (const Triangle &t : tris) {
-      r.addLine(t[0], t[1]);
-      r.addLine(t[1], t[2]);
-      r.addLine(t[2], t[0]);
-    }
-
-    for (const Quad &q : quads) {
-      r.addLine(q[0], q[1]);
-      r.addLine(q[1], q[2]);
-      r.addLine(q[2], q[3]);
-      r.addLine(q[3], q[0]);
-    }
-  }
-
+  r.uploadToGpu();
   return r;
 }
 

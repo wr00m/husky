@@ -18,6 +18,7 @@ public:
     Vector3<T> angles;
   };
 
+  EulerAngles();
   EulerAngles(RotationOrder rotationOrder, T yaw, T pitch, T roll);
   EulerAngles(RotationOrder rotationOrder, const Quaternion<T> &q);
   EulerAngles(RotationOrder rotationOrder, const Matrix33<T> &m);
@@ -31,6 +32,8 @@ public:
 
   Quaternion<T> toQuaternion() const;
   Matrix33<T> toMatrix() const;
+
+  EulerAngles<T> operator-() const;
 };
 
 typedef EulerAngles<double> EulerAnglesd;

@@ -1,11 +1,44 @@
 #pragma once
 
-#include <husky/mesh/Mesh.hpp>
-#include <husky/mesh/Material.hpp>
 #include <husky/mesh/Animation.hpp>
+#include <husky/math/Box.hpp>
+#include <husky/mesh/Material.hpp>
+#include <husky/mesh/Mesh.hpp>
+#include <husky/render/Camera.hpp>
+#include <husky/render/Shader.hpp>
+#include <husky/render/Viewport.hpp>
+#include <memory>
 #include <string>
 
 namespace husky {
+
+class Shader;
+class Viewport;
+
+class HUSKY_DLL ModelNode // Coordinate frame
+{
+public:
+  ModelNode(const std::string &name, const Matrix44d &mtxRelToParent, const ModelNode *parent);
+  ~ModelNode();
+
+  std::string name;
+  const ModelNode *parent; // std::weak_ptr?
+  std::vector<const ModelNode*> children; // std::unique_ptr?
+  Matrix44d mtxRelToParent;
+  Matrix44d mtxRelToModel;
+  std::vector<int> meshIndices;
+};
+
+class HUSKY_DLL ModelMesh
+{
+public:
+  ModelMesh(Mesh &&mesh, int materialIndex);
+
+  Mesh mesh;
+  Box bboxLocal;
+  RenderData renderData;
+  int materialIndex;
+};
 
 class HUSKY_DLL Model
 {
@@ -13,16 +46,23 @@ public:
   static Model load(const std::string &filePath);
 
   Model();
-  Model(const RenderData &&renderData, const Material &mtl);
-  Model(const Mesh &mesh, const Material &mtl);
+  Model(Mesh &&mesh, const Material &mtl);
 
-  void addRenderData(const RenderData &&renderData, int mtlIndex);
-  void addRenderData(const RenderData &&renderData, const Material &mtl);
+  int addMaterial(const Material &mtl);
+  int addMesh(Mesh &&mesh, int mtlIndex);
+  const Material& getMaterial(int mtlIndex) const;
+  void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const;
+  void calcBbox();
 
   std::vector<Material> materials;
-  std::vector<RenderData> meshRenderDatas;
-  std::vector<int> meshMaterialIndices;
+  std::vector<ModelMesh> meshes;
   std::vector<Animation> animations;
+  ModelNode *root; // std::unique_ptr?
+  Box bboxLocal; // Does not take animation into consideration
+
+private:
+  std::vector<const ModelNode*> getNodesFlatList() const;
+  void getNodesRecursive(const ModelNode *node, std::vector<const ModelNode*> &nodes) const;
 };
 
 class HUSKY_DLL ModelInstance
@@ -30,7 +70,9 @@ class HUSKY_DLL ModelInstance
 public:
   ModelInstance(Model *model);
 
-  Model *model;
+  void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const;
+
+  Model *model; // std::shared_ptr?
   int animationIndex;
   double animationTime;
 };

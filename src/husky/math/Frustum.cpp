@@ -46,34 +46,27 @@ Frustum::IntersectionResult Frustum::touches(const Vector3d &pt) const
   return IntersectionResult::INSIDE;
 }
 
-Frustum::IntersectionResult Frustum::touches(const Vector3d &boxMin, const Vector3d &boxMax) const
+Frustum::IntersectionResult Frustum::touches(const Box &box, const Matrix44d *boxTransform) const
 {
-  constexpr unsigned int NUM_CORNERS = 8;
-
-  std::vector<Vector3d> corners;
-  corners.reserve(NUM_CORNERS);
-
-  for (unsigned int i = 0; i < NUM_CORNERS; i++) {
-    Vector3d corner;
-    corner.x = (i < 4     ? boxMax.x : boxMin.x);
-    corner.y = (i % 4 < 2 ? boxMax.y : boxMin.y);
-    corner.z = (i % 2     ? boxMax.z : boxMin.z);
-    corners.emplace_back(corner);
+  std::vector<Vector3d> corners = box.corners();
+  if (boxTransform != nullptr) {
+    for (Vector3d &corner : corners) {
+      corner = (*boxTransform * Vector4d(corner, 1)).xyz;
+    }
   }
-
   return touches(corners);
 }
 
-Frustum::IntersectionResult Frustum::touches(const Vector3d &sphereCenter, double sphereRadius) const
+Frustum::IntersectionResult Frustum::touches(const Sphere &sphere) const
 {
   int planeCount = 0;
 
   for (unsigned int iPlane = 0; iPlane < NUM_CLIPPING_PLANES; iPlane++) {
-    const double dist = getPointDistToPlane(sphereCenter, clippingPlanes[iPlane]);
-    if (dist <= -sphereRadius) {
+    const double dist = getPointDistToPlane(sphere.center, clippingPlanes[iPlane]);
+    if (dist <= -sphere.radius) {
       return IntersectionResult::OUTSIDE;
     }
-    else if (dist > sphereRadius) {
+    else if (dist > sphere.radius) {
       planeCount++;
     }
   }

@@ -130,6 +130,13 @@ static Vector3<T> quaternionToEuler(RotationOrder rotationOrder, const Quaternio
 }
 
 template<typename T>
+EulerAngles<T>::EulerAngles()
+  : rotationOrder(RotationOrder::ZXY)
+  , angles(0, 0, 0)
+{
+}
+
+template<typename T>
 EulerAngles<T>::EulerAngles(RotationOrder rotationOrder, T yaw, T pitch, T roll)
   : rotationOrder(rotationOrder)
   , angles(yaw, pitch, roll)
@@ -197,6 +204,8 @@ Matrix33<T> EulerAngles<T>::toMatrix() const
        * Matrix33<T>::rotate(pitch, axes[inds[1]])
        * Matrix33<T>::rotate( roll, axes[inds[2]]);
 }
+
+template<typename T> EulerAngles<T> EulerAngles<T>::operator-() const { return EulerAngles<T>(rotationOrder, -yaw, -pitch, -roll); }
 
 template class EulerAngles<double>;
 template class EulerAngles<float>;
