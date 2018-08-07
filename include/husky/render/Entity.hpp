@@ -7,7 +7,7 @@ namespace husky {
 class HUSKY_DLL Entity
 {
 public:
-  Entity(const std::string &name, const Shader *shader, Model *model);
+  Entity(const std::string &name, const Shader *shader, const Model *model);
 
   void draw(const Viewport &viewport, const Camera &cam, bool drawBbox) const;
   void calcBbox();

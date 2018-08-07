@@ -4,7 +4,7 @@
 
 namespace husky {
 
-Entity::Entity(const std::string &name, const Shader *shader, Model *model)
+Entity::Entity(const std::string &name, const Shader *shader, const Model *model)
   : name(name)
   , mtxTransform(Matrix44d::identity())
   , shader(shader)

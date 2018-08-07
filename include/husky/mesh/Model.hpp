@@ -70,11 +70,11 @@ private:
 class HUSKY_DLL ModelInstance
 {
 public:
-  ModelInstance(Model *model);
+  ModelInstance(const Model *model);
 
   void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const;
 
-  Model *model; // std::shared_ptr?
+  const Model *model; // std::shared_ptr?
   int animationIndex;
   double animationTime;
 };

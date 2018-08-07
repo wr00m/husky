@@ -512,7 +512,7 @@ void Model::getNodesRecursive(const ModelNode *node, std::vector<const ModelNode
   }
 }
 
-ModelInstance::ModelInstance(Model *model)
+ModelInstance::ModelInstance(const Model *model)
   : model(model)
   , animationIndex(-1)
   , animationTime(0)
