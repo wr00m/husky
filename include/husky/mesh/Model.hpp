@@ -61,9 +61,9 @@ public:
   ModelNode *root; // std::unique_ptr?
   Box bboxLocal; // Does not take animation into consideration
   Sphere bsphereLocal; // Does not take animation into consideration
+  std::vector<const ModelNode*> getNodesFlatList() const;
 
 private:
-  std::vector<const ModelNode*> getNodesFlatList() const;
   void getNodesRecursive(const ModelNode *node, std::vector<const ModelNode*> &nodes) const;
 };
 

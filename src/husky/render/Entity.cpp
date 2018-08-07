@@ -1,4 +1,5 @@
 #include <husky/render/Entity.hpp>
+#include <husky/render/Component.hpp>
 #include <husky/mesh/Mesh.hpp>
 #include <husky/Log.hpp>
 
@@ -10,12 +11,13 @@ Entity::Entity(const std::string &name, const Shader *shader, const Model *model
   , shader(shader)
   , modelInstance(model)
   , bboxLocal()
-  , bboxLocalModel()
+  , bsphereLocal()
+  , components()
 {
   calcBbox();
 }
 
-void Entity::draw(const Viewport &viewport, const Camera &cam, bool drawBbox) const
+void Entity::draw(const Viewport &viewport, const Camera &cam) const
 {
   const Matrix44f view(cam.view);
   const Matrix44f modelView(cam.view * mtxTransform);
@@ -23,10 +25,8 @@ void Entity::draw(const Viewport &viewport, const Camera &cam, bool drawBbox) co
 
   modelInstance.draw(*shader, viewport, view, modelView, projection);
 
-  if (drawBbox) {
-    static const Shader lineShader = Shader::getDefaultLineShader();
-    bboxLocalModel.draw(lineShader, viewport, view, modelView, projection);
-    bsphereLocalModel.draw(lineShader, viewport, view, modelView, projection);
+  for (const IComponent *component : components) {
+    component->draw(viewport, view, modelView, projection);
   }
 }
 
@@ -35,30 +35,6 @@ void Entity::calcBbox()
   // TODO: Combine boxes of multiple ModelInstances
   bboxLocal = modelInstance.model->bboxLocal;
   bsphereLocal = modelInstance.model->bsphereLocal;
-
-  //for (const auto &mm : modelInstance.model->bboxLocal) {
-  //  bbox.expand((mtxTransform * Vector4d(mm.bboxLocal.min, 1.0)).xyz);
-  //  bbox.expand((mtxTransform * Vector4d(mm.bboxLocal.max, 1.0)).xyz);
-  //}
-
-  Vector3d bboxSize = bboxLocal.size();
-  Mesh bboxMesh = Mesh::box(bboxSize.x, bboxSize.y, bboxSize.z);
-  bboxMesh.convertFacesToWireframeLines();
-  bboxMesh.translate(bboxLocal.center());
-
-  Mesh bsphereMesh = Mesh::sphere(bsphereLocal.radius);
-  bsphereMesh.convertFacesToWireframeLines();
-  bsphereMesh.translate(bsphereLocal.center);
-
-  Material mtlBox({ 1, 1, 1 });
-  mtlBox.wireframe = true;
-  mtlBox.lineWidth = 2.0f;
-  bboxLocalModel = Model(std::move(bboxMesh), mtlBox);
-
-  Material mtlSphere({ 0, 1, 0 });
-  mtlSphere.wireframe = true;
-  mtlSphere.lineWidth = 1.0f;
-  bsphereLocalModel = Model(std::move(bsphereMesh), mtlSphere);
 }
 
 const Matrix44d& Entity::getTransform() const
@@ -69,6 +45,27 @@ const Matrix44d& Entity::getTransform() const
 void Entity::setTransform(const Matrix44d &mtxTransform)
 {
   this->mtxTransform = mtxTransform;
+}
+
+void Entity::addComponent(std::unique_ptr<IComponent> &&component)
+{
+  if (component != nullptr) {
+    components.emplace_back(component.release());
+    components.back()->init(this);
+  }
+}
+
+void Entity::removeComponent(IComponent *component)
+{
+  if (component == nullptr) {
+    return;
+  }
+
+  const auto it = std::find(components.begin(), components.end(), component);
+  if (it != components.end()) {
+    delete *it;
+    components.erase(it);
+  }
 }
 
 }

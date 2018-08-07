@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <husky/render/Camera.hpp>
+#include <husky/render/Component.hpp>
 #include <husky/render/Entity.hpp>
 #include <husky/image/Image.hpp>
 #include <husky/math/Intersect.hpp>
@@ -50,6 +51,25 @@ static GLuint fbo = 0;
 static husky::Viewport fboViewport;
 static ImGuiIO *io = nullptr;
 
+static void setSelectedEntity(int i)
+{
+  if (i == iSelectedEntity) {
+    return;
+  }
+
+  // Deselect previous
+  if (iSelectedEntity != -1) {
+    entities[iSelectedEntity]->removeComponent<husky::DebugDrawComponent>();
+    iSelectedEntity = -1;
+  }
+
+  // Select
+  if (i != -1) {
+    entities[i]->addComponent<husky::DebugDrawComponent>();
+    iSelectedEntity = i;
+  }
+}
+
 static void toggleFullscreen(GLFWwindow *win)
 {
   bool fullscreen = (glfwGetWindowMonitor(win) != nullptr);
@@ -79,12 +99,12 @@ static void keyCallback(GLFWwindow *win, int key, int scancode, int action, int 
     }
     else if (key == GLFW_KEY_PAGE_UP) { // Select previous entity
       if (!entities.empty()) {
-        iSelectedEntity = (std::max(iSelectedEntity, 0) + (int)entities.size() - 1) % entities.size();
+        setSelectedEntity((std::max(iSelectedEntity, 0) + (int)entities.size() - 1) % entities.size());
       }
     }
     else if (key == GLFW_KEY_PAGE_DOWN) { // Select next entity
       if (!entities.empty()) {
-        iSelectedEntity = (iSelectedEntity + 1) % entities.size();
+        setSelectedEntity((iSelectedEntity + 1) % entities.size());
       }
     }
   }
@@ -139,15 +159,15 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
       }
 
       if (clickedEntities.empty()) { // Nothing clicked => Deselect
-        iSelectedEntity = -1;
+        setSelectedEntity(-1);
       }
       else if (clickedEntities.size() == 1) { // One entity clicked => Select the entity
-        iSelectedEntity = clickedEntities.begin()->second;
+        setSelectedEntity(clickedEntities.begin()->second);
       }
       else { // Multiple entities clicked => Select first unselected entity
         for (const auto &pair : clickedEntities) {
           if (pair.second != iSelectedEntity) {
-            iSelectedEntity = pair.second;
+            setSelectedEntity(pair.second);
             break;
           }
         }
@@ -377,9 +397,7 @@ int main()
 
       for (int iEntity = 0; iEntity < (int)entities.size(); iEntity++) {
         const auto &entity = entities[iEntity];
-
-        bool isSelected = (iEntity == iSelectedEntity);
-        entity->draw(viewport, cam, isSelected);
+        entity->draw(viewport, cam);
 
         if ((bool)frustum.touches(entity->bboxLocal, &entity->getTransform())) {
           viewEntities.emplace_back(iEntity);

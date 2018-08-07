@@ -1,10 +1,14 @@
 #pragma once
 
-#include <husky/math/Vector3.hpp>
+#include <husky/math/Matrix44.hpp>
 #include <vector>
 #include <cassert>
 
 namespace husky {
+
+class Shader;
+class Material;
+class Viewport;
 
 class HUSKY_DLL RenderData
 {
@@ -72,6 +76,8 @@ public:
 
     return *t;
   }
+
+  void draw(const Shader &shader, const Material &mtl, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const;
 };
 
 }
