@@ -481,11 +481,22 @@ void Model::calcBbox()
 {
   bboxLocal = {};
 
-  // TODO: Take node transformation and mesh usage into consideration
-  for (const auto &mm : meshes) {
-    if (mm.bboxLocal.initialized) {
-      bboxLocal.expand(mm.bboxLocal.min);
-      bboxLocal.expand(mm.bboxLocal.max);
+  for (const ModelNode *node : getNodesFlatList()) {
+    for (const int iMesh : node->meshIndices) {
+      const ModelMesh &mesh = meshes[iMesh];
+#if defined(HUSKY_BBOX_ACCURACY_VERTEX)
+      for (const Vector3d &meshVertPos : mesh.mesh.getPositions()) {
+        const Vector3d modelVertPos = (node->mtxRelToModel * Vector4d(meshVertPos, 1)).xyz;
+        bboxLocal.expand(modelVertPos);
+      }
+#else
+      if (mesh.bboxLocal.initialized) {
+        for (const Vector3d &meshVertPos : mesh.bboxLocal.corners()) {
+          const Vector3d modelVertPos = (node->mtxRelToModel * Vector4d(meshVertPos, 1)).xyz;
+          bboxLocal.expand(modelVertPos);
+        }
+      }
+#endif
     }
   }
 }

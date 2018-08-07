@@ -270,6 +270,7 @@ bool Mesh::hasColors() const { return !vertColor.empty(); }
 bool Mesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
 bool Mesh::hasLines() const { return !lines.empty(); }
 bool Mesh::hasFaces() const { return !tris.empty() || !quads.empty(); }
+const std::vector<Mesh::Position>& Mesh::getPositions() const { return vertPosition; }
 Mesh::Position Mesh::getPosition(int iVert) const { return vertPosition[iVert]; }
 Mesh::Normal Mesh::getNormal(int iVert) const { return vertNormal[iVert]; }
 Mesh::Tangent Mesh::getTangent(int iVert) const { return vertTangent[iVert]; }

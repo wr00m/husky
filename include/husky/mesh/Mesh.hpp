@@ -73,6 +73,7 @@ public:
   bool hasBoneWeights() const;
   bool hasLines() const;
   bool hasFaces() const;
+  const std::vector<Position>& getPositions() const;
   Position  getPosition(int iVert) const;
   Normal    getNormal(int iVert) const;
   Tangent   getTangent(int iVert) const;
