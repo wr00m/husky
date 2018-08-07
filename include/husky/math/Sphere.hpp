@@ -5,6 +5,8 @@
 namespace husky
 {
 
+class Box;
+
 class HUSKY_DLL Sphere
 {
 public:
@@ -15,6 +17,8 @@ public:
 
   void init(const Vector3d &pt);
   void expand(const Vector3d &pt);
+  void expand(const Box &box);
+  void expand(const Sphere &sphere);
   Vector3d min() const;
   Vector3d max() const;
   double volume() const;

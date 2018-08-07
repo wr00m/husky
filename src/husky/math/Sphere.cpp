@@ -1,4 +1,5 @@
 #include <husky/math/Sphere.hpp>
+#include <husky/math/Box.hpp>
 #include <husky/math/Math.hpp>
 #include <algorithm>
 
@@ -32,7 +33,52 @@ void Sphere::expand(const Vector3d &pt)
     return;
   }
 
-  double radius2 = (pt - center).length2();
+  const Vector3d diff = pt - center;
+  const double r = diff.length();
+
+  if (r <= radius) {
+    return; // Already inside
+  }
+
+  const double dr = (r - radius) * 0.5;
+
+  center += diff * (dr / r);
+  radius += dr;
+}
+
+void Sphere::expand(const Box &box)
+{
+  expand(Sphere(box.center(), box.radius()));
+}
+
+void Sphere::expand(const Sphere &sphere)
+{
+  if (!sphere.initialized) {
+    return;
+  }
+
+  if (!initialized) {
+    *this = sphere;
+    return;
+  }
+
+  const Vector3d diff = (sphere.center - center);
+  const double r = diff.length();
+
+  if (r + sphere.radius <= radius) {
+    return; // Already inside
+  }
+
+  if (r + radius <= sphere.radius) {
+    *this = sphere;
+    return;
+  }
+
+  const double newRadius = (radius + r + sphere.radius) * 0.5;
+  const double ratio = (newRadius - radius) / r;
+
+  center += (diff * ratio);
+  radius = newRadius;
 }
 
 Vector3d Sphere::min() const

@@ -1,4 +1,5 @@
 #include <husky/math/Box.hpp>
+#include <husky/math/Sphere.hpp>
 #include <husky/math/Math.hpp>
 #include <algorithm>
 
@@ -42,6 +43,25 @@ void Box::expand(const Vector3d &pt)
   else if (pt.z > max.z) max.z = pt.z;
 }
 
+void Box::expand(const Box &box)
+{
+  if (!box.initialized) {
+    return;
+  }
+
+  if (!initialized) {
+    *this = box;
+  }
+
+  expand(box.min);
+  expand(box.max);
+}
+
+void Box::expand(const Sphere &sphere)
+{
+  expand(Box(sphere.min(), sphere.max()));
+}
+
 Vector3d Box::size() const
 {
   return (max - min);
@@ -50,6 +70,19 @@ Vector3d Box::size() const
 Vector3d Box::center() const
 {
   return (min + max) * 0.5;
+}
+
+double Box::radius() const
+{
+  const Vector3d c = center();
+  double r2max = 0;
+  for (const Vector3d corner : corners()) {
+    double r2 = (corner - c).length2();
+    if (r2 > r2max) {
+      r2max = r2;
+    }
+  }
+  return std::sqrt(r2max);
 }
 
 double Box::volume() const
