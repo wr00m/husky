@@ -26,6 +26,7 @@ void Entity::draw(const Viewport &viewport, const Camera &cam, bool drawBbox) co
   if (drawBbox) {
     static const Shader lineShader = Shader::getDefaultLineShader();
     bboxLocalModel.draw(lineShader, viewport, view, modelView, projection);
+    bsphereLocalModel.draw(lineShader, viewport, view, modelView, projection);
   }
 }
 
@@ -33,6 +34,7 @@ void Entity::calcBbox()
 {
   // TODO: Combine boxes of multiple ModelInstances
   bboxLocal = modelInstance.model->bboxLocal;
+  bsphereLocal = modelInstance.model->bsphereLocal;
 
   //for (const auto &mm : modelInstance.model->bboxLocal) {
   //  bbox.expand((mtxTransform * Vector4d(mm.bboxLocal.min, 1.0)).xyz);
@@ -44,10 +46,19 @@ void Entity::calcBbox()
   bboxMesh.convertFacesToWireframeLines();
   bboxMesh.translate(bboxLocal.center());
 
-  Material mtlWireframe({ 1, 1, 1 });
-  mtlWireframe.wireframe = true;
+  Mesh bsphereMesh = Mesh::sphere(bsphereLocal.radius);
+  bsphereMesh.convertFacesToWireframeLines();
+  bsphereMesh.translate(bsphereLocal.center);
 
-  bboxLocalModel = Model(std::move(bboxMesh), mtlWireframe);
+  Material mtlBox({ 1, 1, 1 });
+  mtlBox.wireframe = true;
+  mtlBox.lineWidth = 2.0f;
+  bboxLocalModel = Model(std::move(bboxMesh), mtlBox);
+
+  Material mtlSphere({ 0, 1, 0 });
+  mtlSphere.wireframe = true;
+  mtlSphere.lineWidth = 1.0f;
+  bsphereLocalModel = Model(std::move(bsphereMesh), mtlSphere);
 }
 
 const Matrix44d& Entity::getTransform() const

@@ -19,6 +19,26 @@ Sphere::Sphere(const Vector3d &center, double radius)
 {
 }
 
+Sphere::Sphere(const Vector3d &center, const std::vector<Vector3d> &pts)
+  : initialized(true)
+  , center(center)
+  , radius(0)
+{
+  expand(pts);
+}
+
+Sphere::Sphere(const std::vector<Vector3d> &pts)
+  : initialized(false)
+  , center(0, 0, 0)
+  , radius(0)
+{
+  if (!pts.empty()) {
+    center = Box(pts).center();
+    expand(pts);
+    initialized = true;
+  }
+}
+
 void Sphere::init(const Vector3d &pt)
 {
   center = pt;
@@ -33,17 +53,30 @@ void Sphere::expand(const Vector3d &pt)
     return;
   }
 
-  const Vector3d diff = pt - center;
-  const double r = diff.length();
+  const double r2 = (pt - center).length2();
+  if (r2 > (radius * radius)) {
+    radius = std::sqrt(r2);
+  }
+}
 
-  if (r <= radius) {
-    return; // Already inside
+void Sphere::expand(const std::vector<Vector3d> &pts)
+{
+  if (pts.empty()) {
+    return;
   }
 
-  const double dr = (r - radius) * 0.5;
+  const double r2orig = (radius * radius);
+  double r2max = r2orig;
+  for (const Vector3d &pt : pts) {
+    double r2 = (pt - center).length2();
+    if (r2 > r2max) {
+      r2max = r2;
+    }
+  }
 
-  center += diff * (dr / r);
-  radius += dr;
+  if (r2max > r2orig) {
+    radius = std::sqrt(r2max);
+  }
 }
 
 void Sphere::expand(const Box &box)

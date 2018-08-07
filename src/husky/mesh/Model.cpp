@@ -34,10 +34,9 @@ ModelMesh::ModelMesh(Mesh &&mesh, int materialIndex)
   : mesh(mesh)
   , renderData(mesh.getRenderData())
   , materialIndex(materialIndex)
+  , bboxLocal(mesh.getPositions())
+  , bsphereLocal(bboxLocal.center(), mesh.getPositions())
 {
-  for (int iVert = 0; iVert < mesh.numVerts(); iVert++) {
-    bboxLocal.expand(mesh.getPosition(iVert));
-  }
 }
 
 static Matrix44f getAiMatrix(const aiMatrix4x4 &m)
@@ -480,23 +479,17 @@ void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f
 void Model::calcBbox()
 {
   bboxLocal = {};
+  bsphereLocal = {};
 
   for (const ModelNode *node : getNodesFlatList()) {
     for (const int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
-#if defined(HUSKY_BBOX_ACCURACY_VERTEX)
-      for (const Vector3d &meshVertPos : mesh.mesh.getPositions()) {
-        const Vector3d modelVertPos = (node->mtxRelToModel * Vector4d(meshVertPos, 1)).xyz;
-        bboxLocal.expand(modelVertPos);
+      std::vector<Mesh::Position> pts = mesh.mesh.getPositions();
+      for (Mesh::Position &pt : pts) { // Mesh-to-model coordinate transformation
+        pt = (node->mtxRelToModel * Vector4d(pt, 1)).xyz;
       }
-#else
-      if (mesh.bboxLocal.initialized) {
-        for (const Vector3d &meshVertPos : mesh.bboxLocal.corners()) {
-          const Vector3d modelVertPos = (node->mtxRelToModel * Vector4d(meshVertPos, 1)).xyz;
-          bboxLocal.expand(modelVertPos);
-        }
-      }
-#endif
+      bboxLocal.expand(Box(pts));
+      bsphereLocal.expand(Sphere(pts));
     }
   }
 }

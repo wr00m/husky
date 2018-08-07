@@ -36,6 +36,7 @@ public:
 
   Mesh mesh;
   Box bboxLocal;
+  Sphere bsphereLocal;
   RenderData renderData;
   int materialIndex;
 };
@@ -59,6 +60,7 @@ public:
   std::vector<Animation> animations;
   ModelNode *root; // std::unique_ptr?
   Box bboxLocal; // Does not take animation into consideration
+  Sphere bsphereLocal; // Does not take animation into consideration
 
 private:
   std::vector<const ModelNode*> getNodesFlatList() const;

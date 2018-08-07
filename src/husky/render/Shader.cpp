@@ -124,11 +124,12 @@ void main()
 
   static const char *lineFragSrc =
 R"(#version 400 core
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
 in vec4 gsColor;
 out vec4 fsColor;
 void main()
 {
-  fsColor = gsColor;
+  fsColor = gsColor * vec4(mtlDiffuse, 1.0);
 })";
 
   return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);

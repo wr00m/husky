@@ -19,6 +19,16 @@ Box::Box(const Vector3d &min, const Vector3d &max)
 {
 }
 
+Box::Box(const std::vector<Vector3d> &pts)
+  : initialized(false)
+  , min(0, 0, 0)
+  , max(0, 0, 0)
+{
+  for (const Vector3d &pt : pts) {
+    expand(pt);
+  }
+}
+
 void Box::init(const Vector3d &pt)
 {
   min = pt;
