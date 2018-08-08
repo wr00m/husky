@@ -135,7 +135,7 @@ void main()
   return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);
 }
 
-Shader Shader::getDefaultShader(bool useBones)
+Shader Shader::getDefaultShader(bool texture, bool bones)
 {
   static const char *defaultVertSrc =
 R"(//#version 400 core
@@ -188,8 +188,10 @@ void main() {
 })";
 
   static const char *defaultFragSrc =
-R"(#version 400 core
+R"(//#version 400 core
+#ifdef USE_TEXTURE
 uniform sampler2D tex;
+#endif
 uniform vec3 lightDir = vec3(20.0, -40.0, 100.0);
 uniform vec3 lightAmbient = vec3(0.05, 0.05, 0.05);
 uniform vec3 lightDiffuse = vec3(1.0, 1.0, 1.0);
@@ -216,18 +218,21 @@ void main() {
   vec3 diffuseColor = diffuseIntensity * lightDiffuse * mtlDiffuse;
   float specularIntensity = clamp(pow(max(dot(R, E), 0.0), mtlShininess) * mtlShininessStrength, 0.0, 1.0);
   vec3 specularColor = specularIntensity * lightSpecular * mtlSpecular;
+#ifdef USE_TEXTURE
   vec4 texColor = texture(tex, varTexCoord);
+#else
+  const vec4 texColor = vec4(1.0);
+#endif
   //texColor = vec4(1.0);
   fragColor.rgb = ambientColor + (diffuseColor * varColor.rgb * texColor.rgb) + specularColor + mtlEmissive;
   fragColor.a = varColor.a * texColor.a;
 })";
 
-  if (useBones) {
-    return Shader(std::string("#version 400 core\n#define USE_BONES\n") + defaultVertSrc, "", defaultFragSrc);
-  }
-  else {
-    return Shader(std::string("#version 400 core\n") + defaultVertSrc, "", defaultFragSrc);
-  }
+  std::string header = "#version 400 core\n";
+  if (texture) { header += "#define USE_TEXTURE\n"; }
+  if (bones) { header += "#define USE_BONES\n"; }
+  
+  return Shader(header + defaultVertSrc, "", header + defaultFragSrc);
 }
 
 Shader::Shader()

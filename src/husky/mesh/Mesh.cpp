@@ -247,6 +247,33 @@ Mesh Mesh::torus(double circleRadius, double tubeRadius, int uSegmentCount, int 
   return m;
 }
 
+Mesh Mesh::axes(double axisLength, int uSegmentCount)
+{
+  double cylinderLength = axisLength * 0.75;
+
+  Mesh mArrow = cylinder(0.05 * axisLength, cylinderLength, true, false, uSegmentCount);
+  Mesh mCone = cone(0.1 * axisLength, axisLength - cylinderLength, true, uSegmentCount);
+  mCone.translate({ 0, 0, cylinderLength });
+  mArrow.addMesh(mCone);
+
+  // Z axis
+  Mesh m;
+  mArrow.setAllColors({ 0, 0, 255, 255 });
+  m.addMesh(mArrow);
+
+  // Y axis
+  mArrow.transform(Matrix44d::rotate(-Math::pi2, { 1, 0, 0 }));
+  mArrow.setAllColors({ 0, 255, 0, 255 });
+  m.addMesh(mArrow);
+
+  // X axis
+  mArrow.transform(Matrix44d::rotate(-Math::pi2, { 0, 0, 1 }));
+  mArrow.setAllColors({ 255, 0, 0, 255 });
+  m.addMesh(mArrow);
+
+  return m;
+}
+
 int Mesh::numVerts() const { return int(vertPosition.size()); }
 int Mesh::numTriangles() const { return int(tris.size()); }
 int Mesh::numQuads() const { return int(quads.size()); }

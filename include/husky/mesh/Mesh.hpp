@@ -39,6 +39,7 @@ public:
   static Mesh disk(double radius, int uSegmentCount = 16);
   static Mesh sphere(double radius, int uSegmentCount = 32, int vSegmentCount = 16);
   static Mesh torus(double circleRadius, double tubeRadius, int uSegmentCount = 32, int vSegmentCount = 16);
+  static Mesh axes(double axisLength = 1.0, int uSegmentCount = 8);
   //static Mesh capsule();
 
   typedef Vector3d Position;

@@ -294,8 +294,8 @@ int main()
 
   updateViewportAndRebuildFbo();
 
-  static const husky::Shader defaultShader = husky::Shader::getDefaultShader(false);
-  static const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true);
+  static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
+  static const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true, true);
 
 #if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -318,35 +318,30 @@ int main()
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::sphere(1.0), husky::Material({ 0, 1, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<husky::Entity>("Sphere", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 3, 3, 0 }));
-    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, textureHandle)));
     entities.emplace_back(std::make_unique<husky::Entity>("Cylinder", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 0 }));
-    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, textureHandle)));
     entities.emplace_back(std::make_unique<husky::Entity>("Cone", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 2 }));
-    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<husky::Entity>("Box", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ -20, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 }));
-    entities.back()->calcBbox();
   }
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, textureHandle)));
     entities.emplace_back(std::make_unique<husky::Entity>("Torus", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 0, 0, 0 }));
-    entities.back()->calcBbox();
   }
 
   {
@@ -361,7 +356,6 @@ int main()
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
-    entities.back()->calcBbox();
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]

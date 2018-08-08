@@ -8,7 +8,7 @@ namespace husky {
 class HUSKY_DLL Shader
 {
 public:
-  static Shader getDefaultShader(bool useBones);
+  static Shader getDefaultShader(bool texture, bool bones);
   static Shader getDefaultLineShader();
 
   Shader();
