@@ -28,6 +28,8 @@ static RenderData sphereRenderData;
 static Material sphereMaterial;
 static RenderData axesRenderData;
 static Material axesMaterial;
+static RenderData boneRenderData;
+static Material boneMaterial;
 
 void DebugDrawComponent::init(Entity *owner)
 {
@@ -64,6 +66,13 @@ void DebugDrawComponent::init(Entity *owner)
       axesMaterial = Material({ 1, 1, 1 });
       axesMaterial.specular = { 0, 0, 0 };
     }
+
+    {
+      boneRenderData = Mesh::cone(0.01, 0.1, true, 6).getRenderData();
+
+      boneMaterial = Material({ 1, 1, 1 });
+      boneMaterial.depthTest = false;
+    }
   }
 }
 
@@ -80,8 +89,10 @@ void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, c
   Matrix44f sphereModelView(modelView * Matrix44f::translate(Vector3f(owner->bsphereLocal.center)) * Matrix44f::scale(Vector3f((float)owner->bsphereLocal.radius)));
   sphereRenderData.draw(lineShader, sphereMaterial, viewport, view, sphereModelView, projection);
 
-  for (const ModelNode *node : owner->modelInstance.model->getNodesFlatList()) {
+  for (const Matrix44f &m : owner->modelInstance.mtxAnimatedNodes) {
     // TODO
+    Matrix44f boneModelView(modelView * m);
+    boneRenderData.draw(defaultShader, boneMaterial, viewport, view, boneModelView, projection);
   }
 }
 

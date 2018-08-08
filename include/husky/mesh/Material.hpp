@@ -27,6 +27,7 @@ public:
     , lineWidth(2.f)
     , wireframe(false)
     , twoSided(false)
+    , depthTest(true)
     , textureHandle(textureHandle)
   {
   }
@@ -42,6 +43,7 @@ public:
   float lineWidth;
   bool wireframe;
   bool twoSided;
+  bool depthTest;
   unsigned int textureHandle;
 };
 

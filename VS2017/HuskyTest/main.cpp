@@ -369,6 +369,10 @@ int main()
     prevTime = time;
     double fps = (frameTime != 0 ? (1.0 / frameTime) : 0.0);
 
+    for (auto &entity : entities) {
+      entity->update(frameTime);
+    }
+
     if (!io->WantCaptureKeyboard) {
       handleKeyInput(window);
     }

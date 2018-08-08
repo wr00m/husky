@@ -76,7 +76,7 @@ void RenderData::uploadToGpu()
   //glBindVertexArray(vao);
 }
 
-void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
+void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones) const
 {
   if (shader.shaderProgramHandle == 0) {
     Log::warning("Invalid shader program");
@@ -88,6 +88,13 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   }
   else {
     glEnable(GL_CULL_FACE);
+  }
+
+  if (mtl.depthTest) {
+    glEnable(GL_DEPTH_TEST);
+  }
+  else {
+    glDisable(GL_DEPTH_TEST);
   }
 
   glUseProgram(shader.shaderProgramHandle);
@@ -107,6 +114,15 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
 
   if (shader.getUniformLocation("mtxProjection", varLocation)) {
     glUniformMatrix4fv(varLocation, 1, GL_FALSE, projection.m);
+  }
+
+  if (shader.getUniformLocation("mtxBones", varLocation)) {
+    if (mtxBones.empty()) {
+      glUniformMatrix4fv(varLocation, 1, GL_FALSE, Matrix44f::identity().m); // Single identity matrix
+    }
+    else {
+      glUniformMatrix4fv(varLocation, (GLsizei)mtxBones.size(), GL_FALSE, mtxBones.front().m);
+    }
   }
 
   if (shader.getUniformLocation("tex", varLocation)) {

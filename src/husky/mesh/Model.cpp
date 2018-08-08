@@ -323,13 +323,13 @@ const Material& Model::getMaterial(int mtlIndex) const
 }
 
 // TODO: Remove? (Render ModelInstance, not Model)
-void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
+void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones) const
 {
   for (const ModelNode *node : getNodesFlatList()) {
     for (int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
       const Material &mtl = getMaterial(mesh.materialIndex);
-      mesh.renderData.draw(shader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection);
+      mesh.renderData.draw(shader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
     }
   }
 }
@@ -374,6 +374,7 @@ ModelInstance::ModelInstance(const Model *model)
   : model(model)
   , animationIndex(-1)
   , animationTime(0)
+  , mtxAnimatedNodes()
 {
   assert(model != nullptr);
   if (!model->animations.empty()) { animationIndex = 0; } // TODO: Remove
@@ -381,31 +382,27 @@ ModelInstance::ModelInstance(const Model *model)
 
 void ModelInstance::animate(double timeDelta)
 {
-  // TODO
+  mtxAnimatedNodes.clear();
+  for (const ModelNode *node : model->getNodesFlatList()) {
+    mtxAnimatedNodes.emplace_back(node->mtxRelToModel); // TODO
+  }
 }
 
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
-  //glUseProgram(shader.shaderProgram);
-
-  //int varLocation;
-
-  //if (shader.getUniformLocation("mtxBones", varLocation)) {
-  //  // TODO
-  //  const std::vector<Matrix44f> mtxBones = modelInstance.getAnimatedBoneMatrices();
-  //  if (!mtxBones.empty()) {
-  //    glUniformMatrix4fv(varLocation, mtxBones.size(), GL_FALSE, mtxBones.front().m);
-  //  }
-  //}
-
   if (model != nullptr) {
-    model->draw(shader, viewport, view, modelView, projection);
+    model->draw(shader, viewport, view, modelView, projection, mtxAnimatedNodes);
   }
 }
 
 void ModelInstance::setAnimationIndex(int i)
 {
-  animationIndex = i;
+  if (i >= -1 || i < model->animations.size()) {
+    animationIndex = i;
+  }
+  else { // Invalid argument
+    animationIndex = -1;
+  }
 }
 
 }
