@@ -9,23 +9,30 @@ AnimationChannel::AnimationChannel(const std::string &nodeName)
 }
 
 Animation::Animation(const std::string &name, double durationTicks, double ticksPerSecond)
-  : name(name), durationTicks(durationTicks), ticksPerSecond(ticksPerSecond)
+  : name(name)
+  , durationTicks(durationTicks)
+  , ticksPerSecond(ticksPerSecond)
 {
 }
 
-Matrix44d Animation::getNodeTransform(const std::string &nodeName, double time, const Matrix44d &defaultTransform) const
+double Animation::getTicks(double seconds) const
 {
+  return std::fmod(seconds * ticksPerSecond, durationTicks); // TODO: Support different loop modes
+}
+
+bool Animation::getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
+{
+  transform = Matrix44d::identity();
+
   const auto &it = channels.find(nodeName);
   if (it == channels.end()) {
-    return defaultTransform;
+    return false;
   }
 
-  const double ticks = time * ticksPerSecond;
   const AnimationChannel &ch = it->second;
-  Matrix44d transform = Matrix44d::identity();
 
   if (!ch.keyframePosition.empty()) { // Translation
-    const auto keyframe1 = ch.keyframePosition.upper_bound(time);
+    const auto keyframe1 = ch.keyframePosition.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframePosition.begin()) {
@@ -41,7 +48,7 @@ Matrix44d Animation::getNodeTransform(const std::string &nodeName, double time, 
   }
 
   if (!ch.keyframeRotation.empty()) { // Rotation
-    const auto keyframe1 = ch.keyframeRotation.upper_bound(time);
+    const auto keyframe1 = ch.keyframeRotation.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframeRotation.begin()) {
@@ -57,7 +64,7 @@ Matrix44d Animation::getNodeTransform(const std::string &nodeName, double time, 
   }
 
   if (!ch.keyframeScale.empty()) { // Scale
-    const auto keyframe1 = ch.keyframeScale.upper_bound(time);
+    const auto keyframe1 = ch.keyframeScale.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframeScale.begin()) {
@@ -72,7 +79,7 @@ Matrix44d Animation::getNodeTransform(const std::string &nodeName, double time, 
     }
   }
 
-  return transform;
+  return true;
 }
 
 //Matrix44d Animation::getBoneTransform(const Bone &bone, double time) const

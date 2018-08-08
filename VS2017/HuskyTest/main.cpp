@@ -454,11 +454,14 @@ int main()
         
         if (ImGui::Button("Zoom to selected")) {
           husky::Matrix44d entityTransform = selectedEntity->getTransform();
+          double scale = entityTransform.col[0].length(); // Assume uniform scaling
+
           husky::Sphere bsphereWorld = selectedEntity->bsphereLocal;
-          bsphereWorld.center = (entityTransform * husky::Vector4d(bsphereWorld.center, 1)).xyz; // TODO: Use entity transform to scale radius
+          bsphereWorld.center = (entityTransform * husky::Vector4d(bsphereWorld.center, 1)).xyz;
+          bsphereWorld.radius *= scale;
 
           double fovRad = (cam.aspectRatio > 1.0 ? cam.vfovRad : cam.hfovRad());
-          double camDistToEntity = selectedEntity->bsphereLocal.radius / std::tan(fovRad * 0.5);
+          double camDistToEntity = bsphereWorld.radius / std::tan(fovRad * 0.5);
           cam.pos = (bsphereWorld.center - cam.forward() * camDistToEntity);
           cam.buildViewMatrix();
         }
@@ -469,9 +472,15 @@ int main()
           for (const auto &anim : selectedEntity->modelInstance.model->animations) {
             animNames.emplace_back(anim.name.c_str());
           }
+
           int iAnim = (selectedEntity->modelInstance.animationIndex + 1);
           if (ImGui::Combo("Animation", &iAnim, animNames.data(), (int)animNames.size())) {
             selectedEntity->modelInstance.setAnimationIndex(iAnim - 1);
+          }
+
+          if (const husky::Animation *anim = selectedEntity->modelInstance.getActiveAnimation()) {
+            float animFactor = (float)(anim != nullptr ? (anim->getTicks(selectedEntity->modelInstance.animationTime) / anim->durationTicks) : 0);
+            ImGui::ProgressBar(animFactor);
           }
         }
 

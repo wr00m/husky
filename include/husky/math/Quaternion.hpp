@@ -42,11 +42,13 @@ public:
   T             angleAbs(const Quaternion<T> &target) const;
   
   Quaternion<T> nlerp(const Quaternion<T> &target, T t) const;
-  Quaternion<T> slerp(const Quaternion<T> &target, T t) const;
+  Quaternion<T> slerp(Quaternion<T> target, T t) const;
   
   Vector3<T> operator*(const Vector3<T> &v) const;
   Quaternion<T>& operator*=(const Quaternion<T> &other);
   Quaternion<T> operator*(const Quaternion<T> &other) const;
+  Quaternion<T> operator+(const Quaternion<T> &other) const;
+  Quaternion<T> operator-(const Quaternion<T> &other) const;
   Quaternion<T>& operator+=(T v);
   Quaternion<T>& operator-=(T v);
   Quaternion<T>& operator*=(T v);

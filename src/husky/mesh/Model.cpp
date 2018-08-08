@@ -382,9 +382,23 @@ ModelInstance::ModelInstance(const Model *model)
 
 void ModelInstance::animate(double timeDelta)
 {
+  animationTime += timeDelta;
+
+  if (animationIndex == -1) {
+    return;
+  }
+
+  const Animation &anim = model->animations[animationIndex];
+
   mtxAnimatedNodes.clear();
   for (const ModelNode *node : model->getNodesFlatList()) {
-    mtxAnimatedNodes.emplace_back(node->mtxRelToModel); // TODO
+    double ticks = anim.getTicks(animationTime);
+
+    // TODO
+    Matrix44d mtxNode;
+    if (anim.getNodeTransform(node->name, ticks, mtxNode)) {
+      mtxAnimatedNodes.emplace_back((Matrix44f)mtxNode);
+    }
   }
 }
 
@@ -403,6 +417,11 @@ void ModelInstance::setAnimationIndex(int i)
   else { // Invalid argument
     animationIndex = -1;
   }
+}
+
+const Animation* ModelInstance::getActiveAnimation() const
+{
+  return (animationIndex != -1 ? &model->animations[animationIndex] : nullptr);
 }
 
 }

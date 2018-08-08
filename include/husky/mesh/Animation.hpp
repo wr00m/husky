@@ -23,15 +23,14 @@ class HUSKY_DLL Animation
 public:
   Animation(const std::string &name, double durationTicks, double ticksPerSecond);
 
+  double getTicks(double seconds) const;
+  bool getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const;
   //Matrix44d getBoneTransform(const Bone &bone, double time) const;
 
   std::string name;
   double durationTicks;
   double ticksPerSecond;
   std::map<std::string, AnimationChannel> channels; // Node name is map key
-
-private:
-  Matrix44d getNodeTransform(const std::string &nodeName, double time, const Matrix44d &defaultTransform) const;
 };
 
 }

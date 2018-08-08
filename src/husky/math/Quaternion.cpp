@@ -232,13 +232,33 @@ T Quaternion<T>::dot(const Quaternion<T> &other) const
 template<typename T>
 Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T> &target, T t) const
 {
-  return{}; // TODO
+  return (*this + (target - *this) * t).normalized();
 }
 
 template<typename T>
-Quaternion<T> Quaternion<T>::slerp(const Quaternion<T> &target, T t) const
+Quaternion<T> Quaternion<T>::slerp(Quaternion<T> target, T t) const
 {
-  return{}; // TODO
+  // Note: Both quaternions must be normalized
+
+  T d = this->dot(target);
+
+  if (d < T(0)) { // Reverse to take the shorter path
+    target = -target;
+    d = -d;
+  }
+
+  if (d > 0.9995) {
+    return this->nlerp(target, t);
+  }
+
+  T theta0 = std::acos(d);
+  T theta = theta0 * t;
+  T sinTheta = std::sin(theta);
+  T sinTheta0 = std::sin(theta0);
+  T s0 = std::cos(theta) - d * sinTheta / sinTheta0;
+  T s1 = sinTheta / sinTheta0;
+
+  return (*this * s0) + (target * s1);
 }
 
 template<typename T>
@@ -269,6 +289,9 @@ Quaternion<T> Quaternion<T>::operator*(const Quaternion<T> &other) const
   //q.w = w * other.w - x * other.x - y * other.y - z * other.z;
   return q;
 }
+
+template<typename T> Quaternion<T> Quaternion<T>::operator+(const Quaternion<T> &other) const { return Quaternion<T>(x + other.x, y + other.y, z + other.z, w + other.w); }
+template<typename T> Quaternion<T> Quaternion<T>::operator-(const Quaternion<T> &other) const { return Quaternion<T>(x - other.x, y - other.y, z - other.z, w - other.w); }
 
 template<typename T>
 Quaternion<T> Quaternion<T>::operator-() const

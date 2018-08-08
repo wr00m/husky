@@ -75,6 +75,7 @@ public:
   void animate(double timeDelta);
   void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const;
   void setAnimationIndex(int i);
+  const Animation* getActiveAnimation() const;
 
   const Model *model; // std::shared_ptr?
   int animationIndex;
