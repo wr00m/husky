@@ -436,9 +436,9 @@ int main()
         cam.buildProjMatrix();
       }
 
-      float fov = (float)cam.perspVerticalFovRad;
+      float fov = (float)cam.vfovRad;
       if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {
-        cam.perspVerticalFovRad = fov;
+        cam.vfovRad = fov;
         cam.buildProjMatrix();
       }
 
@@ -449,9 +449,14 @@ int main()
         const auto &selectedEntity = entities[iSelectedEntity];
         
         if (ImGui::Button("Zoom to selected")) {
-          // TODO
-          //husky::Vector3d SphereCenterPt = selectedEntity->bboxLocal.center();
-          //double SphereRadius = (selectedEntity->bboxLocal.max - selectedEntity->bboxLocal.min).length() * 0.5;
+          husky::Matrix44d entityTransform = selectedEntity->getTransform();
+          husky::Sphere bsphereWorld = selectedEntity->bsphereLocal;
+          bsphereWorld.center = (entityTransform * husky::Vector4d(bsphereWorld.center, 1)).xyz; // TODO: Use entity transform to scale radius
+
+          double fovRad = (cam.aspectRatio > 1.0 ? cam.vfovRad : cam.hfovRad());
+          double camDistToEntity = selectedEntity->bsphereLocal.radius / std::tan(fovRad * 0.5);
+          cam.pos = (bsphereWorld.center - cam.forward() * camDistToEntity);
+          cam.buildViewMatrix();
         }
         
         husky::Vector3d scale, trans;

@@ -25,11 +25,12 @@ public:
   Frustum frustum() const;
   void buildProjMatrix();
   void buildViewMatrix();
+  double hfovRad() const;
 
   Vector3d pos;
   Quaterniond rot;
   ProjectionMode projMode;
-  double perspVerticalFovRad;
+  double vfovRad; // Perspective
   double orthoHeight;
   double aspectRatio;
   double nearDist;
