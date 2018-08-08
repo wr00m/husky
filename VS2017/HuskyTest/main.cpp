@@ -459,22 +459,30 @@ int main()
           cam.buildViewMatrix();
         }
         
+        {
+          std::vector<const char*> animNames;
+          animNames.emplace_back("<None>");
+          for (const auto &anim : selectedEntity->modelInstance.model->animations) {
+            animNames.emplace_back(anim.name.c_str());
+          }
+          int iAnim = (selectedEntity->modelInstance.animationIndex + 1);
+          if (ImGui::Combo("Animation", &iAnim, animNames.data(), (int)animNames.size())) {
+            selectedEntity->modelInstance.setAnimationIndex(iAnim - 1);
+          }
+        }
+
         husky::Vector3d scale, trans;
         husky::Matrix33d rot;
         selectedEntity->getTransform().decompose(scale, rot, trans);
 
         husky::EulerAnglesf eulerAngles = (husky::EulerAnglesf)husky::EulerAnglesd(husky::RotationOrder::ZXY, rot);
-        float yaw   = (float)eulerAngles.yaw;
-        float pitch = (float)eulerAngles.pitch;
-        float roll  = (float)eulerAngles.roll;
 
         bool rotated = false;
-        rotated |= ImGui::SliderAngle("Yaw",   &yaw,   -180.f, 180.f);
-        rotated |= ImGui::SliderAngle("Pitch", &pitch, -180.f, 180.f);
-        rotated |= ImGui::SliderAngle("Roll",  &roll,  -180.f, 180.f);
+        rotated |= ImGui::SliderAngle("Yaw",   &eulerAngles.yaw,   -180.f, 180.f);
+        rotated |= ImGui::SliderAngle("Pitch", &eulerAngles.pitch, -180.f, 180.f);
+        rotated |= ImGui::SliderAngle("Roll",  &eulerAngles.roll,  -180.f, 180.f);
 
         if (rotated) {
-          eulerAngles.angles.set(yaw, pitch, roll);
           selectedEntity->setTransform(husky::Matrix44d::compose(scale, ((husky::EulerAnglesd)eulerAngles).toMatrix(), trans));
         }
       }

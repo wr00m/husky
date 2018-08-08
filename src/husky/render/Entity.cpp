@@ -17,6 +17,11 @@ Entity::Entity(const std::string &name, const Shader *shader, const Model *model
   calcBbox();
 }
 
+void Entity::update(double timeDelta)
+{
+  modelInstance.animate(timeDelta);
+}
+
 void Entity::draw(const Viewport &viewport, const Camera &cam) const
 {
   const Matrix44f view(cam.view);

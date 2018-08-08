@@ -12,6 +12,7 @@ class HUSKY_DLL Entity
 public:
   Entity(const std::string &name, const Shader *shader, const Model *model);
 
+  void update(double timeDelta);
   void draw(const Viewport &viewport, const Camera &cam) const;
   void calcBbox();
   const Matrix44d& getTransform() const;

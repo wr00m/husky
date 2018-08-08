@@ -379,6 +379,11 @@ ModelInstance::ModelInstance(const Model *model)
   if (!model->animations.empty()) { animationIndex = 0; } // TODO: Remove
 }
 
+void ModelInstance::animate(double timeDelta)
+{
+  // TODO
+}
+
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
   //glUseProgram(shader.shaderProgram);
@@ -396,6 +401,11 @@ void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const M
   if (model != nullptr) {
     model->draw(shader, viewport, view, modelView, projection);
   }
+}
+
+void ModelInstance::setAnimationIndex(int i)
+{
+  animationIndex = i;
 }
 
 }
