@@ -52,7 +52,7 @@ public:
   int addMaterial(const Material &mtl);
   int addMesh(Mesh &&mesh, int mtlIndex);
   const Material& getMaterial(int mtlIndex) const;
-  void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones) const;
+  void draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<AnimatedNode> &animNodes) const;
   void calcBbox();
 
   std::vector<Material> materials;
@@ -80,7 +80,7 @@ public:
   const Model *model; // std::shared_ptr?
   int animationIndex;
   double animationTime;
-  std::vector<Matrix44f> mtxAnimatedNodes;
+  std::vector<AnimatedNode> animNodes;
 };
 
 }

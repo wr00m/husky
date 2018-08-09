@@ -75,6 +75,7 @@ public:
   bool hasLines() const;
   bool hasFaces() const;
   const std::vector<Position>& getPositions() const;
+  const std::vector<Bone>&     getBones() const;
   Position  getPosition(int iVert) const;
   Normal    getNormal(int iVert) const;
   Tangent   getTangent(int iVert) const;

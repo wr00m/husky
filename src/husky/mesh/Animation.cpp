@@ -26,7 +26,7 @@ void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, s
   AnimatedNode animatedNode;
   animatedNode.name = node->name;
   
-  getNodeTransform(node->name, ticks, animatedNode.mtxRelToParent);
+  getAnimatedNodeTransform(node->name, ticks, animatedNode.mtxRelToParent);
   
   if (parent != nullptr) {
     animatedNode.mtxRelToModel = (parent->mtxRelToModel * animatedNode.mtxRelToParent);
@@ -42,7 +42,7 @@ void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, s
   animatedNodes.emplace_back(animatedNode);
 }
 
-bool Animation::getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
+bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
 {
   transform = Matrix44d::identity();
 

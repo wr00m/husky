@@ -322,13 +322,34 @@ const Material& Model::getMaterial(int mtlIndex) const
   return fallbackMtl;
 }
 
-// TODO: Remove? (Render ModelInstance, not Model)
-void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones) const
+static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, const std::vector<AnimatedNode> &animNodes)
+{
+  std::vector<Matrix44f> mtxBones;
+  mtxBones.reserve(bones.size());
+
+  for (const Bone &bone : bones) {
+    Matrix44f m = Matrix44f::identity();
+    for (const AnimatedNode &animNode : animNodes) {
+      if (animNode.name == bone.name) {
+        m = (Matrix44f)(animNode.mtxRelToModel * bone.mtxMeshToBone);
+        break;
+      }
+    }
+    mtxBones.emplace_back(m);
+  }
+
+  return mtxBones;
+}
+
+void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<AnimatedNode> &animNodes) const
 {
   for (const ModelNode *node : getNodesFlatList()) {
     for (int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
       const Material &mtl = getMaterial(mesh.materialIndex);
+
+      std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
+
       mesh.renderData.draw(shader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
     }
   }
@@ -374,7 +395,7 @@ ModelInstance::ModelInstance(const Model *model)
   : model(model)
   , animationIndex(-1)
   , animationTime(0)
-  , mtxAnimatedNodes()
+  , animNodes()
 {
   assert(model != nullptr);
   if (!model->animations.empty()) { animationIndex = 0; } // TODO: Remove
@@ -389,23 +410,16 @@ void ModelInstance::animate(double timeDelta)
   }
 
   const Animation &anim = model->animations[animationIndex];
-
   double ticks = anim.getTicks(animationTime);
 
-  std::vector<AnimatedNode> animatedNodes;
-  anim.getAnimatedNodesRecursive(model->root, ticks, animatedNodes, nullptr);
-
-  mtxAnimatedNodes.clear();
-  for (const AnimatedNode &animatedNode : animatedNodes) {
-    mtxAnimatedNodes.emplace_back((Matrix44f)animatedNode.mtxRelToModel);
-    // TODO
-  }
+  animNodes.clear();
+  anim.getAnimatedNodesRecursive(model->root, ticks, animNodes, nullptr);
 }
 
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
   if (model != nullptr) {
-    model->draw(shader, viewport, view, modelView, projection, mtxAnimatedNodes);
+    model->draw(shader, viewport, view, modelView, projection, animNodes);
   }
 }
 

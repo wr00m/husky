@@ -34,7 +34,7 @@ public:
   Animation(const std::string &name, double durationTicks, double ticksPerSecond);
 
   double getTicks(double seconds) const;
-  bool getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const;
+  bool getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const;
   //Matrix44d getBoneTransform(const Bone &bone, double time) const;
   void getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::vector<AnimatedNode> &animatedNodes, const AnimatedNode *parent) const;
 

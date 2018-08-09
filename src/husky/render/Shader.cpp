@@ -143,18 +143,7 @@ R"(//#version 400 core
 #ifndef MAX_BONES
 #define MAX_BONES 100 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
 #endif
-uniform mat4 mtxBones[MAX_BONES] = {
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-  mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0), mat4(1.0),
-};
+uniform mat4 mtxBones[MAX_BONES] = mat4[MAX_BONES](mat4(1.0));
 in ivec4 vertBoneIndices;
 in vec4 vertBoneWeights;
 #endif
@@ -254,7 +243,12 @@ Shader::Shader(unsigned int shaderProgramHandle)
   glGetProgramiv(shaderProgramHandle, GL_ACTIVE_UNIFORMS, &uniformCount);
   for (int iUniform = 0; iUniform < uniformCount; iUniform++) {
     glGetActiveUniform(shaderProgramHandle, (GLuint)iUniform, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
-    uniformLocations[varName] = glGetUniformLocation(shaderProgramHandle, varName);
+    std::string uniformName = varName;
+    size_t b = uniformName.find('['); // Array uniform
+    if (b != std::string::npos) {
+      uniformName = uniformName.substr(0, b);
+    }
+    uniformLocations[uniformName] = glGetUniformLocation(shaderProgramHandle, varName);
   }
 
   // Get active (vertex) attributes

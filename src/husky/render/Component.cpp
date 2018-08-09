@@ -89,9 +89,9 @@ void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, c
   //Matrix44f sphereModelView(modelView * Matrix44f::translate(Vector3f(owner->bsphereLocal.center)) * Matrix44f::scale(Vector3f((float)owner->bsphereLocal.radius)));
   //sphereRenderData.draw(lineShader, sphereMaterial, viewport, view, sphereModelView, projection);
 
-  for (const Matrix44f &m : owner->modelInstance.mtxAnimatedNodes) {
+  for (const AnimatedNode &animNode : owner->modelInstance.animNodes) {
     // TODO
-    Matrix44f boneModelView(modelView * m);
+    Matrix44f boneModelView(modelView * (Matrix44f)animNode.mtxRelToModel);
     boneRenderData.draw(defaultShader, boneMaterial, viewport, view, boneModelView, projection);
   }
 }
