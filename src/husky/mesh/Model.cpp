@@ -50,7 +50,7 @@ static Matrix44f getAiMatrix(const aiMatrix4x4 &m)
 
 static ModelNode* getAiNodesRecursive(const aiNode *node, ModelNode *parent)
 {
-  ModelNode *n = new ModelNode(node->mName.C_Str(), getAiMatrix(node->mTransformation), parent);
+  auto n = std::make_unique<ModelNode>(node->mName.C_Str(), getAiMatrix(node->mTransformation), parent);
 
   for (unsigned int iMesh = 0; iMesh < node->mNumMeshes; iMesh++) {
     //Mesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
@@ -61,11 +61,10 @@ static ModelNode* getAiNodesRecursive(const aiNode *node, ModelNode *parent)
   }
 
   for (unsigned int iChild = 0; iChild < node->mNumChildren; iChild++) {
-    ModelNode *c = getAiNodesRecursive(node->mChildren[iChild], n);
-    n->children.emplace_back(c);
+    n->children.emplace_back(getAiNodesRecursive(node->mChildren[iChild], n.get()));
   }
 
-  return n;
+  return n.release();
 }
 
 static Material getAiMaterial(const fs::path &folderPath, const aiMaterial *material)
@@ -293,7 +292,7 @@ Model::Model()
 Model::Model(Mesh &&mesh, const Material &mtl)
   : root(new ModelNode("Root", Matrix44d::identity(), nullptr))
 {
-  int iMtl = addMaterial(mtl);
+  int iMtl  = addMaterial(mtl);
   int iMesh = addMesh(std::move(mesh), iMtl);
   root->meshIndices.emplace_back(iMesh);
   calcBbox();
@@ -322,42 +321,49 @@ const Material& Model::getMaterial(int mtlIndex) const
   return fallbackMtl;
 }
 
-static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, const std::vector<AnimatedNode> &animNodes)
+static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, const std::map<std::string, AnimatedNode> &animNodes)
 {
   std::vector<Matrix44f> mtxBones;
   mtxBones.reserve(bones.size());
 
   for (const Bone &bone : bones) {
-    Matrix44f m = Matrix44f::identity();
-    for (const AnimatedNode &animNode : animNodes) {
-      if (animNode.name == bone.name) {
-        m = (Matrix44f)(animNode.mtxRelToModel * bone.mtxMeshToBone);
-        break;
-      }
+    const auto it = animNodes.find(bone.name);
+    if (it != animNodes.end()) {
+      mtxBones.emplace_back((Matrix44f)(it->second.mtxRelToModel * bone.mtxMeshToBone));
     }
-    mtxBones.emplace_back(m);
+    else {
+      mtxBones.emplace_back(Matrix44f::identity()); // TODO: Is this correct?
+    }
   }
 
   return mtxBones;
 }
 
-void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<AnimatedNode> &animNodes) const
+void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::map<std::string, AnimatedNode> &animNodes) const
 {
-  // TODO: http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
-  //const Matrix44f mtxGlobalInv(root->mtxRelToParent.inverted());
-
   for (const ModelNode *node : getNodesFlatList()) {
     for (int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
       const Material &mtl = getMaterial(mesh.materialIndex);
 
-      std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
-      for (Matrix44f &mtxBone : mtxBones) {
-        //mtxBone = mtxGlobalInv * mtxBone;
-        mtxBone = mtxBone;
+      if (mesh.mesh.hasBones()) {
+        const std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
+        mesh.renderData.draw(shader, mtl, viewport, view, modelView, projection, mtxBones);
       }
+      else {
+        static const Shader &defaultShader = Shader::getDefaultShader(true, false); // TODO: Remove!
 
-      mesh.renderData.draw(shader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
+        Matrix44f bonelessModelView = modelView;
+        const auto it = animNodes.find(node->name);
+        if (it != animNodes.end()) {
+          bonelessModelView *= (Matrix44f)it->second.mtxRelToModel;
+        }
+        bonelessModelView *= (Matrix44f)node->mtxRelToModel;
+        //bonelessModelView *= (Matrix44f)root->mtxRelToModel.inverted();
+
+        mesh.renderData.draw(defaultShader, mtl, viewport, view, bonelessModelView, projection, {});
+        //mesh.renderData.draw(defaultShader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
+      }
     }
   }
 }

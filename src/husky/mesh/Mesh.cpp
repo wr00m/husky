@@ -297,6 +297,7 @@ bool Mesh::hasColors() const { return !vertColor.empty(); }
 bool Mesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
 bool Mesh::hasLines() const { return !lines.empty(); }
 bool Mesh::hasFaces() const { return !tris.empty() || !quads.empty(); }
+bool Mesh::hasBones() const { return !bones.empty(); }
 const std::vector<Mesh::Position>& Mesh::getPositions() const { return vertPosition; }
 const std::vector<Bone>& Mesh::getBones() const { return bones; }
 Mesh::Position Mesh::getPosition(int iVert) const { return vertPosition[iVert]; }

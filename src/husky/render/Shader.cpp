@@ -164,7 +164,7 @@ void main() {
   mat4 mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
                + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
                + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
-               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3]; // TODO
+               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3];
   varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
   varNormal = mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz;
 #else

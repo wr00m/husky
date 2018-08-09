@@ -349,14 +349,16 @@ int main()
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.fbx");
     //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
-    husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
+    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Boy/Boy.fbx");
+    //husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
     //husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
 
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     //entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
     entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShaderBones, models.back().get()));
-    //entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
+    entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]

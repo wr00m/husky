@@ -30,6 +30,7 @@ static RenderData axesRenderData;
 static Material axesMaterial;
 static RenderData boneRenderData;
 static Material boneMaterial;
+static Material boneMaterialAnimated;
 
 void DebugDrawComponent::init(Entity *owner)
 {
@@ -72,6 +73,9 @@ void DebugDrawComponent::init(Entity *owner)
 
       boneMaterial = Material({ 1, 1, 1 });
       boneMaterial.depthTest = false;
+
+      boneMaterialAnimated = Material({ 1, 0, 0 });
+      boneMaterialAnimated.depthTest = false;
     }
   }
 }
@@ -89,10 +93,11 @@ void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, c
   //Matrix44f sphereModelView(modelView * Matrix44f::translate(Vector3f(owner->bsphereLocal.center)) * Matrix44f::scale(Vector3f((float)owner->bsphereLocal.radius)));
   //sphereRenderData.draw(lineShader, sphereMaterial, viewport, view, sphereModelView, projection);
 
-  for (const AnimatedNode &animNode : owner->modelInstance.animNodes) {
-    // TODO
+  for (const auto &pair : owner->modelInstance.animNodes) {
+    const AnimatedNode &animNode = pair.second;
+    const Material &mtl = (animNode.animated ? boneMaterialAnimated : boneMaterial);
     Matrix44f boneModelView(modelView * (Matrix44f)animNode.mtxRelToModel);
-    boneRenderData.draw(defaultShader, boneMaterial, viewport, view, boneModelView, projection);
+    boneRenderData.draw(defaultShader, mtl, viewport, view, boneModelView, projection);
   }
 }
 

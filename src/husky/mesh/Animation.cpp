@@ -9,6 +9,12 @@ AnimationChannel::AnimationChannel(const std::string &nodeName)
 {
 }
 
+AnimatedNode::AnimatedNode(const std::string &name)
+  : name(name)
+  , animated(false)
+{
+}
+
 Animation::Animation(const std::string &name, double durationTicks, double ticksPerSecond)
   : name(name)
   , durationTicks(durationTicks)
@@ -21,25 +27,18 @@ double Animation::getTicks(double seconds) const
   return std::fmod(seconds * ticksPerSecond, durationTicks); // TODO: Support different loop modes
 }
 
-void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::vector<AnimatedNode> &animatedNodes, const AnimatedNode *parent) const
+void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::map<std::string, AnimatedNode> &animNodes, const AnimatedNode *parent) const
 {
-  AnimatedNode animatedNode;
-  animatedNode.name = node->name;
+  AnimatedNode animNode(node->name);
   
-  getAnimatedNodeTransform(node->name, ticks, animatedNode.mtxRelToParent);
-  
-  if (parent != nullptr) {
-    animatedNode.mtxRelToModel = (parent->mtxRelToModel * animatedNode.mtxRelToParent);
-  }
-  else {
-    animatedNode.mtxRelToModel = animatedNode.mtxRelToParent;
-  }
+  animNode.animated = getAnimatedNodeTransform(node->name, ticks, animNode.mtxRelToParent);
+  animNode.mtxRelToModel = parent ? (parent->mtxRelToModel * animNode.mtxRelToParent) : animNode.mtxRelToParent;
 
   for (const ModelNode *child : node->children) {
-    getAnimatedNodesRecursive(child, ticks, animatedNodes, &animatedNode);
+    getAnimatedNodesRecursive(child, ticks, animNodes, &animNode);
   }
 
-  animatedNodes.emplace_back(animatedNode);
+  animNodes.insert({ animNode.name, animNode });
 }
 
 bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
@@ -106,10 +105,5 @@ bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double tic
   transform = Matrix44d::compose(scale, rot.toMatrix(), trans);
   return true;
 }
-
-//Matrix44d Animation::getBoneTransform(const Bone &bone, double time) const
-//{
-//  return getNodeTransform(bone.name, time, bone.mtx);
-//}
 
 }

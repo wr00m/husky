@@ -74,6 +74,7 @@ public:
   bool hasBoneWeights() const;
   bool hasLines() const;
   bool hasFaces() const;
+  bool hasBones() const;
   const std::vector<Position>& getPositions() const;
   const std::vector<Bone>&     getBones() const;
   Position  getPosition(int iVert) const;
