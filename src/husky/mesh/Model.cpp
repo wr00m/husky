@@ -153,6 +153,9 @@ static Material getAiMaterial(const fs::path &folderPath, const aiMaterial *mate
         mtl.textureHandle = Texture::uploadTexture(*img);
       }
     }
+    else {
+      mtl.textureHandle = Texture::white1x1();
+    }
   }
 
   return mtl;

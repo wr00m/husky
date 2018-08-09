@@ -8,6 +8,7 @@ class HUSKY_DLL Texture
 {
 public:
   static unsigned int uploadTexture(const Image &image);
+  static unsigned int white1x1();
 };
 
 }

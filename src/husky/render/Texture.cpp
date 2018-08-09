@@ -1,5 +1,6 @@
 #include <husky/render/Texture.hpp>
 #include <husky/image/Image.hpp>
+#include <husky/math/Vector4.hpp>
 #include <husky/Log.hpp>
 #include <glad/glad.h>
 
@@ -34,6 +35,19 @@ unsigned int Texture::uploadTexture(const Image &image)
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return textureHandle;
+}
+
+unsigned int Texture::white1x1()
+{
+  static unsigned int texHandle = 0;
+
+  if (texHandle == 0) {
+    Image image(1, 1, husky::ImageFormat::RGBA8);
+    image.setPixel(0, 0, Vector4b(255, 255, 255, 255));
+    texHandle = uploadTexture(image);
+  }
+
+  return texHandle;
 }
 
 }

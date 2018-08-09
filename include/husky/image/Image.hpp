@@ -1,6 +1,7 @@
 #pragma once
 
 #include <husky/Common.hpp>
+#include <cassert>
 #include <string>
 
 namespace husky {

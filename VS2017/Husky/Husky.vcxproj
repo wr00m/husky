@@ -170,6 +170,7 @@
     <ClCompile Include="..\..\src\Husky\Math\Vector4.cpp" />
     <ClCompile Include="..\..\src\husky\math\EulerAngles.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Animation.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\Material.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Mesh.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Transform.cpp" />
