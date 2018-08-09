@@ -214,7 +214,7 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
 
   if (shader.getAttributeLocation("vertBoneIndices", varLocation) && getAttribPointer(RenderData::Attribute::BONE_INDICES, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE, vertByteCount, attrPtr);
+    glVertexAttribIPointer(varLocation, 4, GL_UNSIGNED_BYTE, vertByteCount, attrPtr);
   }
 
   if (shader.getAttributeLocation("vertBoneWeights", varLocation) && getAttribPointer(RenderData::Attribute::BONE_WEIGHTS, attrPtr)) {

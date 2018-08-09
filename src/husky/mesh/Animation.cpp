@@ -1,4 +1,5 @@
 #include <husky/mesh/Animation.hpp>
+#include <husky/mesh/Model.hpp>
 #include <husky/Log.hpp>
 
 namespace husky {
@@ -18,6 +19,27 @@ Animation::Animation(const std::string &name, double durationTicks, double ticks
 double Animation::getTicks(double seconds) const
 {
   return std::fmod(seconds * ticksPerSecond, durationTicks); // TODO: Support different loop modes
+}
+
+void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::vector<AnimatedNode> &animatedNodes, const AnimatedNode *parent) const
+{
+  AnimatedNode animatedNode;
+  animatedNode.name = node->name;
+  
+  getNodeTransform(node->name, ticks, animatedNode.mtxRelToParent);
+  
+  if (parent != nullptr) {
+    animatedNode.mtxRelToModel = (parent->mtxRelToModel * animatedNode.mtxRelToParent);
+  }
+  else {
+    animatedNode.mtxRelToModel = animatedNode.mtxRelToParent;
+  }
+
+  for (const ModelNode *child : node->children) {
+    getAnimatedNodesRecursive(child, ticks, animatedNodes, &animatedNode);
+  }
+
+  animatedNodes.emplace_back(animatedNode);
 }
 
 bool Animation::getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const

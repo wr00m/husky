@@ -7,6 +7,8 @@
 
 namespace husky {
 
+class ModelNode;
+
 class HUSKY_DLL AnimationChannel
 {
 public:
@@ -18,6 +20,14 @@ public:
   std::map<double, Vector3d> keyframeScale;
 };
 
+class HUSKY_DLL AnimatedNode
+{
+public:
+  std::string name;
+  Matrix44d mtxRelToParent;
+  Matrix44d mtxRelToModel;
+};
+
 class HUSKY_DLL Animation
 {
 public:
@@ -26,6 +36,7 @@ public:
   double getTicks(double seconds) const;
   bool getNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const;
   //Matrix44d getBoneTransform(const Bone &bone, double time) const;
+  void getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::vector<AnimatedNode> &animatedNodes, const AnimatedNode *parent) const;
 
   std::string name;
   double durationTicks;

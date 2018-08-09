@@ -390,15 +390,15 @@ void ModelInstance::animate(double timeDelta)
 
   const Animation &anim = model->animations[animationIndex];
 
-  mtxAnimatedNodes.clear();
-  for (const ModelNode *node : model->getNodesFlatList()) {
-    double ticks = anim.getTicks(animationTime);
+  double ticks = anim.getTicks(animationTime);
 
+  std::vector<AnimatedNode> animatedNodes;
+  anim.getAnimatedNodesRecursive(model->root, ticks, animatedNodes, nullptr);
+
+  mtxAnimatedNodes.clear();
+  for (const AnimatedNode &animatedNode : animatedNodes) {
+    mtxAnimatedNodes.emplace_back((Matrix44f)animatedNode.mtxRelToModel);
     // TODO
-    Matrix44d mtxNode;
-    if (anim.getNodeTransform(node->name, ticks, mtxNode)) {
-      mtxAnimatedNodes.emplace_back((Matrix44f)mtxNode);
-    }
   }
 }
 

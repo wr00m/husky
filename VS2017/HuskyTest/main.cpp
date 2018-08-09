@@ -295,7 +295,7 @@ int main()
   updateViewportAndRebuildFbo();
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
-  static const husky::Shader defaultShaderBone = husky::Shader::getDefaultShader(true, true);
+  static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
 
 #if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -355,6 +355,7 @@ int main()
 
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
+    //entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShaderBones, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
   }
 
