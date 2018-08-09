@@ -356,7 +356,7 @@ int main()
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     //entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
     entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShaderBones, models.back().get()));
-    entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
+    //entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]

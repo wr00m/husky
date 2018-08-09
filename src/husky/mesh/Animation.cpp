@@ -44,63 +44,66 @@ void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, s
 
 bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
 {
-  transform = Matrix44d::identity();
-
   const auto &it = channels.find(nodeName);
   if (it == channels.end()) {
+    transform = Matrix44d::identity();
     return false;
   }
 
   const AnimationChannel &ch = it->second;
 
+  Vector3d trans(0.0);
   if (!ch.keyframePosition.empty()) { // Translation
     const auto keyframe1 = ch.keyframePosition.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframePosition.begin()) {
-      transform = Matrix44d::translate(keyframe1->second);
+      trans = keyframe1->second;
     }
     else if (keyframe1 == ch.keyframePosition.end()) {
-      transform = Matrix44d::translate(keyframe0->second);
+      trans = keyframe0->second;
     }
     else {
       const double t = (ticks - keyframe0->first) / (keyframe1->first - keyframe0->first);
-      transform = Matrix44d::translate(keyframe0->second.lerp(keyframe1->second, t));
+      trans = keyframe0->second.lerp(keyframe1->second, t);
     }
   }
 
+  Quaterniond rot;
   if (!ch.keyframeRotation.empty()) { // Rotation
     const auto keyframe1 = ch.keyframeRotation.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframeRotation.begin()) {
-      transform = transform * Matrix44d(keyframe1->second.toMatrix());
+      rot = keyframe1->second;
     }
     else if (keyframe1 == ch.keyframeRotation.end()) {
-      transform = transform * Matrix44d(keyframe0->second.toMatrix());
+      rot = keyframe0->second;
     }
     else {
       const double t = (ticks - keyframe0->first) / (keyframe1->first - keyframe0->first);
-      transform = transform * Matrix44d((keyframe0->second.slerp(keyframe1->second, t)).toMatrix());
+      rot = keyframe0->second.slerp(keyframe1->second, t);
     }
   }
 
+  Vector3d scale(1.0);
   if (!ch.keyframeScale.empty()) { // Scale
     const auto keyframe1 = ch.keyframeScale.upper_bound(ticks);
     const auto keyframe0 = std::prev(keyframe1);
 
     if (keyframe1 == ch.keyframeScale.begin()) {
-      transform = transform * Matrix44d::scale(keyframe1->second);
+      scale = keyframe1->second;
     }
     else if (keyframe1 == ch.keyframeScale.end()) {
-      transform = transform * Matrix44d::scale(keyframe0->second);
+      scale = keyframe0->second;
     }
     else {
       const double t = (ticks - keyframe0->first) / (keyframe1->first - keyframe0->first);
-      transform = transform * Matrix44d::scale(keyframe0->second.lerp(keyframe1->second, t));
+      scale = keyframe0->second.lerp(keyframe1->second, t);
     }
   }
 
+  transform = Matrix44d::compose(scale, rot.toMatrix(), trans);
   return true;
 }
 

@@ -343,12 +343,19 @@ static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, co
 
 void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<AnimatedNode> &animNodes) const
 {
+  // TODO: http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
+  //const Matrix44f mtxGlobalInv(root->mtxRelToParent.inverted());
+
   for (const ModelNode *node : getNodesFlatList()) {
     for (int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
       const Material &mtl = getMaterial(mesh.materialIndex);
 
       std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
+      for (Matrix44f &mtxBone : mtxBones) {
+        //mtxBone = mtxGlobalInv * mtxBone;
+        mtxBone = mtxBone;
+      }
 
       mesh.renderData.draw(shader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
     }
