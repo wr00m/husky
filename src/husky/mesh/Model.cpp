@@ -326,6 +326,8 @@ const Material& Model::getMaterial(int mtlIndex) const
 
 static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, const std::map<std::string, AnimatedNode> &animNodes)
 {
+  // TODO: "m_GlobalInverseTransform"? http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
+
   std::vector<Matrix44f> mtxBones;
   mtxBones.reserve(bones.size());
 

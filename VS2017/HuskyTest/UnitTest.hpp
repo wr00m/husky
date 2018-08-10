@@ -149,6 +149,12 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double compInvDiff2 = matDiff(comp * compInv, glm::dmat4(1)); // Identity matrix
   assert(compInvDiff2 < 1e-9);
 
+  husky::Matrix33d inv3x3 = comp.get3x3();
+  husky::Matrix33d inv3x3Inv = inv3x3.inverted();
+  glm::dmat3 inv3x3InvGlm = glm::inverse(glm::make_mat3(inv3x3.m));
+  double inv3x3Diff = matDiff(husky::Matrix44d(inv3x3Inv), glm::dmat4(inv3x3InvGlm));
+  assert(inv3x3Diff < 1e-9);
+
   // TODO: Test Transform class (primarily ctors)
 
   husky::Matrix44d eulerAnglesMtx = husky::Matrix44d::rotate(3.0, husky::Vector3d(3, 2, 1).normalized());

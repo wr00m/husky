@@ -90,7 +90,7 @@ void Matrix33<T>::transpose()
 template<typename T>
 void Matrix33<T>::invert()
 {
-  *this = {}; // TODO
+  *this = inverted();
 }
 
 template<typename T>
@@ -102,9 +102,28 @@ Matrix33<T> Matrix33<T>::transposed() const
 template<typename T>
 Matrix33<T> Matrix33<T>::inverted() const
 {
-  Matrix33<T> res = *this;
-  res.invert();
-  return res;
+  T det = m00 * (m11 * m22 - m21 * m12)
+        - m01 * (m10 * m22 - m12 * m20)
+        + m02 * (m10 * m21 - m11 * m20);
+
+  if (det == 0) {
+    return{}; // Set to 0
+  }
+
+  T detDiv = T(1) / det;
+
+  Matrix33<T> inv;
+  inv.m00 = (m11 * m22 - m21 * m12) * detDiv;
+  inv.m01 = (m02 * m21 - m01 * m22) * detDiv;
+  inv.m02 = (m01 * m12 - m02 * m11) * detDiv;
+  inv.m10 = (m12 * m20 - m10 * m22) * detDiv;
+  inv.m11 = (m00 * m22 - m02 * m20) * detDiv;
+  inv.m12 = (m10 * m02 - m00 * m12) * detDiv;
+  inv.m20 = (m10 * m21 - m20 * m11) * detDiv;
+  inv.m21 = (m20 * m01 - m00 * m21) * detDiv;
+  inv.m22 = (m00 * m11 - m10 * m01) * detDiv;
+
+  return inv;
 }
 
 template<typename T>
