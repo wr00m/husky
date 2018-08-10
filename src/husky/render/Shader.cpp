@@ -166,10 +166,10 @@ void main() {
                + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
                + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3];
   varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
-  varNormal = mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz;
+  varNormal = normalize(mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz);
 #else
   varPosition = mtxModelView * vec4(vertPosition, 1.0);
-  varNormal = mtxNormal * vertNormal;
+  varNormal = normalize(mtxNormal * vertNormal);
 #endif
   varTexCoord = vertTexCoord * texCoordScale;
   varColor = vertColor;

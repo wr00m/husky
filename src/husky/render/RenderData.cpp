@@ -105,7 +105,7 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
     glUniformMatrix4fv(varLocation, 1, GL_FALSE, modelView.m);
   }
 
-  const Matrix33f normalMatrix = modelView.get3x3();
+  const Matrix33f normalMatrix = modelView.get3x3(); // Fast, but only works with uniform scaling
   //const Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
   //const Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
   if (shader.getUniformLocation("mtxNormal", varLocation)) {
