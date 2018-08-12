@@ -12,12 +12,12 @@ namespace fs = std::experimental::filesystem;
 
 namespace husky {
 
-ModelNode::ModelNode(const std::string &name, const Matrix44d &mtxRelToParent, const ModelNode *parent)
+ModelNode::ModelNode(const std::string &name, const Matrix44d &mtxRelToParent, const Matrix44d *mtxParentRelToModel)
   : name(name)
-  , parent(parent)
+  //, parent(parent)
   , children()
   , mtxRelToParent(mtxRelToParent)
-  , mtxRelToModel(parent != nullptr ? (parent->mtxRelToModel * mtxRelToParent) : mtxRelToParent)
+  , mtxRelToModel(mtxParentRelToModel ? (*mtxParentRelToModel * mtxRelToParent) : mtxRelToParent)
   , meshIndices()
 {
 }
@@ -29,10 +29,11 @@ ModelNode::~ModelNode()
   }
 }
 
-ModelMesh::ModelMesh(Mesh &&mesh, int materialIndex)
-  : mesh(mesh)
-  , renderData(mesh.getRenderData())
+ModelMesh::ModelMesh(const std::string &name, int materialIndex, Mesh &&mesh)
+  : name(name)
   , materialIndex(materialIndex)
+  , mesh(mesh)
+  , renderData(mesh.getRenderData())
   , bboxLocal(mesh.getPositions())
   , bsphereLocal(bboxLocal.center(), mesh.getPositions())
 {
@@ -50,18 +51,31 @@ static Matrix44f getAiMatrix(const aiMatrix4x4 &m)
 
 static ModelNode* getAiNodesRecursive(const aiNode *node, ModelNode *parent)
 {
-  auto n = std::make_unique<ModelNode>(node->mName.C_Str(), getAiMatrix(node->mTransformation), parent);
+  auto n = std::make_unique<ModelNode>(node->mName.C_Str(), getAiMatrix(node->mTransformation), parent ? &parent->mtxRelToModel : nullptr);
 
   for (unsigned int iMesh = 0; iMesh < node->mNumMeshes; iMesh++) {
-    //Mesh m = meshes[node->mMeshes[iMesh]]; // Copy mesh before applying transform
-    //m.transform(mat);
-    //mdl.addRenderData(m.getRenderData(), meshMaterialIndices[iMesh]);
-
     n->meshIndices.emplace_back(node->mMeshes[iMesh]);
   }
 
   for (unsigned int iChild = 0; iChild < node->mNumChildren; iChild++) {
-    n->children.emplace_back(getAiNodesRecursive(node->mChildren[iChild], n.get()));
+    ModelNode *c = getAiNodesRecursive(node->mChildren[iChild], n.get());
+    if (!c->name.empty()) {
+      n->children.emplace_back(c);
+    }
+    else {
+      for (ModelNode *cc : c->children) { // Note: For some reason, we have to merge unnamed node transforms with named nodes to handle FBX files exported from Blender (2.78)
+        cc->mtxRelToModel = c->mtxRelToModel * cc->mtxRelToParent;
+        cc->mtxRelToParent = c->mtxRelToParent * cc->mtxRelToParent;
+        n->children.emplace_back(cc);
+      }
+
+      if (!c->meshIndices.empty()) {
+        Log::warning("Culled model node with meshes");
+      }
+
+      c->children.clear();
+      delete c;
+    }
   }
 
   return n.release();
@@ -161,7 +175,7 @@ static Material getAiMaterial(const fs::path &folderPath, const aiMaterial *mate
   return mtl;
 }
 
-static Mesh getAiMesh(const aiMesh *mesh)
+static ModelMesh getAiMesh(const aiMesh *mesh)
 {
   assert(mesh->HasPositions());
 
@@ -206,7 +220,7 @@ static Mesh getAiMesh(const aiMesh *mesh)
 
   m.normalizeBoneWeights();
 
-  return m;
+  return ModelMesh(mesh->mName.C_Str(), mesh->mMaterialIndex, std::move(m));
 }
 
 static Animation getAiAnimation(const aiAnimation *anim)
@@ -241,27 +255,47 @@ static Animation getAiAnimation(const aiAnimation *anim)
 
 Model Model::load(const std::string &filePath)
 {
-  const fs::path folderPath = fs::u8path(filePath).parent_path();
+  const fs::path fPath = fs::u8path(filePath);
+  const fs::path folderPath = fPath.parent_path();
 
   Assimp::Importer importer;
+  importer.SetPropertyFloat(AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE, 80.0f);
 
-  const aiScene *scene = importer.ReadFile(filePath,
-    aiProcess_CalcTangentSpace |
-    aiProcess_Triangulate |
-    aiProcess_JoinIdenticalVertices |
-    aiProcess_SortByPType); // TODO: aiProcess_FlipUVs?
+  unsigned int importFlags
+    = aiProcess_CalcTangentSpace
+    | aiProcess_JoinIdenticalVertices
+    //| aiProcess_ValidateDataStructure
+    | aiProcess_Triangulate
+    | aiProcess_SortByPType // Split meshes by primitive type
+    | aiProcess_ImproveCacheLocality
+    | aiProcess_RemoveRedundantMaterials
+    | aiProcess_FindDegenerates
+    | aiProcess_FindInvalidData
+    | aiProcess_GenUVCoords // Convert non-UV texture mapping (e.g. spherical) to UVs
+    //| aiProcess_TransformUVCoords
+    //| aiProcess_FindInstances
+    | aiProcess_LimitBoneWeights // Limit bone weights to 4 per vertex
+    //| aiProcess_OptimizeMeshes
+    //| aiProcess_PreTransformVertices
+    //| aiProcess_SplitByBoneCount // TODO
+    //| aiProcess_OptimizeGraph
+    //| aiProcess_FlipUVs
+    | aiProcess_FixInfacingNormals
+    | aiProcess_GenSmoothNormals;
+
+  const aiScene *scene = importer.ReadFile(filePath, importFlags);
+
+  Model mdl(fPath.stem().u8string());
 
   if (scene == nullptr || scene->mRootNode == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) {
     Log::warning("Failed to load model: %s", filePath.c_str());
-    return {};
+    return mdl;
   }
 
   //for (unsigned int iTex = 0; iTex < scene->mNumTextures; iTex++) {
   //  const aiTexture *tex = scene->mTextures[iTex];
   //  tex->
   //}
-
-  Model mdl;
 
   // Get materials
   mdl.materials.reserve(scene->mNumMaterials);
@@ -272,7 +306,7 @@ Model Model::load(const std::string &filePath)
   // Get meshes
   mdl.meshes.reserve(scene->mNumMeshes);
   for (unsigned int iMesh = 0; iMesh < scene->mNumMeshes; iMesh++) {
-    mdl.addMesh(getAiMesh(scene->mMeshes[iMesh]), scene->mMeshes[iMesh]->mMaterialIndex);
+    mdl.addMesh(getAiMesh(scene->mMeshes[iMesh]));
   }
 
   // Get animations
@@ -287,16 +321,18 @@ Model Model::load(const std::string &filePath)
   return mdl;
 }
 
-Model::Model()
-  : root(nullptr)
+Model::Model(const std::string &name)
+  : name(name)
+  , root(nullptr)
 {
 }
 
 Model::Model(Mesh &&mesh, const Material &mtl)
-  : root(new ModelNode("Root", Matrix44d::identity(), nullptr))
+  : name()
+  , root(new ModelNode("Root", Matrix44d::identity(), nullptr))
 {
   int iMtl  = addMaterial(mtl);
-  int iMesh = addMesh(std::move(mesh), iMtl);
+  int iMesh = addMesh({ "", iMtl, std::move(mesh) });
   root->meshIndices.emplace_back(iMesh);
   calcBbox();
 }
@@ -307,9 +343,9 @@ int Model::addMaterial(const Material &mtl)
   return (int)materials.size() - 1;
 }
 
-int Model::addMesh(Mesh &&mesh, int mtlIndex)
+int Model::addMesh(ModelMesh &&mm)
 {
-  meshes.emplace_back(ModelMesh(std::move(mesh), mtlIndex));
+  meshes.emplace_back(mm);
   return (int)meshes.size() - 1;
 }
 
@@ -326,8 +362,6 @@ const Material& Model::getMaterial(int mtlIndex) const
 
 static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, const std::map<std::string, AnimatedNode> &animNodes)
 {
-  // TODO: "m_GlobalInverseTransform"? http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
-
   std::vector<Matrix44f> mtxBones;
   mtxBones.reserve(bones.size());
 
@@ -337,37 +371,57 @@ static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, co
       mtxBones.emplace_back((Matrix44f)(it->second.mtxRelToModel * bone.mtxMeshToBone));
     }
     else {
-      mtxBones.emplace_back(Matrix44f::identity()); // TODO: Is this correct?
+      mtxBones.emplace_back(Matrix44f::identity()); // This shouldn't happen...
+      Log::warning("FIXME!");
     }
   }
 
   return mtxBones;
 }
 
+// TODO: Move to Animation.hpp?
+static void getAnimatedNodesRecursive(const Animation *anim, const ModelNode *node, double ticks, std::map<std::string, AnimatedNode> &animNodes, const AnimatedNode *parent)
+{
+  AnimatedNode animNode(node->name);
+
+  // Try getting animated local transform
+  if (anim != nullptr && anim->getAnimatedNodeTransform(node->name, ticks, animNode.mtxRelToParent)) {
+    animNode.animated = true;
+  }
+  else { // Node not animated; use local transform from bind pose
+    animNode.animated = false;
+    animNode.mtxRelToParent = node->mtxRelToParent;
+  }
+
+  // Calculate animated global transform
+  animNode.mtxRelToModel = (parent ? (parent->mtxRelToModel * animNode.mtxRelToParent) : animNode.mtxRelToParent);
+
+  for (const ModelNode *child : node->children) {
+    getAnimatedNodesRecursive(anim, child, ticks, animNodes, &animNode);
+  }
+
+  animNodes.insert({ animNode.name, animNode });
+}
+
 void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::map<std::string, AnimatedNode> &animNodes) const
 {
+  // TODO: "m_GlobalInverseTransform"? http://ogldev.atspace.co.uk/www/tutorial38/tutorial38.html
+  //const Matrix44f mtxGlobalInv = (Matrix44f)root->mtxRelToModel.inverted();
+
   for (const ModelNode *node : getNodesFlatList()) {
     for (int iMesh : node->meshIndices) {
       const ModelMesh &mesh = meshes[iMesh];
       const Material &mtl = getMaterial(mesh.materialIndex);
 
-      if (mesh.mesh.hasBones()) {
+      if (mesh.mesh.hasBones() && mesh.mesh.hasBoneWeights()) {
         const std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
         mesh.renderData.draw(shader, mtl, viewport, view, modelView, projection, mtxBones);
       }
       else {
-        static const Shader &defaultShader = Shader::getDefaultShader(true, false); // TODO: Remove!
-
-        Matrix44f bonelessModelView = modelView;
-        const auto it = animNodes.find(node->name);
-        if (it != animNodes.end()) {
-          bonelessModelView *= (Matrix44f)it->second.mtxRelToModel;
-        }
-        bonelessModelView *= (Matrix44f)node->mtxRelToModel;
-        //bonelessModelView *= (Matrix44f)root->mtxRelToModel.inverted();
-
-        mesh.renderData.draw(defaultShader, mtl, viewport, view, bonelessModelView, projection, {});
-        //mesh.renderData.draw(defaultShader, mtl, viewport, view, modelView * (Matrix44f)node->mtxRelToModel, projection, mtxBones);
+        static const Shader &defaultShader = Shader::getDefaultShader(true, false); // TODO: Remove this locally defined shader hack!
+        Matrix44f mtxAnimNodeToModel = (Matrix44f)animNodes.find(node->name)->second.mtxRelToModel;
+        Matrix44f nodeModelView = modelView * mtxAnimNodeToModel;
+        mesh.renderData.draw(defaultShader, mtl, viewport, view, nodeModelView, projection, {});
       }
     }
   }
@@ -422,16 +476,15 @@ ModelInstance::ModelInstance(const Model *model)
 void ModelInstance::animate(double timeDelta)
 {
   animationTime += timeDelta;
+  animNodes.clear();
 
-  if (animationIndex == -1) {
+  if (model->root == nullptr) {
     return;
   }
 
-  const Animation &anim = model->animations[animationIndex];
-  double ticks = anim.getTicks(animationTime);
-
-  animNodes.clear();
-  anim.getAnimatedNodesRecursive(model->root, ticks, animNodes, nullptr);
+  const Animation* anim = getActiveAnimation();
+  double ticks = anim ? anim->getTicks(animationTime) : 0;
+  getAnimatedNodesRecursive(anim, model->root, ticks, animNodes, nullptr);
 }
 
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const

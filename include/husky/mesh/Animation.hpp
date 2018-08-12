@@ -7,8 +7,6 @@
 
 namespace husky {
 
-class ModelNode;
-
 class HUSKY_DLL AnimationChannel
 {
 public:
@@ -37,8 +35,7 @@ public:
   Animation(const std::string &name, double durationTicks, double ticksPerSecond);
 
   double getTicks(double seconds) const;
-  bool getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const;
-  void getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::map<std::string, AnimatedNode> &animNodes, const AnimatedNode *parent) const;
+  bool getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &mtxAnimNode) const;
 
   std::string name;
   double durationTicks;

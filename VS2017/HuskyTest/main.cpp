@@ -199,7 +199,8 @@ static void handleKeyInput(GLFWwindow *win)
   input.y = glfwGetKey(win, GLFW_KEY_W)     - glfwGetKey(win, GLFW_KEY_S);
   input.z = glfwGetKey(win, GLFW_KEY_SPACE) - glfwGetKey(win, GLFW_KEY_LEFT_CONTROL);
 
-  const husky::Vector3d camSpeed(20, 20, 20);
+  const double camSpeedMultiplier = (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) ? 3.0 : 1.0);
+  const husky::Vector3d camSpeed(20.0 * camSpeedMultiplier);
 
   cam.pos += cam.right()   * input.x * camSpeed.x * frameTime;
   cam.pos += cam.forward() * input.y * camSpeed.y * frameTime;
@@ -345,19 +346,16 @@ int main()
   }
 
   {
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.fbx");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.blend");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Bot.fbx");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.blend");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.fbx");
-    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Git/boynbot/Assets/Models/Boy.fbx");
-    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Boy/Boy.fbx");
-    //husky::Model mdl = husky::Model::load("C:/tmp/Rigged_Hand_fbx/Rigged Hand.fbx");
-    //husky::Model mdl = husky::Model::load("C:/tmp/Box/Box.blend");
+    models.emplace_back(std::make_unique<husky::Model>(husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Bot/Bot.fbx")));
+    entities.emplace_back(std::make_unique<husky::Entity>("Bot", &defaultShaderBones, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::rotate(husky::Math::pi2, { 1, 0, 0 }), { -3, 0, 0 }));
+  }
 
+  {
+    //husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/Explora/character.fbx");
+    husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Boy/Boy_FBX2013.fbx");
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
-    //entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShader, models.back().get()));
-    entities.emplace_back(std::make_unique<husky::Entity>("TestModel", &defaultShaderBones, models.back().get()));
+    entities.emplace_back(std::make_unique<husky::Entity>("Boy", &defaultShaderBones, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
   }
 

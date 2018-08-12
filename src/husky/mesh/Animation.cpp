@@ -12,6 +12,8 @@ AnimationChannel::AnimationChannel(const std::string &nodeName)
 AnimatedNode::AnimatedNode(const std::string &name)
   : name(name)
   , animated(false)
+  //, mtxRelToParent()
+  //, mtxRelToModel()
 {
 }
 
@@ -27,25 +29,10 @@ double Animation::getTicks(double seconds) const
   return std::fmod(seconds * ticksPerSecond, durationTicks); // TODO: Support different loop modes
 }
 
-void Animation::getAnimatedNodesRecursive(const ModelNode *node, double ticks, std::map<std::string, AnimatedNode> &animNodes, const AnimatedNode *parent) const
-{
-  AnimatedNode animNode(node->name);
-  
-  animNode.animated = getAnimatedNodeTransform(node->name, ticks, animNode.mtxRelToParent);
-  animNode.mtxRelToModel = parent ? (parent->mtxRelToModel * animNode.mtxRelToParent) : animNode.mtxRelToParent;
-
-  for (const ModelNode *child : node->children) {
-    getAnimatedNodesRecursive(child, ticks, animNodes, &animNode);
-  }
-
-  animNodes.insert({ animNode.name, animNode });
-}
-
-bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &transform) const
+bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double ticks, Matrix44d &mtxAnimNode) const
 {
   const auto &it = channels.find(nodeName);
   if (it == channels.end()) {
-    transform = Matrix44d::identity();
     return false;
   }
 
@@ -102,7 +89,7 @@ bool Animation::getAnimatedNodeTransform(const std::string &nodeName, double tic
     }
   }
 
-  transform = Matrix44d::compose(scale, rot.toMatrix(), trans);
+  mtxAnimNode = Matrix44d::compose(scale, rot.toMatrix(), trans);
   return true;
 }
 
