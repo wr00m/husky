@@ -83,7 +83,7 @@ void DebugDrawComponent::init(Entity *owner)
 void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
   static const Shader defaultShader = Shader::getDefaultShader(false, false);
-  static const Shader lineShader = Shader::getDefaultLineShader();
+  static const Shader lineShader = Shader::getLineShader();
 
   axesRenderData.draw(defaultShader, axesMaterial, viewport, view, modelView, projection);
 

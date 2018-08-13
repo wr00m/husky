@@ -297,6 +297,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
+  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(false);
 
 #if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -357,6 +358,18 @@ int main()
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Boy", &defaultShaderBones, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
+  }
+
+  {
+    husky::Mesh billboardPointsMesh;
+    billboardPointsMesh.addVert({ 0, 0, 0 });
+    billboardPointsMesh.addVert({ 5, 5, 5 });
+    husky::Material mtl({ 1, 1, 0 }, textureHandle);
+    mtl.twoSided = true;
+    husky::Model mdl(std::move(billboardPointsMesh), mtl);
+    models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
+    entities.emplace_back(std::make_unique<husky::Entity>("Billboards", &billboardShader, models.back().get()));
+    //entities.back()->setTransform(husky::Matrix44d::identity());
   }
 
   glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]

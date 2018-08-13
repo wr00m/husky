@@ -497,99 +497,117 @@ void Mesh::convertFacesToWireframeLines()
 
 RenderData Mesh::getRenderData() const
 {
-  if (hasLines()) {
-    if (hasFaces()) {
+  if (hasFaces()) {
+    if (hasLines()) {
       Log::warning("Mesh has both lines and faces");
     }
-    else {
-      RenderData r(RenderData::Mode::LINES);
-      r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-      r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-      r.init(numVerts());
 
-      if (numVerts() > 0) {
-        r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
-
-        for (int i = 0; i < numVerts(); i++) {
-          r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-          r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
-        }
-
-        for (const Line &l : lines) {
-          r.addLine(l[0], l[1]);
-        }
-
-        for (const Triangle &t : tris) {
-          r.addLine(t[0], t[1]);
-          r.addLine(t[1], t[2]);
-          r.addLine(t[2], t[0]);
-        }
-
-        for (const Quad &q : quads) {
-          r.addLine(q[0], q[1]);
-          r.addLine(q[1], q[2]);
-          r.addLine(q[2], q[3]);
-          r.addLine(q[3], q[0]);
-        }
-      }
-
-      r.uploadToGpu();
-      return r;
+    RenderData r(RenderData::Mode::TRIANGLES);
+    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
+    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    if (hasBoneWeights()) {
+      r.addAttr(RenderData::Attribute::BONE_INDICES, sizeof(Vector4b));
+      r.addAttr(RenderData::Attribute::BONE_WEIGHTS, sizeof(Vector4b));
     }
-  }
+    r.init(numVerts());
 
-  RenderData r(RenderData::Mode::TRIANGLES);
-  r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-  r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
-  r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
-  r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-  if (hasBoneWeights()) {
-    r.addAttr(RenderData::Attribute::BONE_INDICES, sizeof(Vector4b));
-    r.addAttr(RenderData::Attribute::BONE_WEIGHTS, sizeof(Vector4b));
-  }
-  r.init(numVerts());
+    if (numVerts() > 0) {
+      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
-  if (numVerts() > 0) {
-    r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+      for (int i = 0; i < numVerts(); i++) {
+        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+        if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
+        if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
+        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
 
-    for (int i = 0; i < numVerts(); i++) {
-      r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-      if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
-      if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
-      r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        if (hasBoneWeights()) {
+          const auto &boneWeights = vertBoneWeights[i];
+          Vector4b indices; // = { 0, 1, 2, 3 };
+          Vector4b weights; // = { 255, 0, 0, 0 };
 
-      if (hasBoneWeights()) {
-        const auto &boneWeights = vertBoneWeights[i];
-        Vector4b indices; // = { 0, 1, 2, 3 };
-        Vector4b weights; // = { 255, 0, 0, 0 };
+          for (int j = 0; j < boneWeights.size(); j++) {
+            if (j > 3) {
+              Log::warning("Too many bone weights, should be normalized");
+              break;
+            }
 
-        for (int j = 0; j < boneWeights.size(); j++) {
-          if (j > 3) {
-            Log::warning("Too many bone weights, should be normalized");
-            break;
+            indices[j] = (std::uint8_t)boneWeights[j].boneIndex;
+            weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
           }
 
-          indices[j] = (std::uint8_t)boneWeights[j].boneIndex;
-          weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
+          r.setValue(i, RenderData::Attribute::BONE_INDICES, indices);
+          r.setValue(i, RenderData::Attribute::BONE_WEIGHTS, weights);
         }
+      }
 
-        r.setValue(i, RenderData::Attribute::BONE_INDICES, indices);
-        r.setValue(i, RenderData::Attribute::BONE_WEIGHTS, weights);
+      for (const Triangle &t : tris) {
+        r.addTriangle(t[0], t[1], t[2]);
+      }
+
+      for (const Quad &q : quads) {
+        r.addTriangle(q[0], q[1], q[2]);
+        r.addTriangle(q[0], q[2], q[3]);
       }
     }
 
-    for (const Triangle &t : tris) {
-      r.addTriangle(t[0], t[1], t[2]);
-    }
-
-    for (const Quad &q : quads) {
-      r.addTriangle(q[0], q[1], q[2]);
-      r.addTriangle(q[0], q[2], q[3]);
-    }
+    r.uploadToGpu();
+    return r;
   }
+  else if (hasLines()) {
+    RenderData r(RenderData::Mode::LINES);
+    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    r.init(numVerts());
 
-  r.uploadToGpu();
-  return r;
+    if (numVerts() > 0) {
+      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+
+      for (int i = 0; i < numVerts(); i++) {
+        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+      }
+
+      for (const Line &l : lines) {
+        r.addLine(l[0], l[1]);
+      }
+
+      //for (const Triangle &t : tris) {
+      //  r.addLine(t[0], t[1]);
+      //  r.addLine(t[1], t[2]);
+      //  r.addLine(t[2], t[0]);
+      //}
+
+      //for (const Quad &q : quads) {
+      //  r.addLine(q[0], q[1]);
+      //  r.addLine(q[1], q[2]);
+      //  r.addLine(q[2], q[3]);
+      //  r.addLine(q[3], q[0]);
+      //}
+    }
+
+    r.uploadToGpu();
+    return r;
+  }
+  else { // Neither faces nor lines => Assume points
+    RenderData r(RenderData::Mode::POINTS);
+    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
+    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    r.init(numVerts());
+
+    if (numVerts() > 0) {
+      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+
+      for (int i = 0; i < numVerts(); i++) {
+        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
+        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+      }
+    }
+
+    r.uploadToGpu();
+    return r;
+  }
 }
 
 }

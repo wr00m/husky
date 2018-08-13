@@ -9,7 +9,8 @@ class HUSKY_DLL Shader
 {
 public:
   static Shader getDefaultShader(bool texture, bool bones);
-  static Shader getDefaultLineShader();
+  static Shader getLineShader();
+  static Shader getBillboardShader(bool cylindrical);
 
   Shader();
   Shader(unsigned int shaderProgramHandle);

@@ -69,72 +69,6 @@ static GLuint compileShaderProgram(const std::string &vertSrc, const std::string
   return program;
 }
 
-Shader Shader::getDefaultLineShader()
-{
-  static const char *lineVertSrc =
-R"(#version 400 core
-uniform mat4 mtxModelView;
-uniform mat4 mtxProjection;
-in vec3 vertPosition;
-in vec4 vertColor;
-out vec4 vsColor;
-void main()
-{
-  vsColor = vertColor;
-  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
-})";
-
-  static const char *lineGeomSrc =
-R"(#version 400 core
-uniform vec2 viewportSize = vec2(1280, 720); // Pixels
-uniform float lineWidth = 2.0; // Pixels
-in vec4 vsColor[2];
-out vec4 gsColor;
-layout (lines) in;
-layout (triangle_strip, max_vertices = 4) out;
-void main()
-{
-  vec4 p0 = gl_in[0].gl_Position;
-  vec4 p1 = gl_in[1].gl_Position;
-  vec3 ndc0 = p0.xyz / p0.w;
-  vec3 ndc1 = p1.xyz / p1.w;
-
-  vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
-  vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
-  vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
-
-  gl_Position = vec4(p0.xy + lineScreenOffset * p0.w, p0.zw);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = vec4(p0.xy - lineScreenOffset * p0.w, p0.zw);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = vec4(p1.xy + lineScreenOffset * p1.w, p1.zw);
-  gsColor = vsColor[1];
-  EmitVertex();
-
-  gl_Position = vec4(p1.xy - lineScreenOffset * p1.w, p1.zw);
-  gsColor = vsColor[1];
-  EmitVertex();
-
-  EndPrimitive();
-})";
-
-  static const char *lineFragSrc =
-R"(#version 400 core
-uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
-in vec4 gsColor;
-out vec4 fsColor;
-void main()
-{
-  fsColor = gsColor * vec4(mtlDiffuse, 1.0);
-})";
-
-  return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);
-}
-
 Shader Shader::getDefaultShader(bool texture, bool bones)
 {
   static const char *defaultVertSrc =
@@ -222,6 +156,147 @@ void main() {
   if (bones) { header += "#define USE_BONES\n"; }
   
   return Shader(header + defaultVertSrc, "", header + defaultFragSrc);
+}
+
+Shader Shader::getLineShader()
+{
+  static const char *lineVertSrc =
+R"(#version 400 core
+uniform mat4 mtxModelView;
+uniform mat4 mtxProjection;
+in vec3 vertPosition;
+in vec4 vertColor;
+out vec4 vsColor;
+void main()
+{
+  vsColor = vertColor;
+  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
+})";
+
+  static const char *lineGeomSrc =
+R"(#version 400 core
+uniform vec2 viewportSize = vec2(1280, 720); // Pixels
+uniform float lineWidth = 2.0; // Pixels
+in vec4 vsColor[2];
+out vec4 gsColor;
+layout (lines) in;
+layout (triangle_strip, max_vertices = 4) out;
+void main()
+{
+  vec4 p0 = gl_in[0].gl_Position;
+  vec4 p1 = gl_in[1].gl_Position;
+  vec3 ndc0 = p0.xyz / p0.w;
+  vec3 ndc1 = p1.xyz / p1.w;
+
+  vec2 lineScreenForward = normalize(ndc1.xy - ndc0.xy);
+  vec2 lineScreenRight = vec2(-lineScreenForward.y, lineScreenForward.x);
+  vec2 lineScreenOffset = (vec2(lineWidth) / viewportSize) * lineScreenRight;
+
+  gl_Position = vec4(p0.xy + lineScreenOffset * p0.w, p0.zw);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(p0.xy - lineScreenOffset * p0.w, p0.zw);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = vec4(p1.xy + lineScreenOffset * p1.w, p1.zw);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  gl_Position = vec4(p1.xy - lineScreenOffset * p1.w, p1.zw);
+  gsColor = vsColor[1];
+  EmitVertex();
+
+  EndPrimitive();
+})";
+
+  static const char *lineFragSrc =
+R"(#version 400 core
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
+in vec4 gsColor;
+out vec4 fsColor;
+void main()
+{
+  fsColor = gsColor * vec4(mtlDiffuse, 1.0);
+})";
+
+  return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);
+}
+
+Shader Shader::getBillboardShader(bool cylindrical)
+{
+  static const char *billboardVertSrc =
+R"(//#version 400 core
+uniform mat4 mtxModelView;
+uniform mat4 mtxProjection;
+in vec3 vertPosition;
+in vec4 vertColor;
+out vec4 vsColor;
+void main()
+{
+  vsColor = vertColor;
+  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
+})";
+
+  static const char *billboardGeomSrc =
+R"(//#version 400 core
+uniform vec2 billboardSize = vec2(1.0, 1.0);
+in vec4 vsColor[1];
+out vec2 gsTexCoord;
+out vec4 gsColor;
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
+void main()
+{
+  vec4 p = gl_in[0].gl_Position;
+
+  gl_Position = p;
+  gl_Position.xz += vec2(1.0, 1.0) * billboardSize;
+  gsTexCoord = vec2(1.0, 1.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = p;
+  gl_Position.xz += vec2(1.0, -1.0) * billboardSize;
+  gsTexCoord = vec2(1.0, 0.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = p;
+  gl_Position.xz += vec2(-1.0, -1.0) * billboardSize;
+  gsTexCoord = vec2(0.0, 0.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  gl_Position = p;
+  gl_Position.xz += vec2(-1.0, 1.0) * billboardSize;
+  gsTexCoord = vec2(0.0, 1.0);
+  gsColor = vsColor[0];
+  EmitVertex();
+
+  EndPrimitive();
+})";
+
+  static const char *billboardFragSrc =
+R"(//#version 400 core
+uniform sampler2D tex;
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
+in vec2 gsTexCoord;
+in vec4 gsColor;
+out vec4 fsColor;
+void main()
+{
+  //vec4 texColor = texture(tex, gsTexCoord);
+  //fsColor.rgb = (mtlDiffuse * gsColor.rgb * texColor.rgb);
+  //fsColor.a = gsColor.a * texColor.a;
+  fsColor = vec4(1.0, 0.0, 1.0, 1.0);
+})";
+
+  std::string header = "#version 400 core\n";
+  if (cylindrical) { header += "#define BILLBOARD_CYLINDRICAL\n"; }
+
+  return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }
 
 Shader::Shader()
