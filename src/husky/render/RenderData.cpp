@@ -83,6 +83,8 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
     return;
   }
 
+  glPointSize(8.f);
+
   if (mtl.twoSided) {
     glDisable(GL_CULL_FACE);
   }
@@ -231,7 +233,12 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   default: Log::warning("Unsupported RenderData::Mode: %d", mode); break;
   }
 
-  glDrawElements(mode, (int)indices.size(), GL_UNSIGNED_SHORT, indices.data());
+  if (indices.empty()) {
+    glDrawArrays(mode, 0, vertCount);
+  }
+  else {
+    glDrawElements(mode, (int)indices.size(), GL_UNSIGNED_SHORT, indices.data());
+  }
 }
 
 }

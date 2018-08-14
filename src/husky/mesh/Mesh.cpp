@@ -602,6 +602,7 @@ RenderData Mesh::getRenderData() const
       for (int i = 0; i < numVerts(); i++) {
         r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
         r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        //r.addPoint(i); // TODO: Remove?
       }
     }
 

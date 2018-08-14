@@ -5,12 +5,20 @@
 
 namespace husky {
 
+enum class BillboardMode
+{
+  VIEWPLANE,
+  SPHERICAL,
+  CYLINDRICAL,
+  FIXED_PX,
+};
+
 class HUSKY_DLL Shader
 {
 public:
   static Shader getDefaultShader(bool texture, bool bones);
   static Shader getLineShader();
-  static Shader getBillboardShader(bool cylindrical);
+  static Shader getBillboardShader(BillboardMode mode);
 
   Shader();
   Shader(unsigned int shaderProgramHandle);

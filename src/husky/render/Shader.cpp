@@ -224,57 +224,77 @@ void main()
   return Shader(lineVertSrc, lineGeomSrc, lineFragSrc);
 }
 
-Shader Shader::getBillboardShader(bool cylindrical)
+Shader Shader::getBillboardShader(BillboardMode mode)
 {
   static const char *billboardVertSrc =
 R"(//#version 400 core
 uniform mat4 mtxModelView;
-uniform mat4 mtxProjection;
 in vec3 vertPosition;
 in vec4 vertColor;
 out vec4 vsColor;
 void main()
 {
   vsColor = vertColor;
-  gl_Position = mtxProjection * (mtxModelView * vec4(vertPosition, 1.0));
+  //mat4 MV = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(mtxModelView[3].xyz, 1));
+  gl_Position = mtxModelView * vec4(vertPosition, 1.0);
 })";
 
   static const char *billboardGeomSrc =
 R"(//#version 400 core
-uniform vec2 billboardSize = vec2(1.0, 1.0);
+uniform mat4 mtxModelView;
+uniform mat4 mtxProjection;
+#if defined(BILLBOARD_FIXED_PX)
+uniform vec2 viewportSize = vec2(1280, 720); // Pixels
+uniform vec2 billboardSizePx = vec2(64, 64); // Pixels
+#else
+#if defined(BILLBOARD_CYLINDRICAL)
+uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
+#endif
+uniform vec2 billboardSize = vec2(1, 1); // World units
+#endif
 in vec4 vsColor[1];
 out vec2 gsTexCoord;
 out vec4 gsColor;
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
+
+void emitBillboardVert(const vec2 offset)
+{
+#if defined(BILLBOARD_VIEWPLANE)
+  gl_Position = gl_in[0].gl_Position;
+  gl_Position.xy += (offset * billboardSize);
+  gl_Position = (mtxProjection * gl_Position);
+#elif defined(BILLBOARD_CYLINDRICAL)
+  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+  gl_Position = gl_in[0].gl_Position;
+  gl_Position.x += (offset.x * billboardSize.x);
+  gl_Position.xyz += (up * offset.y * billboardSize.y);
+  gl_Position = (mtxProjection * gl_Position);
+#elif defined(BILLBOARD_SPHERICAL)
+  gl_Position = gl_in[0].gl_Position;
+  vec3 dir = gl_Position.xyz;
+  vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
+  vec3 up = normalize(cross(right, dir));
+  gl_Position.xyz += (right * offset.x * billboardSize.x);
+  gl_Position.xyz += (up    * offset.y * billboardSize.y);
+  gl_Position = (mtxProjection * gl_Position);
+#elif defined(BILLBOARD_FIXED_PX)
+  vec2 billboardSizeNDC  = (billboardSizePx / viewportSize);
+  gl_Position            = (mtxProjection * gl_in[0].gl_Position);
+  gl_Position           /= gl_Position.w; // Perspective divide
+  gl_Position.xy        += (offset * billboardSizeNDC);
+#endif
+  gsTexCoord = (offset * 0.5 + 0.5);
+  gsColor = vsColor[0];
+  EmitVertex();
+}
+
 void main()
 {
-  vec4 p = gl_in[0].gl_Position;
-
-  gl_Position = p;
-  gl_Position.xz += vec2(1.0, 1.0) * billboardSize;
-  gsTexCoord = vec2(1.0, 1.0);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = p;
-  gl_Position.xz += vec2(1.0, -1.0) * billboardSize;
-  gsTexCoord = vec2(1.0, 0.0);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = p;
-  gl_Position.xz += vec2(-1.0, -1.0) * billboardSize;
-  gsTexCoord = vec2(0.0, 0.0);
-  gsColor = vsColor[0];
-  EmitVertex();
-
-  gl_Position = p;
-  gl_Position.xz += vec2(-1.0, 1.0) * billboardSize;
-  gsTexCoord = vec2(0.0, 1.0);
-  gsColor = vsColor[0];
-  EmitVertex();
-
+  emitBillboardVert(vec2(-1, -1)); // LL
+  emitBillboardVert(vec2(-1,  1)); // UL
+  emitBillboardVert(vec2( 1, -1)); // LR
+  emitBillboardVert(vec2( 1,  1)); // UR
   EndPrimitive();
 })";
 
@@ -284,17 +304,20 @@ uniform sampler2D tex;
 uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
 in vec2 gsTexCoord;
 in vec4 gsColor;
+in vec4 vsColor;
 out vec4 fsColor;
 void main()
 {
-  //vec4 texColor = texture(tex, gsTexCoord);
-  //fsColor.rgb = (mtlDiffuse * gsColor.rgb * texColor.rgb);
-  //fsColor.a = gsColor.a * texColor.a;
-  fsColor = vec4(1.0, 0.0, 1.0, 1.0);
+  vec4 texColor = texture(tex, gsTexCoord);
+  fsColor = vec4(mtlDiffuse * gsColor.rgb * texColor.rgb, gsColor.a * texColor.a);
 })";
 
   std::string header = "#version 400 core\n";
-  if (cylindrical) { header += "#define BILLBOARD_CYLINDRICAL\n"; }
+  if      (mode == BillboardMode::VIEWPLANE)   { header += "#define BILLBOARD_VIEWPLANE\n"; }
+  else if (mode == BillboardMode::SPHERICAL)   { header += "#define BILLBOARD_SPHERICAL\n"; }
+  else if (mode == BillboardMode::CYLINDRICAL) { header += "#define BILLBOARD_CYLINDRICAL\n"; }
+  else if (mode == BillboardMode::FIXED_PX)    { header += "#define BILLBOARD_FIXED_PX\n"; }
+  else { Log::warning("Unsupported billboard mode: ", mode); }
 
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }

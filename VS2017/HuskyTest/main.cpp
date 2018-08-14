@@ -297,7 +297,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(false);
+  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::SPHERICAL);
 
 #if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -362,9 +362,9 @@ int main()
 
   {
     husky::Mesh billboardPointsMesh;
-    billboardPointsMesh.addVert({ 0, 0, 0 });
+    billboardPointsMesh.addVert({ 0, 10, 2 });
     billboardPointsMesh.addVert({ 5, 5, 5 });
-    husky::Material mtl({ 1, 1, 0 }, textureHandle);
+    husky::Material mtl({ 1, 0.5, 0 }, textureHandle);
     mtl.twoSided = true;
     husky::Model mdl(std::move(billboardPointsMesh), mtl);
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
