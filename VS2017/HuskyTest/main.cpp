@@ -356,12 +356,12 @@ int main()
     husky::Mesh billboardPointsMesh;
     for (int ix = 0; ix < 100; ix++) {
       for (int iy = 0; iy < 100; iy++) {
-        billboardPointsMesh.addVert(husky::Vector3d(10 + ix, 10 + iy, 0));
+        billboardPointsMesh.addVert(husky::Vector3d(10 + 2.5 * ix, 10 + 2.5 * iy, 0));
       }
     }
 
     husky::Material mtl({ 1, 0.5, 0 }, texTree);
-    mtl.twoSided = true;
+    //mtl.twoSided = true;
     husky::Model mdl(std::move(billboardPointsMesh), mtl);
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Billboards", &billboardShader, models.back().get()));

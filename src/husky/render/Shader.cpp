@@ -293,8 +293,8 @@ void emitBillboardVert(const vec2 offset)
 void main()
 {
   emitBillboardVert(vec2(-1, -1)); // LL
-  emitBillboardVert(vec2(-1,  1)); // UL
   emitBillboardVert(vec2( 1, -1)); // LR
+  emitBillboardVert(vec2(-1,  1)); // UL
   emitBillboardVert(vec2( 1,  1)); // UR
   EndPrimitive();
 })";
@@ -310,6 +310,9 @@ out vec4 fsColor;
 void main()
 {
   vec4 texColor = texture(tex, gsTexCoord);
+  if (texColor.a < 0.01) {
+    discard;
+  }
   fsColor = vec4(mtlDiffuse * gsColor.rgb * texColor.rgb, gsColor.a * texColor.a);
 })";
 
