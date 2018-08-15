@@ -8,11 +8,11 @@ Material::Material()
 }
 
 Material::Material(const Vector3f &diffuse)
-  : Material(diffuse, 0)
+  : Material(diffuse, {})
 {
 }
 
-Material::Material(const Vector3f &diffuse, unsigned int textureHandle)
+Material::Material(const Vector3f &diffuse, const Texture &tex)
   : name()
   , diffuse(diffuse)
   , specular(1.f, 1.f, 1.f)
@@ -25,7 +25,7 @@ Material::Material(const Vector3f &diffuse, unsigned int textureHandle)
   , wireframe(false)
   , twoSided(false)
   , depthTest(true)
-  , textureHandle(textureHandle)
+  , tex(tex)
 {
 }
 

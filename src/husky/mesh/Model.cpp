@@ -164,11 +164,11 @@ static Material getAiMaterial(const fs::path &folderPath, const aiMaterial *mate
           p = folderPath / p;
         }
         auto img = SharedResource::loadImage(p.u8string());
-        mtl.textureHandle = Texture::uploadTexture(*img);
+        mtl.tex = Texture(*img);
       }
     }
     else {
-      mtl.textureHandle = Texture::white1x1();
+      mtl.tex = Texture::white1x1();
     }
   }
 

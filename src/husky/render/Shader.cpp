@@ -84,7 +84,7 @@ in vec4 vertBoneWeights;
 uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
-uniform vec2 texCoordScale = vec2(1.0, -1.0); // Flip vertically
+uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
 in vec3 vertPosition;
 in vec3 vertNormal;
 in vec2 vertTexCoord;
@@ -252,6 +252,7 @@ uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 #endif
 uniform vec2 billboardSize = vec2(1, 1); // World units
 #endif
+uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
 in vec4 vsColor[1];
 out vec2 gsTexCoord;
 out vec4 gsColor;
@@ -284,7 +285,7 @@ void emitBillboardVert(const vec2 offset)
   gl_Position           /= gl_Position.w; // Perspective divide
   gl_Position.xy        += (offset * billboardSizeNDC);
 #endif
-  gsTexCoord = (offset * 0.5 + 0.5);
+  gsTexCoord = (offset * 0.5 + 0.5) * texCoordScale;
   gsColor = vsColor[0];
   EmitVertex();
 }
@@ -317,7 +318,7 @@ void main()
   else if (mode == BillboardMode::SPHERICAL)   { header += "#define BILLBOARD_SPHERICAL\n"; }
   else if (mode == BillboardMode::CYLINDRICAL) { header += "#define BILLBOARD_CYLINDRICAL\n"; }
   else if (mode == BillboardMode::FIXED_PX)    { header += "#define BILLBOARD_FIXED_PX\n"; }
-  else { Log::warning("Unsupported billboard mode: ", mode); }
+  else { Log::warning("Unsupported billboard mode: %d", mode); }
 
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }

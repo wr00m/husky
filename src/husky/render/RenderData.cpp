@@ -83,8 +83,6 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
     return;
   }
 
-  glPointSize(8.f);
-
   if (mtl.twoSided) {
     glDisable(GL_CULL_FACE);
   }
@@ -169,10 +167,10 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
     glUniform1f(varLocation, mtl.lineWidth);
   }
 
-  if (mtl.textureHandle != 0) {
+  if (mtl.tex.valid()) {
     //glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0 + 0);
-    glBindTexture(GL_TEXTURE_2D, mtl.textureHandle);
+    glBindTexture(GL_TEXTURE_2D, mtl.tex.handle);
   }
   else {
     glBindTexture(GL_TEXTURE_2D, 0);

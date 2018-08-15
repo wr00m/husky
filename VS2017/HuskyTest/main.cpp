@@ -299,49 +299,39 @@ int main()
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
   static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::SPHERICAL);
 
-#if 1
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
   image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
-  //image.setPixel(0, 0, husky::Vector4b(255, 0,   0,   255));
-  //image.setPixel(1, 0, husky::Vector4b(0,   255, 0,   255));
-  //image.setPixel(0, 1, husky::Vector4b(0,   0,   255, 255));
-  //image.setPixel(1, 1, husky::Vector4b(255, 255, 0,   255));
-#else
-  husky::Image image = husky::Image::load("C:/tmp/test.jpg");
-  image.save("C:/tmp/imgout/test.png");
-#endif
-
-  GLuint textureHandle = husky::Texture::uploadTexture(image);
+  const husky::Texture tex = husky::Texture(image, husky::TextureWrap::REPEAT, husky::TextureSampling::NEAREST, true);
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::sphere(1.0), husky::Material({ 0, 1, 0 }, textureHandle)));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::sphere(1.0), husky::Material({ 0, 1, 0 }, tex)));
     entities.emplace_back(std::make_unique<husky::Entity>("Sphere", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 3, 3, 0 }));
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, textureHandle)));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cylinder(0.5, 0.3, 2.0, true, false, 8, 1), husky::Material({ 1, 0, 1 }, tex)));
     entities.emplace_back(std::make_unique<husky::Entity>("Cylinder", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 0 }));
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, textureHandle)));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::cone(0.5, 1.0, true, 8), husky::Material({ 1, 0, 1 }, tex)));
     entities.emplace_back(std::make_unique<husky::Entity>("Cone", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 4, -2, 2 }));
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, textureHandle)));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::box(2.0, 3.0, 1.0), husky::Material({ 1, 0, 0 }, tex)));
     entities.emplace_back(std::make_unique<husky::Entity>("Box", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ -20, 0, 0 }) * husky::Matrix44d::rotate(husky::Math::pi2, { 0, 0, 1 }));
   }
 
   {
-    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, textureHandle)));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::torus(8.0, 1.0), husky::Material({ 1, 1, 0 }, tex)));
     entities.emplace_back(std::make_unique<husky::Entity>("Torus", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::translate({ 0, 0, 0 }));
   }
@@ -361,10 +351,16 @@ int main()
   }
 
   {
+    const husky::Texture texTree("C:/tmp/Billboard/tree.png");
+
     husky::Mesh billboardPointsMesh;
-    billboardPointsMesh.addVert({ 0, 10, 2 });
-    billboardPointsMesh.addVert({ 5, 5, 5 });
-    husky::Material mtl({ 1, 0.5, 0 }, textureHandle);
+    for (int ix = 0; ix < 100; ix++) {
+      for (int iy = 0; iy < 100; iy++) {
+        billboardPointsMesh.addVert(husky::Vector3d(10 + ix, 10 + iy, 0));
+      }
+    }
+
+    husky::Material mtl({ 1, 0.5, 0 }, texTree);
     mtl.twoSided = true;
     husky::Model mdl(std::move(billboardPointsMesh), mtl);
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
@@ -514,7 +510,7 @@ int main()
         }
       }
 
-      ImGui::Image(((std::uint8_t*)nullptr) + textureHandle, { 100, 100 });
+      ImGui::Image(((std::uint8_t*)nullptr) + tex.handle, { 100, 100 });
 
       ImGui::End();
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <husky/math/Vector3.hpp>
+#include <husky/render/Texture.hpp>
 #include <stdint.h>
 #include <string>
 
@@ -12,7 +13,7 @@ class HUSKY_DLL Material
 public:
   Material();
   Material(const Vector3f &diffuse);
-  Material(const Vector3f &diffuse, unsigned int textureHandle);
+  Material(const Vector3f &diffuse, const Texture &tex);
 
   std::string name;
   Vector3f diffuse;
@@ -26,7 +27,7 @@ public:
   bool wireframe;
   bool twoSided;
   bool depthTest;
-  unsigned int textureHandle;
+  Texture tex;
 };
 
 }
