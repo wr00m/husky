@@ -14,6 +14,7 @@
 #include <husky/math/EulerAngles.hpp>
 #include <husky/render/Texture.hpp>
 #include <husky/util/SharedResource.hpp>
+#include <husky/math/Random.hpp>
 #include "UnitTest.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -297,7 +298,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::SPHERICAL);
+  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::CYLINDRICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
@@ -353,12 +354,17 @@ int main()
   {
     const husky::Texture texTree("C:/tmp/Billboard/tree.png");
 
+    husky::Random random;
+
     husky::Mesh billboardPointsMesh;
     for (int ix = 0; ix < 100; ix++) {
       for (int iy = 0; iy < 100; iy++) {
-        billboardPointsMesh.addVert(husky::Vector3d(10 + 2.5 * ix, 10 + 2.5 * iy, 0));
+        int iVert = billboardPointsMesh.addVert(husky::Vector3d(10 + 2.5 * ix, 10 + 2.5 * iy, 0));
+        billboardPointsMesh.setTexCoord(iVert, husky::Vector2d(random.getDouble(), random.getDouble()) + 1.0);
       }
     }
+
+    billboardPointsMesh.setAllColors({ 255,255,255,255 });
 
     husky::Material mtl({ 1, 0.5, 0 }, texTree);
     //mtl.twoSided = true;

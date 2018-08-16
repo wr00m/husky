@@ -230,11 +230,14 @@ Shader Shader::getBillboardShader(BillboardMode mode)
 R"(//#version 400 core
 uniform mat4 mtxModelView;
 in vec3 vertPosition;
+in vec2 vertTexCoord; // TODO: Don't abuse texture coordinate as scale
 in vec4 vertColor;
+out vec2 vsScale;
 out vec4 vsColor;
 void main()
 {
   vsColor = vertColor;
+  vsScale = vertTexCoord;
   //mat4 MV = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(mtxModelView[3].xyz, 1));
   gl_Position = mtxModelView * vec4(vertPosition, 1.0);
 })";
@@ -253,6 +256,7 @@ uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 uniform vec2 billboardSize = vec2(1, 1); // World units
 #endif
 uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
+in vec2 vsScale[1];
 in vec4 vsColor[1];
 out vec2 gsTexCoord;
 out vec4 gsColor;
@@ -263,24 +267,24 @@ void emitBillboardVert(const vec2 offset)
 {
 #if defined(BILLBOARD_VIEWPLANE)
   gl_Position = gl_in[0].gl_Position;
-  gl_Position.xy += (offset * billboardSize);
+  gl_Position.xy += (offset * billboardSize * vsScale[0]);
   gl_Position = (mtxProjection * gl_Position);
 #elif defined(BILLBOARD_CYLINDRICAL)
   vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
   gl_Position = gl_in[0].gl_Position;
-  gl_Position.x += (offset.x * billboardSize.x);
-  gl_Position.xyz += (up * offset.y * billboardSize.y);
+  gl_Position.x += (offset.x * billboardSize.x * vsScale[0].x);
+  gl_Position.xyz += (up * offset.y * billboardSize.y * vsScale[0].y);
   gl_Position = (mtxProjection * gl_Position);
 #elif defined(BILLBOARD_SPHERICAL)
   gl_Position = gl_in[0].gl_Position;
   vec3 dir = gl_Position.xyz;
   vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
   vec3 up = normalize(cross(right, dir));
-  gl_Position.xyz += (right * offset.x * billboardSize.x);
-  gl_Position.xyz += (up    * offset.y * billboardSize.y);
+  gl_Position.xyz += (right * offset.x * billboardSize.x * vsScale[0].x);
+  gl_Position.xyz += (up    * offset.y * billboardSize.y * vsScale[0].y);
   gl_Position = (mtxProjection * gl_Position);
 #elif defined(BILLBOARD_FIXED_PX)
-  vec2 billboardSizeNDC  = (billboardSizePx / viewportSize);
+  vec2 billboardSizeNDC  = (billboardSizePx / viewportSize * vsScale[0]);
   gl_Position            = (mtxProjection * gl_in[0].gl_Position);
   gl_Position           /= gl_Position.w; // Perspective divide
   gl_Position.xy        += (offset * billboardSizeNDC);

@@ -69,7 +69,7 @@ public:
   int addBone(const Bone &bone);
   bool hasNormals() const;
   bool hasTangents() const;
-  bool hasTexCoord() const;
+  bool hasTexCoords() const;
   bool hasColors() const;
   bool hasBoneWeights() const;
   bool hasLines() const;

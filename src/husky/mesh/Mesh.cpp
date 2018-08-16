@@ -292,7 +292,7 @@ const Mesh::Quad& Mesh::addQuad(const Position &p0, const Position &p1, const Po
 int Mesh::addBone(const Bone &bone) { bones.emplace_back(bone); return int(bones.size() - 1); }
 bool Mesh::hasNormals() const { return !vertNormal.empty(); }
 bool Mesh::hasTangents() const { return !vertTangent.empty(); }
-bool Mesh::hasTexCoord() const { return !vertTexCoord.empty(); }
+bool Mesh::hasTexCoords() const { return !vertTexCoord.empty(); }
 bool Mesh::hasColors() const { return !vertColor.empty(); }
 bool Mesh::hasBoneWeights() const { return !vertBoneWeights.empty(); }
 bool Mesh::hasLines() const { return !lines.empty(); }
@@ -322,7 +322,7 @@ void Mesh::addMesh(const Mesh &m)
   vertPosition.reserve(numVerts() + m.numVerts());
   if (hasNormals() || m.hasNormals()) { vertNormal.reserve(vertPosition.capacity()); }
   if (hasTangents() || m.hasTangents()) { vertTangent.reserve(vertPosition.capacity()); }
-  if (hasTexCoord() || m.hasTexCoord()) { vertTexCoord.reserve(vertPosition.capacity()); }
+  if (hasTexCoords() || m.hasTexCoords()) { vertTexCoord.reserve(vertPosition.capacity()); }
   if (hasColors() || m.hasColors()) { vertColor.reserve(vertPosition.capacity()); }
   if (hasBoneWeights() || m.hasBoneWeights()) { vertBoneWeights.reserve(vertPosition.capacity()); }
   //lineStrips.reserve(numLineStrips() + m.numLineStrips());
@@ -339,7 +339,7 @@ void Mesh::addMesh(const Mesh &m)
 
     if (m.hasNormals()) { setNormal(iVert, m.vertNormal[i]); }
     if (m.hasTangents()) { setTangent(iVert, m.vertTangent[i]); }
-    if (m.hasTexCoord()) { setTexCoord(iVert, m.vertTexCoord[i]); }
+    if (m.hasTexCoords()) { setTexCoord(iVert, m.vertTexCoord[i]); }
     if (m.hasColors()) { setColor(iVert, m.vertColor[i]); }
 
     if (m.hasBoneWeights()) {
@@ -519,7 +519,7 @@ RenderData Mesh::getRenderData() const
       for (int i = 0; i < numVerts(); i++) {
         r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
         if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
-        if (hasTexCoord()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
+        if (hasTexCoords()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
         r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
 
         if (hasBoneWeights()) {
@@ -593,7 +593,8 @@ RenderData Mesh::getRenderData() const
   else { // Neither faces nor lines => Assume points
     RenderData r(RenderData::Mode::POINTS);
     r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    if (hasTexCoords()) { r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f)); }
+    if (hasColors()) { r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b)); }
     r.init(numVerts());
 
     if (numVerts() > 0) {
@@ -601,7 +602,8 @@ RenderData Mesh::getRenderData() const
 
       for (int i = 0; i < numVerts(); i++) {
         r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        if (hasTexCoords()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
+        if (hasColors()) { r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255)); }
         //r.addPoint(i); // TODO: Remove?
       }
     }
