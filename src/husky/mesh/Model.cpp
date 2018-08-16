@@ -417,11 +417,10 @@ void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f
         const std::vector<Matrix44f> mtxBones = getBoneMatrices(mesh.mesh.getBones(), animNodes);
         mesh.renderData.draw(shader, mtl, viewport, view, modelView, projection, mtxBones);
       }
-      else {
-        static const Shader &defaultShader = Shader::getDefaultShader(true, false); // TODO: Remove this locally defined shader hack!
+      else { // TODO: Can we avoid this branch?
         Matrix44f mtxAnimNodeToModel = (Matrix44f)animNodes.find(node->name)->second.mtxRelToModel;
         Matrix44f nodeModelView = modelView * mtxAnimNodeToModel;
-        mesh.renderData.draw(defaultShader, mtl, viewport, view, nodeModelView, projection, {});
+        mesh.renderData.draw(shader, mtl, viewport, view, nodeModelView, projection, {});
       }
     }
   }

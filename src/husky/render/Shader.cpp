@@ -78,6 +78,7 @@ R"(//#version 400 core
 #define MAX_BONES 100 // Note: We use 8-bit bone indices, so use MAX_BONES <= 256
 #endif
 uniform mat4 mtxBones[MAX_BONES] = mat4[MAX_BONES](mat4(1.0));
+uniform bool useBones = true; // TODO: Rewrite shader to avoid if-else branching
 in ivec4 vertBoneIndices;
 in vec4 vertBoneWeights;
 #endif
@@ -95,10 +96,13 @@ out vec2 varTexCoord;
 out vec4 varColor;
 void main() {
 #ifdef USE_BONES
-  mat4 mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
-               + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
-               + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
-               + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3];
+  mat4 mtxBone = mat4(1.0);
+  if (useBones) {
+    mtxBone = mtxBones[vertBoneIndices[0]] * vertBoneWeights[0]
+            + mtxBones[vertBoneIndices[1]] * vertBoneWeights[1]
+            + mtxBones[vertBoneIndices[2]] * vertBoneWeights[2]
+            + mtxBones[vertBoneIndices[3]] * vertBoneWeights[3];
+  }
   varPosition = mtxModelView * mtxBone * vec4(vertPosition, 1.0);
   varNormal = normalize(mtxNormal * (mtxBone * vec4(vertNormal, 0.0)).xyz);
 #else

@@ -125,6 +125,10 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
     }
   }
 
+  if (shader.getUniformLocation("useBones", varLocation)) {
+    glUniform1i(varLocation, !mtxBones.empty());
+  }
+
   if (shader.getUniformLocation("tex", varLocation)) {
     glUniform1i(varLocation, 0);
   }
