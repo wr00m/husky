@@ -7,9 +7,10 @@ namespace husky {
 
 enum class BillboardMode
 {
-  VIEWPLANE,
+  VIEWPLANE_SPHERICAL,
+  VIEWPLANE_CYLINDRICAL,
   SPHERICAL,
-  CYLINDRICAL,
+  //CYLINDRICAL,
   FIXED_PX,
 };
 

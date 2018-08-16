@@ -250,7 +250,7 @@ uniform mat4 mtxProjection;
 uniform vec2 viewportSize = vec2(1280, 720); // Pixels
 uniform vec2 billboardSizePx = vec2(64, 64); // Pixels
 #else
-#if defined(BILLBOARD_CYLINDRICAL)
+#if defined(BILLBOARD_VIEWPLANE_CYLINDRICAL) || defined(BILLBOARD_CYLINDRICAL)
 uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 #endif
 uniform vec2 billboardSize = vec2(1, 1); // World units
@@ -265,11 +265,11 @@ layout (triangle_strip, max_vertices = 4) out;
 
 void emitBillboardVert(const vec2 offset)
 {
-#if defined(BILLBOARD_VIEWPLANE)
+#if defined(BILLBOARD_VIEWPLANE_SPHERICAL)
   gl_Position = gl_in[0].gl_Position;
   gl_Position.xy += (offset * billboardSize * vsScale[0]);
   gl_Position = (mtxProjection * gl_Position);
-#elif defined(BILLBOARD_CYLINDRICAL)
+#elif defined(BILLBOARD_VIEWPLANE_CYLINDRICAL)
   vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
   gl_Position = gl_in[0].gl_Position;
   gl_Position.x += (offset.x * billboardSize.x * vsScale[0].x);
@@ -321,10 +321,10 @@ void main()
 })";
 
   std::string header = "#version 400 core\n";
-  if      (mode == BillboardMode::VIEWPLANE)   { header += "#define BILLBOARD_VIEWPLANE\n"; }
-  else if (mode == BillboardMode::SPHERICAL)   { header += "#define BILLBOARD_SPHERICAL\n"; }
-  else if (mode == BillboardMode::CYLINDRICAL) { header += "#define BILLBOARD_CYLINDRICAL\n"; }
-  else if (mode == BillboardMode::FIXED_PX)    { header += "#define BILLBOARD_FIXED_PX\n"; }
+  if      (mode == BillboardMode::VIEWPLANE_SPHERICAL)   { header += "#define BILLBOARD_VIEWPLANE_SPHERICAL\n"; }
+  else if (mode == BillboardMode::VIEWPLANE_CYLINDRICAL) { header += "#define BILLBOARD_VIEWPLANE_CYLINDRICAL\n"; }
+  else if (mode == BillboardMode::SPHERICAL)             { header += "#define BILLBOARD_SPHERICAL\n"; }
+  else if (mode == BillboardMode::FIXED_PX)              { header += "#define BILLBOARD_FIXED_PX\n"; }
   else { Log::warning("Unsupported billboard mode: %d", mode); }
 
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
