@@ -279,11 +279,15 @@ void emitBillboardVert(const vec2 offset)
   gl_Position.x += (offset.x * billboardSize.x * vsScale[0].x);
   gl_Position.xyz += (up * offset.y * billboardSize.y * vsScale[0].y);
   gl_Position = (mtxProjection * gl_Position);
-#elif defined(BILLBOARD_SPHERICAL)
+#elif defined(BILLBOARD_SPHERICAL) || defined(BILLBOARD_CYLINDRICAL)
   gl_Position = gl_in[0].gl_Position;
   vec3 dir = gl_Position.xyz;
   vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
+#if defined(BILLBOARD_SPHERICAL)
   vec3 up = normalize(cross(right, dir));
+#elif defined(BILLBOARD_CYLINDRICAL)
+  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+#endif
   gl_Position.xyz += (right * offset.x * billboardSize.x * vsScale[0].x);
   gl_Position.xyz += (up    * offset.y * billboardSize.y * vsScale[0].y);
   gl_Position = (mtxProjection * gl_Position);
@@ -328,6 +332,7 @@ void main()
   if      (mode == BillboardMode::VIEWPLANE_SPHERICAL)   { header += "#define BILLBOARD_VIEWPLANE_SPHERICAL\n"; }
   else if (mode == BillboardMode::VIEWPLANE_CYLINDRICAL) { header += "#define BILLBOARD_VIEWPLANE_CYLINDRICAL\n"; }
   else if (mode == BillboardMode::SPHERICAL)             { header += "#define BILLBOARD_SPHERICAL\n"; }
+  else if (mode == BillboardMode::CYLINDRICAL)           { header += "#define BILLBOARD_CYLINDRICAL\n"; }
   else if (mode == BillboardMode::FIXED_PX)              { header += "#define BILLBOARD_FIXED_PX\n"; }
   else { Log::warning("Unsupported billboard mode: %d", mode); }
 

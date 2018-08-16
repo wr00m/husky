@@ -298,7 +298,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::VIEWPLANE_CYLINDRICAL);
+  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::CYLINDRICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
@@ -359,7 +359,7 @@ int main()
     husky::Mesh billboardPointsMesh;
     for (int ix = 0; ix < 100; ix++) {
       for (int iy = 0; iy < 100; iy++) {
-        int iVert = billboardPointsMesh.addVert(husky::Vector3d(10 + 2.5 * ix, 10 + 2.5 * iy, 0));
+        int iVert = billboardPointsMesh.addVert(husky::Vector3d(random.getDouble(0, 250), random.getDouble(0, 250), 0));
         billboardPointsMesh.setTexCoord(iVert, husky::Vector2d(random.getDouble() * 0.5 + 1.0));
         billboardPointsMesh.setColor(iVert, husky::Vector4b(random.getInt(100, 255), random.getInt(100, 255), random.getInt(50, 200), 255));
       }
