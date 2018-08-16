@@ -305,7 +305,7 @@ int main()
   image.setPixel(1, 0, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(0, 1, husky::Vector4b(128, 128, 128, 255));
   image.setPixel(1, 1, husky::Vector4b(255, 255, 255, 255));
-  const husky::Texture tex = husky::Texture(image, husky::TextureWrap::REPEAT, husky::TextureSampling::NEAREST, true);
+  const husky::Texture tex = husky::Texture(image, husky::TexWrap::REPEAT, husky::TexFilter::NEAREST, husky::TexMipmaps::NONE);
 
   {
     models.emplace_back(std::make_unique<husky::Model>(husky::Mesh::sphere(1.0), husky::Material({ 0, 1, 0 }, tex)));

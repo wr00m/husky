@@ -18,7 +18,7 @@ const Texture& Texture::white1x1()
     Image image(1, 1, husky::ImageFormat::RGBA8);
     image.setPixel(0, 0, Vector4b(255, 255, 255, 255));
 
-    tex = Texture(image, TextureWrap::REPEAT, TextureSampling::NEAREST, true);
+    tex = Texture(image, TexWrap::REPEAT, TexFilter::NEAREST, TexMipmaps::NONE);
   }
 
   return tex;
@@ -29,46 +29,53 @@ Texture::Texture()
 {
 }
 
-Texture::Texture(const Image &image, TextureWrap wrap, TextureSampling sampling, bool mipmaps)
+Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
   : handle(0)
+  , wrap(wrap)
+  , filter(filter)
+  , mipmaps(mipmaps)
 {
   glGenTextures(1, &handle);
   glBindTexture(GL_TEXTURE_2D, handle);
   
-  if (wrap == TextureWrap::REPEAT) {
+  if (wrap == TexWrap::REPEAT) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
-  else if (wrap == TextureWrap::CLAMP) {
+  else if (wrap == TexWrap::CLAMP) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  }
+  else if (wrap == TexWrap::MIRROR) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   }
   else {
     Log::warning("Unsupported texture wrap: %d", wrap);
   }
 
-  if (sampling == TextureSampling::LINEAR) {
-    if (mipmaps) {
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    }
-    else {
+  if (filter == TexFilter::LINEAR) {
+    if (mipmaps == TexMipmaps::NONE) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
-  }
-  else if (sampling == TextureSampling::NEAREST) {
-    if (mipmaps) {
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    }
     else {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
+  }
+  else if (filter == TexFilter::NEAREST) {
+    if (mipmaps == TexMipmaps::NONE) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
+    else {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    }
   }
   else {
-    Log::warning("Unsupported texture sampling: %d", sampling);
+    Log::warning("Unsupported texture filter: %d", filter);
   }
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -85,15 +92,20 @@ Texture::Texture(const Image &image, TextureWrap wrap, TextureSampling sampling,
     Log::warning("Unsupported image format: %d", image.format);
   }
 
-  if (mipmaps) {
+  if (mipmaps != TexMipmaps::NONE) {
+    if (mipmaps == TexMipmaps::ANISOTROPIC) {
+      //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxAnisotropy);
+      //glTextureParameterf(handle, GL_TEXTURE_MAX_ANISOTROPY, 4.0f); // TODO
+      Log::warning("Anisotropic texture filtering not implemented");
+    }
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Texture::Texture(const std::string &imageFilePath, TextureWrap wrap, TextureSampling sampling, bool mipmaps)
-  : Texture(*SharedResource::loadImage(imageFilePath), wrap, sampling)
+Texture::Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
+  : Texture(*SharedResource::loadImage(imageFilePath), wrap, filter, mipmaps)
 {
   this->imageFilePath = imageFilePath;
 }
