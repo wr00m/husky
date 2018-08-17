@@ -27,6 +27,7 @@ public:
   bool save(const std::string &filePath) const;
   bool valid() const;
   const std::uint8_t* data() const;
+  std::uint8_t* data();
 
   template<typename T>
   void setPixel(int x, int y, const T &px)

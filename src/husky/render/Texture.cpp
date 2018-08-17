@@ -35,6 +35,17 @@ static bool imageFormatToGL(ImageFormat imageFormat, GLint &internalFormat, GLen
   }
 }
 
+static ImageFormat imageFormatFromGL(GLint internalFormat)
+{
+  switch (internalFormat)
+  {
+    // TODO: Support more values
+  case GL_RGB   : { return ImageFormat::RGB8; }
+  case GL_RGBA  : { return ImageFormat::RGBA8; }
+  default       : { return ImageFormat::UNDEFINED; }
+  }
+}
+
 Texture::Texture()
   : handle(0)
   , wrap(TexWrap::REPEAT)
@@ -121,7 +132,7 @@ bool Texture::valid() const
   return (handle != 0);
 }
 
-void Texture::setImageData(const Image &image) const
+void Texture::uploadImageData(const Image &image) const
 {
   if (!valid()) {
     return;
@@ -138,6 +149,33 @@ void Texture::setImageData(const Image &image) const
   else {
     Log::warning("Unsupported texture image format: %d", image.format);
   }
+}
+
+Image Texture::downloadImageData() const
+{
+  if (!valid()) {
+    return{};
+  }
+
+  glBindTexture(GL_TEXTURE_2D, handle);
+
+  GLint internalFormat;
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+  ImageFormat imageFormat = imageFormatFromGL(internalFormat);
+
+  if (imageFormat == ImageFormat::UNDEFINED) {
+    return{};
+  }
+
+  int w, h;
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+  glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+
+  Image image(w, h, imageFormat);
+  glGetTexImage(GL_TEXTURE_2D, 0, internalFormat, GL_UNSIGNED_BYTE, image.data()); // TODO: Is this call really correct? (Seems to be working...)
+  //glReadPixels(0, 0, w, h, internalFormat, GL_UNSIGNED_BYTE, image.data());
+
+  return image;
 }
 
 void Texture::buildMipmaps() const

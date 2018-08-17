@@ -118,6 +118,11 @@ const std::uint8_t* Image::data() const
   return bytes;
 }
 
+std::uint8_t* Image::data()
+{
+  return bytes;
+}
+
 Image::~Image()
 {
   if (bytes != nullptr) {

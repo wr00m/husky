@@ -35,7 +35,8 @@ public:
   Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
 
   bool valid() const;
-  void setImageData(const Image &image) const;
+  void uploadImageData(const Image &image) const;
+  Image downloadImageData() const;
 
   unsigned int handle;
   std::string imageFilePath;
