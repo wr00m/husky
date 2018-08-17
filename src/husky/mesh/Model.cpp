@@ -371,8 +371,7 @@ static std::vector<Matrix44f> getBoneMatrices(const std::vector<Bone> &bones, co
       mtxBones.emplace_back((Matrix44f)(it->second.mtxRelToModel * bone.mtxMeshToBone));
     }
     else {
-      mtxBones.emplace_back(Matrix44f::identity()); // This shouldn't happen...
-      Log::warning("FIXME!");
+      mtxBones.emplace_back(Matrix44f::identity());
     }
   }
 
@@ -418,8 +417,12 @@ void Model::draw(const Shader &shader, const Viewport &viewport, const Matrix44f
         mesh.renderData.draw(shader, mtl, viewport, view, modelView, projection, mtxBones);
       }
       else { // TODO: Can we avoid this branch?
-        Matrix44f mtxAnimNodeToModel = (Matrix44f)animNodes.find(node->name)->second.mtxRelToModel;
-        Matrix44f nodeModelView = modelView * mtxAnimNodeToModel;
+        Matrix44f nodeModelView = modelView;
+        const auto it = animNodes.find(node->name);
+        if (it != animNodes.end()) {
+          Matrix44f mtxAnimNodeToModel = (Matrix44f)it->second.mtxRelToModel;
+          nodeModelView *= mtxAnimNodeToModel;
+        }
         mesh.renderData.draw(shader, mtl, viewport, view, nodeModelView, projection, {});
       }
     }

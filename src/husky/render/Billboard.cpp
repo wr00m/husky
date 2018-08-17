@@ -1,5 +1,6 @@
 #include <husky/render/Billboard.hpp>
 #include <husky/Log.hpp>
+#include <glad/glad.h>
 
 namespace husky {
 
@@ -115,9 +116,61 @@ void main()
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }
 
-Texture Billboard::getMultidirectionalBillboardTexture(const Model &mdl)
+Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 {
-  return{};
+  const int texWidth = 2048;
+  const int texHeight = 2048;
+
+  GLuint fbo = 0;
+  glGenFramebuffers(1, &fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+  GLuint depthBuf;
+  glGenRenderbuffers(1, &depthBuf);
+  glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texWidth, texHeight);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuf);
+
+  const Texture tex(ImageFormat::RGBA8, texWidth, texHeight, nullptr, TexWrap::REPEAT, TexFilter::LINEAR, TexMipmaps::STANDARD);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex.handle, 0);
+
+  const GLenum drawBuf[1] = { GL_COLOR_ATTACHMENT0 };
+  glDrawBuffers(1, drawBuf);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    Log::warning("Incomplete FBO");
+    return {};
+  }
+
+  glClearColor(0, 0, 0, 0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  constexpr int numLon = 8;
+  constexpr int numLat = 8;
+
+  Viewport viewport;
+  viewport.width = (texWidth / numLon);
+  viewport.height = (texHeight / numLat);
+
+  for (int iLat = 0; iLat < numLat; iLat++) {
+    for (int iLon = 0; iLon < numLon; iLon++) {
+      viewport.x = (iLon * viewport.width);
+      viewport.y = (iLat * viewport.height);
+
+      glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+      Camera cam({ 0, -20, 5 }, {});
+      cam.aspectRatio = viewport.aspectRatio();
+      cam.buildProjMatrix();
+      cam.buildViewMatrix();
+
+      entity.draw(viewport, cam);
+    }
+  }
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return tex;
 }
 
 }

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <husky/render/Shader.hpp>
-#include <husky/mesh/Model.hpp>
+#include <husky/render/Entity.hpp>
 //#include <husky/math/Vector2.hpp>
 //#include <vector>
 
@@ -22,7 +21,7 @@ public:
   //static const std::vector<Vector2f> billboardShapeSquareCenter;
   //static const std::vector<Vector2f> billboardShapeSquareCenterBottom;
   static Shader getBillboardShader(BillboardMode mode);
-  static Texture getMultidirectionalBillboardTexture(const Model &mdl);
+  static Texture getMultidirectionalBillboardTexture(const Entity &entity);
 };
 
 }
