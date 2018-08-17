@@ -24,12 +24,26 @@ const Texture& Texture::white1x1()
   return tex;
 }
 
+static bool imageFormatToGL(ImageFormat imageFormat, GLint &internalFormat, GLenum &dataFormat, GLenum &dataType)
+{
+  switch (imageFormat)
+  {
+  // TODO: Support more values
+  case ImageFormat::RGB8  : { internalFormat = GL_RGB;  dataFormat = GL_RGB;  dataType = GL_UNSIGNED_BYTE;  return true; }
+  case ImageFormat::RGBA8 : { internalFormat = GL_RGBA; dataFormat = GL_RGBA; dataType = GL_UNSIGNED_BYTE;  return true; }
+  default                 : { internalFormat = 0;       dataFormat = 0;       dataType = 0;                 return false; }
+  }
+}
+
 Texture::Texture()
   : handle(0)
+  , wrap(TexWrap::REPEAT)
+  , filter(TexFilter::LINEAR)
+  , mipmaps(TexMipmaps::STANDARD)
 {
 }
 
-Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
+Texture::Texture(ImageFormat imageFormat, int w, int h, const void *data, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
   : handle(0)
   , wrap(wrap)
   , filter(filter)
@@ -37,7 +51,7 @@ Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps 
 {
   glGenTextures(1, &handle);
   glBindTexture(GL_TEXTURE_2D, handle);
-  
+
   if (wrap == TexWrap::REPEAT) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -80,28 +94,20 @@ Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps 
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-  if (image.format == ImageFormat::RGB8) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+  GLint internalFormat;
+  GLenum dataFormat, dataType;
+  if (imageFormatToGL(imageFormat, internalFormat, dataFormat, dataType)) {
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, dataFormat, dataType, data);
+    buildMipmaps();
   }
-  else if (image.format == ImageFormat::RGBA8) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+  else {
+    Log::warning("Unsupported texture image format: %d", imageFormat);
   }
-  else { // Default checkerboard texture
-    static constexpr unsigned int checkerboard[4] = { 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF, };
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerboard);
-    Log::warning("Unsupported image format: %d", image.format);
-  }
+}
 
-  if (mipmaps != TexMipmaps::NONE) {
-    if (mipmaps == TexMipmaps::ANISOTROPIC) {
-      //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxAnisotropy);
-      //glTextureParameterf(handle, GL_TEXTURE_MAX_ANISOTROPY, 4.0f); // TODO
-      Log::warning("Anisotropic texture filtering not implemented");
-    }
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-
-  glBindTexture(GL_TEXTURE_2D, 0);
+Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
+  :Texture(image.format, image.width, image.height, image.data(), wrap, filter, mipmaps)
+{
 }
 
 Texture::Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
@@ -113,6 +119,42 @@ Texture::Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filte
 bool Texture::valid() const
 {
   return (handle != 0);
+}
+
+void Texture::setImageData(const Image &image) const
+{
+  if (!valid()) {
+    return;
+  }
+
+  glBindTexture(GL_TEXTURE_2D, handle);
+
+  GLint internalFormat;
+  GLenum dataFormat, dataType;
+  if (imageFormatToGL(image.format, internalFormat, dataFormat, dataType)) {
+    glTextureSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, dataFormat, dataType, image.data());
+    buildMipmaps();
+  }
+  else {
+    Log::warning("Unsupported texture image format: %d", image.format);
+  }
+}
+
+void Texture::buildMipmaps() const
+{
+  if (!valid() || mipmaps == TexMipmaps::NONE) {
+    return;
+  }
+
+  glBindTexture(GL_TEXTURE_2D, handle);
+
+  if (mipmaps == TexMipmaps::ANISOTROPIC) {
+    //glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &maxAnisotropy);
+    //glTextureParameterf(handle, GL_TEXTURE_MAX_ANISOTROPY, 4.0f); // TODO
+    Log::warning("Anisotropic texture filtering not implemented");
+  }
+
+  glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 }

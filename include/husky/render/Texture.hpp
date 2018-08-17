@@ -30,16 +30,21 @@ public:
   static const Texture& white1x1();
 
   Texture();
-  Texture(const Image &image, TexWrap wrap = TexWrap::REPEAT, TexFilter filter = TexFilter::LINEAR, TexMipmaps mipmaps = TexMipmaps::STANDARD);
-  Texture(const std::string &imageFilePath, TexWrap wrap = TexWrap::REPEAT, TexFilter filter = TexFilter::LINEAR, TexMipmaps mipmaps = TexMipmaps::STANDARD);
+  Texture(ImageFormat imageFormat, int w, int h, const void *data, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
+  Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
+  Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
 
   bool valid() const;
+  void setImageData(const Image &image) const;
 
   unsigned int handle;
   std::string imageFilePath;
   TexWrap wrap;
   TexFilter filter;
   TexMipmaps mipmaps;
+
+private:
+  void buildMipmaps() const;
 };
 
 }

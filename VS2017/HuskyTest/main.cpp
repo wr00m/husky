@@ -353,7 +353,7 @@ int main()
   }
 
   {
-    const husky::Texture texTree("C:/tmp/Billboard/tree.png");
+    const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
 
     husky::Random random;
 

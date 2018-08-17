@@ -114,4 +114,9 @@ void main()
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }
 
+Texture Billboard::getMultidirectionalBillboardTexture(const Model &mdl)
+{
+  return{};
+}
+
 }

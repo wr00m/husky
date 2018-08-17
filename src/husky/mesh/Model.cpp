@@ -164,7 +164,7 @@ static Material getAiMaterial(const fs::path &folderPath, const aiMaterial *mate
           p = folderPath / p;
         }
         auto img = SharedResource::loadImage(p.u8string());
-        mtl.tex = Texture(*img);
+        mtl.tex = Texture(*img, TexWrap::REPEAT, TexFilter::LINEAR, TexMipmaps::STANDARD);
       }
     }
     else {
