@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Transform.cpp" />
     <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp" />
+    <ClCompile Include="..\..\src\husky\render\Billboard.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\husky\render\Component.cpp" />
     <ClCompile Include="..\..\src\husky\render\Entity.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Transform.hpp" />
     <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp" />
+    <ClInclude Include="..\..\include\husky\render\Billboard.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
     <ClInclude Include="..\..\include\husky\render\Component.hpp" />
     <ClInclude Include="..\..\include\husky\render\Entity.hpp" />

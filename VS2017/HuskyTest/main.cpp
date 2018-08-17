@@ -8,13 +8,14 @@
 #include <husky/render/Camera.hpp>
 #include <husky/render/Component.hpp>
 #include <husky/render/Entity.hpp>
+#include <husky/render/Billboard.hpp>
 #include <husky/image/Image.hpp>
-#include <husky/math/Intersect.hpp>
 #include <husky/mesh/Model.hpp>
+#include <husky/math/Intersect.hpp>
 #include <husky/math/EulerAngles.hpp>
+#include <husky/math/Random.hpp>
 #include <husky/render/Texture.hpp>
 #include <husky/util/SharedResource.hpp>
-#include <husky/math/Random.hpp>
 #include "UnitTest.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -298,7 +299,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader billboardShader = husky::Shader::getBillboardShader(husky::BillboardMode::CYLINDRICAL);
+  static const husky::Shader billboardShader = husky::Billboard::getBillboardShader(husky::BillboardMode::CYLINDRICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
