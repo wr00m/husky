@@ -145,6 +145,11 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  //glClipControl(GL_LOWER_LEFT, GL_NEGATIVE_ONE_TO_ONE);
+  //glClearDepth(1.f);
+  //glDepthFunc(GL_LESS);
+  //glDisable(GL_DEPTH_CLAMP);
+
   constexpr int numLon = 8;
   constexpr int numLat = 8;
 
@@ -159,8 +164,10 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 
       glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-      Camera cam({ 0, -20, 5 }, {});
+      Camera cam({ 0, -10, 0 }, {});
       cam.aspectRatio = viewport.aspectRatio();
+      //cam.projMode = ProjectionMode::ORTHO;
+      //cam.orthoHeight = entity.bboxLocal.size().z;
       cam.buildProjMatrix();
       cam.buildViewMatrix();
 

@@ -8,6 +8,7 @@ namespace husky {
 enum class ProjectionMode
 {
   ORTHO,
+  ORTHO_REVZ,
   PERSP,
   PERSP_FARINF,
   PERSP_FARINF_REVZ,
@@ -26,6 +27,8 @@ public:
   void buildProjMatrix();
   void buildViewMatrix();
   double hfovRad() const;
+  bool isOrtho() const;
+  bool isRevZ() const;
 
   Vector3d pos;
   Quaterniond rot;

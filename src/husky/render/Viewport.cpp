@@ -66,7 +66,7 @@ Vector3d Viewport::getPickingRayDir(const Vector2d &windowPos, const Camera &cam
   Vector3d worldPos = unproject({ windowPos, 0.0 }, mvpInv);
   Vector3d dir = (worldPos - cam.pos).normalized();
 
-  if (cam.projMode == ProjectionMode::PERSP_FARINF_REVZ) {
+  if (cam.isRevZ()) {
     dir = -dir; // Reverse Z
   }
 

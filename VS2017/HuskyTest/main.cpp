@@ -139,19 +139,20 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
 
   if (action == GLFW_PRESS) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
+      husky::Vector2i windowSize;
+      glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
+
+      const husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
+      const husky::Vector3d rayDirWorld = viewport.getPickingRayDir(windowPos, cam);
+
       std::multimap<double, int> clickedEntities; // Sorted by key (tMean)
 
       for (int iEntity = 0; iEntity < (int)entities.size(); iEntity++) {
         const auto &entity = entities[iEntity];
 
-        husky::Vector2i windowSize;
-        glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
-        husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
-
-        // TODO: Each entity should provide its bounding box in world coordinates (better performance than inverting the picking ray for each entity)
-        husky::Matrix44d inv = entity->getTransform().inverted();
-        husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
-        husky::Vector3d rayDir = (inv * husky::Vector4d(viewport.getPickingRayDir(windowPos, cam), 0)).xyz;
+        const husky::Matrix44d inv = entity->getTransform().inverted(); // TODO: Use pre-inverted transform, or get bounds in world coordinates
+        const husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
+        const husky::Vector3d rayDir = (inv * husky::Vector4d(rayDirWorld, 0.0)).xyz;
 
         double t0, t1;
         if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
@@ -367,17 +368,16 @@ int main()
     }
 
     husky::Material mtl({ 1, 0.5, 0 }, texTree);
-    //mtl.twoSided = true;
     husky::Model mdl(std::move(billboardPointsMesh), mtl);
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Billboards", &billboardShader, models.back().get()));
     //entities.back()->setTransform(husky::Matrix44d::identity());
   }
 
-  glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]
-  glEnable(GL_DEPTH_TEST);
-  //glDisable(GL_CULL_FACE);
-  //glCullFace(GL_FRONT);
+  //{
+  //  husky::Texture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get());
+  //  texBillboard.downloadImageData().save("C:/tmp/hejhopp.png");
+  //}
 
   while (!glfwWindowShouldClose(window)) {
     double time = glfwGetTime();
@@ -402,10 +402,22 @@ int main()
 
       glViewport(fboViewport.x, fboViewport.y, fboViewport.width, fboViewport.height);
       glClearColor(0.f, 0.f, .5f, 1.f);
-      glClearDepth(0.0f); // Reverse Z
-      glDepthFunc(GL_GREATER); // Reverse Z
-      glEnable(GL_DEPTH_CLAMP); // http://www.terathon.com/gdc07_lengyel.pdf
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      if (cam.isRevZ()) {
+        glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE); // Change clip space Z range from [-1,1] to [0,1]
+        glClearDepth(0.f);
+        glDepthFunc(GL_GREATER);
+        glEnable(GL_DEPTH_CLAMP); // http://www.terathon.com/gdc07_lengyel.pdf
+      }
+      else {
+        glClipControl(GL_LOWER_LEFT, GL_NEGATIVE_ONE_TO_ONE); // Default clip space
+        glClearDepth(1.f);
+        glDepthFunc(GL_LESS);
+        glDisable(GL_DEPTH_CLAMP);
+      }
+
+      glEnable(GL_DEPTH_TEST);
 
       const husky::Frustum frustum = cam.frustum();
 
@@ -451,18 +463,26 @@ int main()
       ImGui::Text("cam.pos:\n  %f\n  %f\n  %f", cam.pos.x, cam.pos.y, cam.pos.z);
 
       int projMode = (int)cam.projMode;
-      if (ImGui::Combo("cam.projMode", &projMode, "ORTHO\0PERSP\0PERSP_FARINF\0PERSP_FARINF_REVZ")) {
+      if (ImGui::Combo("cam.projMode", &projMode, "ORTHO\0ORTHO_REVZ\0PERSP\0PERSP_FARINF\0PERSP_FARINF_REVZ")) {
         cam.projMode = (husky::ProjectionMode)projMode;
         cam.buildProjMatrix();
       }
 
-      float fov = (float)cam.vfovRad;
-      if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {
-        cam.vfovRad = fov;
-        cam.buildProjMatrix();
+      if (cam.isOrtho()) {
+        float orthoHeight = (float)cam.orthoHeight;
+        if (ImGui::SliderFloat("orthoHeight", &orthoHeight, 0.1f, 100.0f)) {
+          cam.orthoHeight = orthoHeight;
+          cam.buildProjMatrix();
+        }
+      }
+      else {
+        float fov = (float)cam.vfovRad;
+        if (ImGui::SliderAngle("fov", &fov, 1.f, 179.f)) {
+          cam.vfovRad = fov;
+          cam.buildProjMatrix();
+        }
       }
 
-      //ImGui::Text("cam.fov: %f", cam.projection.fov() * husky::Math::rad2deg);
       ImGui::Text(entitiesDebugText.c_str());
 
       if (iSelectedEntity != -1) {

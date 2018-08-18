@@ -472,7 +472,7 @@ ModelInstance::ModelInstance(const Model *model)
   , animNodes()
 {
   assert(model != nullptr);
-  if (!model->animations.empty()) { animationIndex = 0; } // TODO: Remove
+  animate(0); // Initialize node transforms
 }
 
 void ModelInstance::animate(double timeDelta)

@@ -51,6 +51,11 @@ void Camera::buildProjMatrix()
     double wh = hh * aspectRatio;
     proj = Matrix44d::ortho(-wh, wh, -hh, hh, nearDist, farDist, &projInv);
   }
+  else if (projMode == ProjectionMode::ORTHO_REVZ) {
+    double hh = orthoHeight * 0.5;
+    double wh = hh * aspectRatio;
+    proj = Matrix44d::ortho(-wh, wh, -hh, hh, farDist, nearDist, &projInv);
+  }
   else if (projMode == ProjectionMode::PERSP) {
     proj = Matrix44d::perspective(vfovRad, aspectRatio, nearDist, farDist, &projInv);
   }
@@ -74,6 +79,16 @@ double Camera::hfovRad() const
 {
   double hfovRad = 2.0 * std::atan(std::tan(vfovRad * 0.5) * aspectRatio);
   return hfovRad;
+}
+
+bool Camera::isOrtho() const
+{
+  return (projMode == ProjectionMode::ORTHO || projMode == ProjectionMode::ORTHO_REVZ);
+}
+
+bool Camera::isRevZ() const
+{
+  return (projMode == ProjectionMode::PERSP_FARINF_REVZ || projMode == ProjectionMode::ORTHO_REVZ);
 }
 
 }
