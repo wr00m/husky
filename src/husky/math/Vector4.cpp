@@ -1,5 +1,6 @@
 #include <husky/math/Vector4.hpp>
 #include <husky/math/Math.hpp>
+#include <algorithm>
 #include <cmath>
 
 namespace husky {
@@ -81,6 +82,18 @@ template<typename T>
 T Vector4<T>::dot(const Vector4<T> &other) const
 {
   return (x * other.x + y * other.y + z * other.z + w * other.w);
+}
+
+template<typename T>
+T Vector4<T>::min() const
+{
+  return std::min(xyz.min(), z);
+}
+
+template<typename T>
+T Vector4<T>::max() const
+{
+  return std::max(xyz.max(), z);
 }
 
 template<typename T>

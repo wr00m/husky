@@ -1,5 +1,6 @@
 #include <husky/math/Vector2.hpp>
 #include <husky/math/Math.hpp>
+#include <algorithm>
 #include <cmath>
 
 namespace husky {
@@ -71,6 +72,18 @@ T Vector2<T>::angleSigned(const Vector2<T> &target) const
   T angle = (T)std::atan2(det, dot); // [-pi,pi]
   return angle;
   //return (T)std::atan2(target.y, target.x) - (T)std::atan2(this->y, this->x);
+}
+
+template<typename T>
+T Vector2<T>::min() const
+{
+  return std::min(x, y);
+}
+
+template<typename T>
+T Vector2<T>::max() const
+{
+  return std::max(x, y);
 }
 
 template<typename T>

@@ -1,5 +1,6 @@
 #include <husky/math/Vector3.hpp>
 #include <husky/math/Math.hpp>
+#include <algorithm>
 #include <cmath>
 
 namespace husky {
@@ -78,6 +79,18 @@ T Vector3<T>::angleAbs(const Vector3<T> &target) const
   T angle = (T)std::acos(a.dot(b)); // [0,pi]
   //Vector3<T> axis = a.cross(b);
   return angle;
+}
+
+template<typename T>
+T Vector3<T>::min() const
+{
+  return std::min(xy.min(), z);
+}
+
+template<typename T>
+T Vector3<T>::max() const
+{
+  return std::max(xy.max(), z);
 }
 
 template<typename T>
