@@ -378,6 +378,8 @@ int main()
   //  texBillboard.downloadImageData().save("C:/tmp/hejhopp.png");
   //}
 
+  cam.lookAt({ 0, 0, 0 }, { 0, 0, 1 });
+
   while (!glfwWindowShouldClose(window)) {
     double time = glfwGetTime();
     frameTime = (time - prevTime);
@@ -501,6 +503,11 @@ int main()
           cam.buildViewMatrix();
         }
         
+        if (ImGui::Button("Look at selected")) {
+          cam.lookAt(selectedEntity->getTransform()[3].xyz, { 0, 0, 1 });
+          cam.buildViewMatrix();
+        }
+
         {
           std::vector<const char*> animNames;
           animNames.emplace_back("<None>");

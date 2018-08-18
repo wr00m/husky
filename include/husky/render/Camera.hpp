@@ -24,11 +24,12 @@ public:
   Vector3d forward() const;
   Vector3d up() const;
   Frustum frustum() const;
-  void buildProjMatrix();
-  void buildViewMatrix();
   double hfovRad() const;
   bool isOrtho() const;
   bool isRevZ() const;
+  void lookAt(const Vector3d &pt, const Vector3d &up);
+  void buildProjMatrix();
+  void buildViewMatrix();
 
   Vector3d pos;
   Quaterniond rot;

@@ -31,17 +31,40 @@ Vector3d Camera::right() const
 
 Vector3d Camera::forward() const
 {
-  return rot * Vector3d(0, 1, 0);
+  return rot * Vector3d(0, 0, -1); // (0, 1, 0);
 }
 
 Vector3d Camera::up() const
 {
-  return rot * Vector3d(0, 0, 1);
+  return rot * Vector3d(0, 1, 0); // (0, 0, 1);
 }
 
 Frustum Camera::frustum() const
 {
   return Frustum(proj, view);
+}
+
+double Camera::hfovRad() const
+{
+  double hfovRad = 2.0 * std::atan(std::tan(vfovRad * 0.5) * aspectRatio);
+  return hfovRad;
+}
+
+bool Camera::isOrtho() const
+{
+  return (projMode == ProjectionMode::ORTHO || projMode == ProjectionMode::ORTHO_REVZ);
+}
+
+bool Camera::isRevZ() const
+{
+  return (projMode == ProjectionMode::PERSP_FARINF_REVZ || projMode == ProjectionMode::ORTHO_REVZ);
+}
+
+void Camera::lookAt(const Vector3d &pt, const Vector3d &up)
+{
+  Matrix44d mtxInv;
+  Matrix44d mtx = Matrix44d::lookAt(pos, pt, up, &mtxInv);
+  rot = Quaterniond::fromRotationMatrix(mtxInv.get3x3());
 }
 
 void Camera::buildProjMatrix()
@@ -73,22 +96,6 @@ void Camera::buildProjMatrix()
 void Camera::buildViewMatrix()
 {
   view = Matrix44d::lookAt(pos, pos + forward(), up(), &viewInv);
-}
-
-double Camera::hfovRad() const
-{
-  double hfovRad = 2.0 * std::atan(std::tan(vfovRad * 0.5) * aspectRatio);
-  return hfovRad;
-}
-
-bool Camera::isOrtho() const
-{
-  return (projMode == ProjectionMode::ORTHO || projMode == ProjectionMode::ORTHO_REVZ);
-}
-
-bool Camera::isRevZ() const
-{
-  return (projMode == ProjectionMode::PERSP_FARINF_REVZ || projMode == ProjectionMode::ORTHO_REVZ);
 }
 
 }
