@@ -21,7 +21,7 @@ public:
   void removeComponent(IComponent *component);
 
   template<class T>
-  void addComponent() { addComponent(std::make_unique<husky::DebugDrawComponent>()); }
+  void addComponent() { addComponent(std::make_unique<DebugDrawComponent>()); }
 
   template<class T>
   void removeComponent() { removeComponent(getComponent<T>()); }

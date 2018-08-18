@@ -4,6 +4,20 @@
 
 namespace husky {
 
+class HUSKY_DLL Ray
+{
+public:
+  Vector3d startPos;
+  Vector3d dir;
+
+  Ray();
+  Ray(const Vector3d &startPos, const Vector3d &dir);
+  
+  void transform(const Matrix44d &mtx);
+};
+
+HUSKY_DLL Ray operator*(const Matrix44d &mtx, const Ray &r);
+
 class HUSKY_DLL Viewport
 {
 public:
@@ -20,7 +34,7 @@ public:
   Vector3d  project(const Vector3d &worldPos, const Matrix44d &modelView, const Matrix44d &proj) const;
   Vector3d  unproject(const Vector3d &windowPos, const Matrix44d &modelView, const Matrix44d &proj) const;
   Vector3d  unproject(const Vector3d &windowPos, const Matrix44d &mvpInv) const;
-  Vector3d  getPickingRayDir(const Vector2d &windowPos, const Camera &cam) const;
+  Ray       getPickingRay(const Vector2d &windowPos, const Camera &cam) const;
 };
 
 }

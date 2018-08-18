@@ -143,7 +143,7 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
       glfwGetWindowSize(win, &windowSize.x, &windowSize.y);
 
       const husky::Vector2d windowPos(mousePos.x, windowSize.y - mousePos.y);
-      const husky::Vector3d rayDirWorld = viewport.getPickingRayDir(windowPos, cam);
+      const husky::Ray rayWorld = viewport.getPickingRay(windowPos, cam);
 
       std::multimap<double, int> clickedEntities; // Sorted by key (tMean)
 
@@ -151,11 +151,10 @@ static void mouseButtonCallback(GLFWwindow *win, int button, int action, int mod
         const auto &entity = entities[iEntity];
 
         const husky::Matrix44d inv = entity->getTransform().inverted(); // TODO: Use pre-inverted transform, or get bounds in world coordinates
-        const husky::Vector3d rayStart = (inv * husky::Vector4d(cam.pos, 1.0)).xyz;
-        const husky::Vector3d rayDir = (inv * husky::Vector4d(rayDirWorld, 0.0)).xyz;
+        const husky::Ray ray = (inv * rayWorld);
 
         double t0, t1;
-        if (husky::Intersect::lineIntersectsBox(rayStart, rayDir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
+        if (husky::Intersect::lineIntersectsBox(ray.startPos, ray.dir, entity->bboxLocal.min, entity->bboxLocal.max, t0, t1) && t0 > 0 && t1 > 0) {
           double tMean = (t0 + t1) * 0.5; // Picking priority feels more intuitive with tMean than t0
           clickedEntities.insert({ tMean, iEntity });
         }

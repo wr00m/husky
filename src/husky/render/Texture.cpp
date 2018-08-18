@@ -15,7 +15,7 @@ const Texture& Texture::white1x1()
   if (!initialized) {
     initialized = true;
 
-    Image image(1, 1, husky::ImageFormat::RGBA8);
+    Image image(1, 1, ImageFormat::RGBA8);
     image.setPixel(0, 0, Vector4b(255, 255, 255, 255));
 
     tex = Texture(image, TexWrap::REPEAT, TexFilter::NEAREST, TexMipmaps::NONE);

@@ -2,6 +2,31 @@
 
 namespace husky {
 
+Ray::Ray()
+  : startPos()
+  , dir()
+{
+}
+
+Ray::Ray(const Vector3d &startPos, const Vector3d &dir)
+  : startPos(startPos)
+  , dir(dir)
+{
+}
+
+void Ray::transform(const Matrix44d &mtx)
+{
+  startPos = (mtx * Vector4d(startPos, 1.0)).xyz;
+  dir = (mtx * Vector4d(dir, 0.0)).xyz;
+}
+
+Ray operator*(const Matrix44d &mtx, const Ray &r)
+{
+  Ray ray = r;
+  ray.transform(mtx);
+  return ray;
+}
+
 Viewport::Viewport()
   : x(0), y(0), width(0), height(0)
 {
@@ -60,17 +85,25 @@ Vector3d Viewport::unproject(const Vector3d &windowPos, const Matrix44d &mvpInv)
   return worldPos.xyz;
 }
 
-Vector3d Viewport::getPickingRayDir(const Vector2d &windowPos, const Camera &cam) const
+Ray Viewport::getPickingRay(const Vector2d &windowPos, const Camera &cam) const
 {
-  Matrix44d mvpInv = cam.viewInv * cam.projInv;
-  Vector3d worldPos = unproject({ windowPos, 0.0 }, mvpInv);
-  Vector3d dir = (worldPos - cam.pos).normalized();
+  const Matrix44d mvpInv = cam.viewInv * cam.projInv;
 
-  if (cam.isRevZ()) {
-    dir = -dir; // Reverse Z
+  Ray ray;
+  ray.startPos = unproject({ windowPos, 0.0 }, mvpInv);
+
+  if (cam.isOrtho()) {
+    ray.dir = cam.forward();
+  }
+  else {
+    ray.dir = (ray.startPos - cam.pos).normalized();
   }
 
-  return dir;
+  if (cam.isRevZ()) {
+    ray.dir = -ray.dir;
+  }
+
+  return ray;
 }
 
 }
