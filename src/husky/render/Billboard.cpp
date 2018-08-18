@@ -1,4 +1,7 @@
 #include <husky/render/Billboard.hpp>
+#include <husky/math/EulerAngles.hpp>
+#include <husky/math/Random.hpp>
+#include <husky/math/Math.hpp>
 #include <husky/Log.hpp>
 #include <glad/glad.h>
 
@@ -116,10 +119,40 @@ void main()
   return Shader(header + billboardVertSrc, header + billboardGeomSrc, header + billboardFragSrc);
 }
 
+static void drawFullscreenQuad(const Vector3f &color)
+{
+  static const char *fsqVertSrc =
+R"(#version 400 core
+in vec3 vertPosition;
+void main() {
+  gl_Position = vec4(vertPosition, 1.0);
+})";
+
+  static const char *fsqFragSrc =
+R"(#version 400 core
+uniform vec3 mtlDiffuse = vec3(1.0, 1.0, 1.0);
+out vec4 fragColor;
+void main() {
+  fragColor = vec4(mtlDiffuse, 1.0);
+})";
+
+  static const Shader fsqShader(fsqVertSrc, "", fsqFragSrc);
+
+  Mesh mesh;
+  mesh.addQuad({ -1, -1, 0 }, { 1, -1, 0 }, { 1, 1, 0 }, { -1, 1, 0 });
+
+  Material mtl(color);
+  mtl.twoSided = true;
+  mtl.depthTest = false;
+
+  RenderData rd = mesh.getRenderData();
+  rd.draw(fsqShader, mtl, {}, {}, {}, {}, {});
+}
+
 Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 {
-  const int texWidth = 2048;
-  const int texHeight = 2048;
+  const int texWidth = 1024;
+  const int texHeight = 1024;
 
   GLuint fbo = 0;
   glGenFramebuffers(1, &fbo);
@@ -157,19 +190,33 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
   viewport.width = (texWidth / numLon);
   viewport.height = (texHeight / numLat);
 
+  Camera cam(entity.bsphereLocal.center, {});
+  cam.orthoHeight = (entity.bsphereLocal.radius * 2);
+  cam.projMode = ProjectionMode::ORTHO;
+  cam.aspectRatio = viewport.aspectRatio();
+  cam.buildProjMatrix();
+
+  Random random;
+
   for (int iLat = 0; iLat < numLat; iLat++) {
+    double v = (iLat / (double)(numLat - 1));
+    double latRad = (v * Math::pi);
+    viewport.y = (iLat * viewport.height);
+
     for (int iLon = 0; iLon < numLon; iLon++) {
+      double u = (iLon / (double)numLon);
+      double lonRad = (u * Math::twoPi);
       viewport.x = (iLon * viewport.width);
-      viewport.y = (iLat * viewport.height);
+
+      EulerAnglesd eulerAngles(RotationOrder::ZXY, lonRad, latRad, 0);
+      cam.rot = -eulerAngles.toQuaternion();
+      cam.pos = cam.rot * Vector3d(0, 0, entity.bsphereLocal.radius * 2);
+      cam.buildViewMatrix();
 
       glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-      Camera cam({ 0, -10, 0 }, {});
-      cam.aspectRatio = viewport.aspectRatio();
-      //cam.projMode = ProjectionMode::ORTHO;
-      //cam.orthoHeight = entity.bboxLocal.size().z;
-      cam.buildProjMatrix();
-      cam.buildViewMatrix();
+      Vector3d color(random.getDouble(0.1, 1.0), random.getDouble(0.1, 1.0), random.getDouble(0.1, 1.0));
+      drawFullscreenQuad((Vector3f)color);
 
       entity.draw(viewport, cam);
     }

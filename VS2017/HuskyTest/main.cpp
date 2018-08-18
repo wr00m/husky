@@ -349,7 +349,7 @@ int main()
     husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Boy/Boy_FBX2013.fbx");
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Boy", &defaultShaderBones, models.back().get()));
-    entities.back()->setTransform(husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 })); // * husky::Matrix44d::scale({ 0.01, 0.01, 0.01 }));
+    entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::rotate(husky::Math::pi2, { 1, 0, 0 }), { 0, 0, -entities.back()->bsphereLocal.radius * 0.5 }));
   }
 
   {
@@ -373,10 +373,10 @@ int main()
     //entities.back()->setTransform(husky::Matrix44d::identity());
   }
 
-  //{
-  //  husky::Texture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get());
-  //  texBillboard.downloadImageData().save("C:/tmp/hejhopp.png");
-  //}
+  {
+    husky::Texture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get());
+    texBillboard.downloadImageData().save("C:/tmp/hejhopp.png");
+  }
 
   cam.lookAt({ 0, 0, 0 }, { 0, 0, 1 });
 
