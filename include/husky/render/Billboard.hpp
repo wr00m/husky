@@ -21,7 +21,7 @@ public:
   //static const std::vector<Vector2f> billboardShapeSquareCenter;
   //static const std::vector<Vector2f> billboardShapeSquareCenterBottom;
   static Shader getBillboardShader(BillboardMode mode);
-  static Texture getMultidirectionalBillboardTexture(const Entity &entity);
+  static MultidirTexture getMultidirectionalBillboardTexture(const Entity &entity, int texWidth, int texHeight, int numLon, int numLat);
 };
 
 }

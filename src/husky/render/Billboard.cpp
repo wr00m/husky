@@ -149,11 +149,8 @@ void main() {
   rd.draw(fsqShader, mtl, {}, {}, {}, {}, {});
 }
 
-Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
+MultidirTexture Billboard::getMultidirectionalBillboardTexture(const Entity &entity, int texWidth, int texHeight, int numLon, int numLat)
 {
-  const int texWidth = 1024;
-  const int texHeight = 1024;
-
   GLuint fbo = 0;
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -164,15 +161,15 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, texWidth, texHeight);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuf);
 
-  const Texture tex(ImageFormat::RGBA8, texWidth, texHeight, nullptr, TexWrap::REPEAT, TexFilter::LINEAR, TexMipmaps::STANDARD);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex.handle, 0);
+  MultidirTexture mdTex(Texture(ImageFormat::RGBA8, texWidth, texHeight, TexWrap::REPEAT, TexFilter::LINEAR, TexMipmaps::STANDARD, nullptr), numLon, numLat);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mdTex.tex.handle, 0);
 
   const GLenum drawBuf[1] = { GL_COLOR_ATTACHMENT0 };
   glDrawBuffers(1, drawBuf);
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     Log::warning("Incomplete FBO");
-    return {};
+    return mdTex;
   }
 
   glClearColor(0, 0, 0, 0);
@@ -182,9 +179,6 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
   //glClearDepth(1.f);
   //glDepthFunc(GL_LESS);
   //glDisable(GL_DEPTH_CLAMP);
-
-  constexpr int numLon = 8;
-  constexpr int numLat = 7;
 
   Viewport viewport;
   viewport.width = (texWidth / numLon);
@@ -205,7 +199,7 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 
     for (int iLon = 0; iLon < numLon; iLon++) {
       double u = (iLon / (double)numLon);
-      double lonRad = (Math::pi + u * Math::twoPi);
+      double lonRad = -(Math::pi + u * Math::twoPi);
       viewport.x = (iLon * viewport.width);
 
       EulerAnglesd eulerAngles(RotationOrder::ZXY, lonRad, latRad, 0);
@@ -216,7 +210,7 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 
       glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-      Vector3d color(random.getDouble(0.1, 1.0), random.getDouble(0.1, 1.0), random.getDouble(0.1, 1.0));
+      Vector3d color(random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0));
       drawFullscreenQuad((Vector3f)color);
 
       entity.draw(viewport, cam);
@@ -225,7 +219,9 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  return tex;
+  mdTex.tex.buildMipmaps();
+
+  return mdTex;
 }
 
 }

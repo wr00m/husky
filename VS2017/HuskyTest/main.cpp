@@ -351,7 +351,7 @@ int main()
     entities.emplace_back(std::make_unique<husky::Entity>("Boy", &defaultShaderBones, models.back().get()));
     entities.back()->modelInstance.mtxTransform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::translate(-entities.back()->modelInstance.model->bboxLocal.center());
     entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 1, 0, 0 }));
-    entities.back()->addComponent<husky::DebugDrawComponent>();
+    //entities.back()->addComponent<husky::DebugDrawComponent>();
   }
 
   {
@@ -376,8 +376,8 @@ int main()
   }
 
   {
-    husky::Texture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get());
-    texBillboard.downloadImageData().save("C:/tmp/hejhopp.png");
+    husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 1024, 1024, 16, 7);
+    texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
   }
 
   cam.lookAt({ 0, 0, 0 }, { 0, 0, 1 });

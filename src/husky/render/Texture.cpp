@@ -54,7 +54,7 @@ Texture::Texture()
 {
 }
 
-Texture::Texture(ImageFormat imageFormat, int w, int h, const void *data, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
+Texture::Texture(ImageFormat imageFormat, int w, int h, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps, const void *data)
   : handle(0)
   , wrap(wrap)
   , filter(filter)
@@ -117,7 +117,7 @@ Texture::Texture(ImageFormat imageFormat, int w, int h, const void *data, TexWra
 }
 
 Texture::Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps)
-  :Texture(image.format, image.width, image.height, image.data(), wrap, filter, mipmaps)
+  :Texture(image.format, image.width, image.height, wrap, filter, mipmaps, image.data())
 {
 }
 
@@ -193,6 +193,20 @@ void Texture::buildMipmaps() const
   }
 
   glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+MultidirTexture::MultidirTexture()
+  : tex()
+  , numLon()
+  , numLat()
+{
+}
+
+MultidirTexture::MultidirTexture(Texture &&tex, int numLon, int numLat)
+  : tex(tex)
+  , numLon(numLon)
+  , numLat(numLat)
+{
 }
 
 }

@@ -30,22 +30,31 @@ public:
   static const Texture& white1x1();
 
   Texture();
-  Texture(ImageFormat imageFormat, int w, int h, const void *data, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
+  Texture(ImageFormat imageFormat, int w, int h, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps, const void *data = nullptr);
   Texture(const Image &image, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
   Texture(const std::string &imageFilePath, TexWrap wrap, TexFilter filter, TexMipmaps mipmaps);
 
   bool valid() const;
   void uploadImageData(const Image &image) const;
   Image downloadImageData() const;
+  void buildMipmaps() const;
 
   unsigned int handle;
   std::string imageFilePath;
   TexWrap wrap;
   TexFilter filter;
   TexMipmaps mipmaps;
+};
 
-private:
-  void buildMipmaps() const;
+class HUSKY_DLL MultidirTexture
+{
+public:
+  MultidirTexture();
+  MultidirTexture(Texture &&tex, int numLon, int numLat);
+
+  Texture tex;
+  int numLon;
+  int numLat;
 };
 
 }
