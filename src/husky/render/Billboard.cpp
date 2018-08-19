@@ -35,7 +35,8 @@ uniform vec2 billboardSize = vec2(64, 64); // Pixels
 #else
 uniform vec2 billboardSize = vec2(1, 1); // World units
 #endif
-uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
+uniform vec2 numSubTextures = vec2(16, 7); // TODO: ivec2?
+uniform vec2 subTexIndex = vec2(0, 3); // TODO: vec2(0, 0)
 uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 in vec2 vsScale[1];
 in vec4 vsColor[1];
@@ -46,7 +47,9 @@ layout (triangle_strip, max_vertices = 4) out;
 
 void emitVertFinalize(const vec2 offset)
 {
-  gsTexCoord = (offset * 0.5 + 0.5) * texCoordScale;
+  gsTexCoord = vec2(0.5 + 0.5 * offset.x, 0.5 - 0.5 * offset.y); // [0,1]; Flip V
+  gsTexCoord += subTexIndex; // [0,numSubTextures]
+  gsTexCoord /= numSubTextures; // [0,1]
   gsColor = vsColor[0];
   EmitVertex();
 }

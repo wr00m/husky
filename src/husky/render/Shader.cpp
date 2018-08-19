@@ -85,7 +85,6 @@ in vec4 vertBoneWeights;
 uniform mat4 mtxModelView;
 uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
-uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
 in vec3 vertPosition;
 in vec3 vertNormal;
 in vec2 vertTexCoord;
@@ -109,7 +108,7 @@ void main() {
   varPosition = mtxModelView * vec4(vertPosition, 1.0);
   varNormal = normalize(mtxNormal * vertNormal);
 #endif
-  varTexCoord = vertTexCoord * texCoordScale;
+  varTexCoord = vec2(vertTexCoord.x, 1.0 - vertTexCoord.y); // Flip V
   varColor = vertColor;
   gl_Position = mtxProjection * varPosition;
 })";
