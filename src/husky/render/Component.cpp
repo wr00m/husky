@@ -92,7 +92,7 @@ void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, c
     // Draw ModelInstance bounds, etc.
     const ModelInstance &modelInstance = owner->modelInstance;
     const Model *model = modelInstance.model;
-    const Matrix44f instanceModelView(modelView * modelInstance.mtxTransform);
+    const Matrix44f instanceModelView(modelView * (Matrix44f)modelInstance.mtxTransform);
 
     Matrix44f boxModelView(instanceModelView * Matrix44f::translate(Vector3f(model->bboxLocal.center())) * Matrix44f::scale(Vector3f(model->bboxLocal.size())));
     boxRenderData.draw(lineShader, boxMaterial, viewport, view, boxModelView, projection);

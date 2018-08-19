@@ -493,7 +493,7 @@ void ModelInstance::animate(double timeDelta)
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
   if (model != nullptr) {
-    const Matrix44f instanceModelView(modelView * mtxTransform);
+    const Matrix44f instanceModelView(modelView * (Matrix44f)mtxTransform);
     model->draw(shader, viewport, view, instanceModelView, projection, animNodes);
   }
 }
