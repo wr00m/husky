@@ -29,16 +29,14 @@ void main()
 R"(//#version 400 core
 uniform mat4 mtxModelView;
 uniform mat4 mtxProjection;
-#if defined(BILLBOARD_FIXED_PX)
 uniform vec2 viewportSize = vec2(1280, 720); // Pixels
-uniform vec2 billboardSizePx = vec2(64, 64); // Pixels
+#if defined(BILLBOARD_FIXED_PX)
+uniform vec2 billboardSize = vec2(64, 64); // Pixels
 #else
-#if defined(BILLBOARD_VIEWPLANE_CYLINDRICAL) || defined(BILLBOARD_CYLINDRICAL)
-uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
-#endif
 uniform vec2 billboardSize = vec2(1, 1); // World units
 #endif
 uniform vec2 texCoordScale = vec2(1.0, -1.0); // TODO: This won't work with repeating textures
+uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 in vec2 vsScale[1];
 in vec4 vsColor[1];
 out vec2 gsTexCoord;
@@ -46,48 +44,97 @@ out vec4 gsColor;
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-void emitBillboardVert(const vec2 offset)
+void emitVertFinalize(const vec2 offset)
 {
-#if defined(BILLBOARD_VIEWPLANE_SPHERICAL)
-  gl_Position = gl_in[0].gl_Position;
-  gl_Position.xy += (offset * billboardSize * vsScale[0]);
-  gl_Position = (mtxProjection * gl_Position);
-#elif defined(BILLBOARD_VIEWPLANE_CYLINDRICAL)
-  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
-  gl_Position = gl_in[0].gl_Position;
-  gl_Position.x += (offset.x * billboardSize.x * vsScale[0].x);
-  gl_Position.xyz += (up * offset.y * billboardSize.y * vsScale[0].y);
-  gl_Position = (mtxProjection * gl_Position);
-#elif defined(BILLBOARD_SPHERICAL) || defined(BILLBOARD_CYLINDRICAL)
-  gl_Position = gl_in[0].gl_Position;
-  vec3 dir = gl_Position.xyz;
-#if defined(BILLBOARD_SPHERICAL)
-  vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
-  vec3 up = normalize(cross(right, dir));
-#elif defined(BILLBOARD_CYLINDRICAL)
-  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
-  vec3 right = normalize(cross(dir, up));
-#endif
-  gl_Position.xyz += (right * offset.x * billboardSize.x * vsScale[0].x);
-  gl_Position.xyz += (up    * offset.y * billboardSize.y * vsScale[0].y);
-  gl_Position = (mtxProjection * gl_Position);
-#elif defined(BILLBOARD_FIXED_PX)
-  vec2 billboardSizeNDC  = (billboardSizePx / viewportSize * vsScale[0]);
-  gl_Position            = (mtxProjection * gl_in[0].gl_Position);
-  gl_Position           /= gl_Position.w; // Perspective divide
-  gl_Position.xy        += (offset * billboardSizeNDC);
-#endif
   gsTexCoord = (offset * 0.5 + 0.5) * texCoordScale;
   gsColor = vsColor[0];
   EmitVertex();
 }
 
+void emitVertViewplaneSpherical(const vec2 offset)
+{
+  gl_Position = gl_in[0].gl_Position;
+  gl_Position.xy += (offset * billboardSize * vsScale[0]);
+  gl_Position = (mtxProjection * gl_Position);
+  emitVertFinalize(offset);
+}
+
+void emitVertViewplaneCylindrical(const vec2 offset, const vec3 up)
+{
+  gl_Position = gl_in[0].gl_Position;
+  gl_Position.x += (offset.x * billboardSize.x * vsScale[0].x);
+  gl_Position.xyz += (up * offset.y * billboardSize.y * vsScale[0].y);
+  gl_Position = (mtxProjection * gl_Position);
+  emitVertFinalize(offset);
+}
+
+void emitVert(const vec2 offset, const vec3 right, const vec3 up)
+{
+  gl_Position = gl_in[0].gl_Position;
+  gl_Position.xyz += (right * offset.x * billboardSize.x * vsScale[0].x);
+  gl_Position.xyz += (up    * offset.y * billboardSize.y * vsScale[0].y);
+  gl_Position = (mtxProjection * gl_Position);
+  emitVertFinalize(offset);
+}
+
+void emitVertFixedSize(const vec2 offset, const vec2 billboardSizeNDC)
+{
+  gl_Position = (mtxProjection * gl_in[0].gl_Position);
+  gl_Position /= gl_Position.w; // Perspective divide
+  gl_Position.xy += (offset * billboardSizeNDC);
+  emitVertFinalize(offset);
+}
+
 void main()
 {
-  emitBillboardVert(vec2(-1, -1)); // LL
-  emitBillboardVert(vec2( 1, -1)); // LR
-  emitBillboardVert(vec2(-1,  1)); // UL
-  emitBillboardVert(vec2( 1,  1)); // UR
+  const vec2 ll = vec2(-1, -1);
+  const vec2 lr = vec2( 1, -1);
+  const vec2 ul = vec2(-1,  1);
+  const vec2 ur = vec2( 1,  1);
+
+#if defined(BILLBOARD_VIEWPLANE_SPHERICAL)
+  emitVertViewplaneSpherical(ll);
+  emitVertViewplaneSpherical(lr);
+  emitVertViewplaneSpherical(ul);
+  emitVertViewplaneSpherical(ur);
+#endif
+
+#if defined(BILLBOARD_VIEWPLANE_CYLINDRICAL)
+  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+  emitVertViewplaneCylindrical(ll, up);
+  emitVertViewplaneCylindrical(lr, up);
+  emitVertViewplaneCylindrical(ul, up);
+  emitVertViewplaneCylindrical(ur, up);
+#endif
+
+#if defined(BILLBOARD_SPHERICAL)
+  vec3 dir = gl_in[0].gl_Position.xyz;
+  vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
+  vec3 up = normalize(cross(right, dir));
+  emitVert(ll, right, up);
+  emitVert(lr, right, up);
+  emitVert(ul, right, up);
+  emitVert(ur, right, up);
+#endif
+
+#if defined(BILLBOARD_CYLINDRICAL)
+  vec3 dir = gl_in[0].gl_Position.xyz;
+  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+  vec3 right = normalize(cross(dir, up));
+  emitVert(ll, right, up);
+  emitVert(lr, right, up);
+  emitVert(ul, right, up);
+  emitVert(ur, right, up);
+#endif
+
+#if defined(BILLBOARD_FIXED_PX)
+  vec2 billboardSizeNDC  = (billboardSize / viewportSize * vsScale[0]); // Pixels to normalized device coordinates
+  emitVertFixedSize(ll, billboardSizeNDC);
+  emitVertFixedSize(lr, billboardSizeNDC);
+  emitVertFixedSize(ul, billboardSizeNDC);
+  emitVertFixedSize(ur, billboardSizeNDC);
+#endif
+
   EndPrimitive();
 })";
 

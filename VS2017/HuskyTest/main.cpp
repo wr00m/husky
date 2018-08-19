@@ -355,7 +355,9 @@ int main()
   }
 
   {
-    const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
+    //const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
+    const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 1024, 1024, 16, 7);
+    //texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
 
     husky::Random random;
 
@@ -368,16 +370,11 @@ int main()
       }
     }
 
-    husky::Material mtl({ 1, 0.5, 0 }, texTree);
+    husky::Material mtl({ 1, 0.5, 0 }, texBillboard.tex);
     husky::Model mdl(std::move(billboardPointsMesh), mtl);
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Billboards", &billboardShader, models.back().get()));
     //entities.back()->setTransform(husky::Matrix44d::identity());
-  }
-
-  {
-    husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 1024, 1024, 16, 7);
-    texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
   }
 
   cam.lookAt({ 0, 0, 0 }, { 0, 0, 1 });
