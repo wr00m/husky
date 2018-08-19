@@ -85,19 +85,27 @@ void DebugDrawComponent::draw(const Viewport &viewport, const Matrix44f &view, c
   static const Shader defaultShader = Shader::getDefaultShader(false, false);
   static const Shader lineShader = Shader::getLineShader();
 
+  // Draw Entity axes
   axesRenderData.draw(defaultShader, axesMaterial, viewport, view, modelView, projection);
 
-  Matrix44f boxModelView(modelView * Matrix44f::translate(Vector3f(owner->bboxLocal.center())) * Matrix44f::scale(Vector3f(owner->bboxLocal.size())));
-  boxRenderData.draw(lineShader, boxMaterial, viewport, view, boxModelView, projection);
-  
-  //Matrix44f sphereModelView(modelView * Matrix44f::translate(Vector3f(owner->bsphereLocal.center)) * Matrix44f::scale(Vector3f((float)owner->bsphereLocal.radius)));
-  //sphereRenderData.draw(lineShader, sphereMaterial, viewport, view, sphereModelView, projection);
+  {
+    // Draw ModelInstance bounds, etc.
+    const ModelInstance &modelInstance = owner->modelInstance;
+    const Model *model = modelInstance.model;
+    const Matrix44f instanceModelView(modelView * modelInstance.mtxTransform);
 
-  for (const auto &pair : owner->modelInstance.animNodes) {
-    const AnimatedNode &animNode = pair.second;
-    const Material &mtl = (animNode.animated ? boneMaterialAnimated : boneMaterial);
-    Matrix44f boneModelView(modelView * (Matrix44f)animNode.mtxRelToModel);
-    boneRenderData.draw(defaultShader, mtl, viewport, view, boneModelView, projection);
+    Matrix44f boxModelView(instanceModelView * Matrix44f::translate(Vector3f(model->bboxLocal.center())) * Matrix44f::scale(Vector3f(model->bboxLocal.size())));
+    boxRenderData.draw(lineShader, boxMaterial, viewport, view, boxModelView, projection);
+
+    //Matrix44f sphereModelView(instanceModelView * Matrix44f::translate(Vector3f(model->bsphereLocal.center)) * Matrix44f::scale(Vector3f((float)model->bsphereLocal.radius)));
+    //sphereRenderData.draw(lineShader, sphereMaterial, viewport, view, sphereModelView, projection);
+
+    for (const auto &pair : modelInstance.animNodes) {
+      const AnimatedNode &animNode = pair.second;
+      const Material &mtl = (animNode.animated ? boneMaterialAnimated : boneMaterial);
+      Matrix44f boneModelView(instanceModelView * (Matrix44f)animNode.mtxRelToModel);
+      boneRenderData.draw(defaultShader, mtl, viewport, view, boneModelView, projection);
+    }
   }
 }
 

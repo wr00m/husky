@@ -470,6 +470,7 @@ ModelInstance::ModelInstance(const Model *model)
   , animationIndex(-1)
   , animationTime(0)
   , animNodes()
+  , mtxTransform(Matrix44d::identity())
 {
   assert(model != nullptr);
   animate(0); // Initialize node transforms
@@ -492,7 +493,8 @@ void ModelInstance::animate(double timeDelta)
 void ModelInstance::draw(const Shader &shader, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection) const
 {
   if (model != nullptr) {
-    model->draw(shader, viewport, view, modelView, projection, animNodes);
+    const Matrix44f instanceModelView(modelView * mtxTransform);
+    model->draw(shader, viewport, view, instanceModelView, projection, animNodes);
   }
 }
 

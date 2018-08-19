@@ -349,7 +349,9 @@ int main()
     husky::Model mdl = husky::Model::load("C:/Users/chris/Stash/Blender/BoynBot/Boy/Boy_FBX2013.fbx");
     models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
     entities.emplace_back(std::make_unique<husky::Entity>("Boy", &defaultShaderBones, models.back().get()));
-    entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::rotate(husky::Math::pi2, { 1, 0, 0 }), { 0, 0, -entities.back()->bsphereLocal.radius * 0.5 }));
+    entities.back()->modelInstance.mtxTransform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::translate(-entities.back()->modelInstance.model->bboxLocal.center());
+    entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 1, 0, 0 }));
+    entities.back()->addComponent<husky::DebugDrawComponent>();
   }
 
   {

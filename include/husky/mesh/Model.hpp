@@ -83,6 +83,7 @@ public:
   int animationIndex;
   double animationTime;
   std::map<std::string, AnimatedNode> animNodes;
+  Matrix44d mtxTransform;
 };
 
 }
