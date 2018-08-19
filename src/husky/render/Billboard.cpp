@@ -184,7 +184,7 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
   //glDisable(GL_DEPTH_CLAMP);
 
   constexpr int numLon = 8;
-  constexpr int numLat = 8;
+  constexpr int numLat = 7;
 
   Viewport viewport;
   viewport.width = (texWidth / numLon);
@@ -200,17 +200,18 @@ Texture Billboard::getMultidirectionalBillboardTexture(const Entity &entity)
 
   for (int iLat = 0; iLat < numLat; iLat++) {
     double v = (iLat / (double)(numLat - 1));
-    double latRad = (v * Math::pi);
+    double latRad = (-v * Math::pi);
     viewport.y = (iLat * viewport.height);
 
     for (int iLon = 0; iLon < numLon; iLon++) {
       double u = (iLon / (double)numLon);
-      double lonRad = (u * Math::twoPi);
+      double lonRad = (Math::pi + u * Math::twoPi);
       viewport.x = (iLon * viewport.width);
 
       EulerAnglesd eulerAngles(RotationOrder::ZXY, lonRad, latRad, 0);
-      cam.rot = -eulerAngles.toQuaternion();
-      cam.pos = cam.rot * Vector3d(0, 0, entity.bsphereLocal.radius * 2);
+      cam.rot = eulerAngles.toQuaternion();
+      cam.pos = entity.getTransform().col[3].xyz; // Center view on Entity
+      cam.pos -= (cam.forward() * entity.modelInstance.model->bsphereLocal.radius);
       cam.buildViewMatrix();
 
       glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
