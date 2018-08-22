@@ -46,6 +46,7 @@ void Vector3<T>::set(T x, T y, T z)
 template<typename T>
 void Vector3<T>::normalize()
 {
+  // TODO: Can we optimize this by checking if length^2 is (approx.) equal to 1 before sqrt?
   if (T len = length()) {
     *this /= len;
   }
@@ -76,9 +77,23 @@ T Vector3<T>::angleAbs(const Vector3<T> &target) const
 {
   Vector3<T> a = this->normalized();
   Vector3<T> b = target.normalized();
-  T angle = (T)std::acos(a.dot(b)); // [0,pi]
-  //Vector3<T> axis = a.cross(b);
-  return angle;
+  T cosTheta = a.dot(b);
+  T theta = (T)std::acos(cosTheta); // [0,pi]
+  return theta;
+}
+
+template<typename T>
+T Vector3<T>::angleSigned(const Vector3<T> &target, const Vector3<T> &axis) const
+{
+  Vector3<T> a = this->normalized();
+  Vector3<T> b = target.normalized();
+  T cosTheta = a.dot(b);
+  T theta = (T)std::acos(cosTheta); // [0,pi]
+  T sinTheta = axis.cross(a).dot(b);
+  if (sinTheta < 0) {
+    theta = -theta;
+  }
+  return theta;
 }
 
 template<typename T>

@@ -130,15 +130,20 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   double perspInfRevZInvDiff = matDiff(perspInfRevZInv1, glm::make_mat4(perspInfRevZInv2.m));
   assert(perspInfRevZInvDiff < 1e-14);
 
-  double vec3Angle = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
-  double vec3AngleGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));
-  double vec3AngleDiff = std::abs(vec3Angle - vec3AngleGlm);
-  assert(vec3AngleDiff < 1e-9);
+  double vec3AngleAbs = husky::Vector3d(1, 0, 0).angleAbs({ 0, 1, 0 });
+  double vec3AngleAbsGlm = glm::angle(glm::dvec3(1, 0, 0), glm::dvec3(0, 1, 0));
+  double vec3AngleAbsDiff = std::abs(vec3AngleAbs - vec3AngleAbsGlm);
+  assert(vec3AngleAbsDiff < 1e-9);
 
-  double vec2Angle = husky::Vector2d(1, 0).angleSigned({ 0, -1 });
-  double vec2AngleGlm = glm::orientedAngle(glm::dvec2(1, 0), glm::dvec2(0, -1));
-  double vec2AngleDiff = std::abs(vec2Angle - vec2AngleGlm);
-  assert(vec2AngleDiff < 1e-9);
+  double vec3AngleSigned = husky::Vector3d(3, 2, -1).angleSigned({ 0, -7, 0 }, { 0, 0, 1 });
+  double vec3AngleSignedGlm = glm::orientedAngle(glm::normalize(glm::dvec3(3, 2, -1)), glm::normalize(glm::dvec3(0, -7, 0)), glm::dvec3(0, 0, 1));
+  double vec3AngleSignedDiff = std::abs(vec3AngleSigned - vec3AngleSignedGlm);
+  assert(vec3AngleSignedDiff < 1e-9);
+
+  double vec2AngleSigned = husky::Vector2d(1, 0).angleSigned({ 0, -1 });
+  double vec2AngleSignedGlm = glm::orientedAngle(glm::dvec2(1, 0), glm::dvec2(0, -1));
+  double vec2AngleSignedDiff = std::abs(vec2AngleSigned - vec2AngleSignedGlm);
+  assert(vec2AngleSignedDiff < 1e-9);
 
   // TODO: Test Quaternion::fromRotationMatrix()
 
