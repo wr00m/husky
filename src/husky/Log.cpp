@@ -1,5 +1,3 @@
-#pragma once
-
 #include <husky/Log.hpp>
 #include <cstdio>
 #include <stdio.h>

@@ -1,9 +1,9 @@
-#pragma once
-
 #include <husky/render/Shader.hpp>
 #include <husky/Log.hpp>
 #include <glad/glad.h>
 #include <vector>
+
+// TODO: Use in/out interface blocks: https://www.opengl.org/discussion_boards/showthread.php/185141-Is-there-a-way-that-Geometryshaders-in-and-out-variables-have-the-same-name
 
 namespace husky {
 

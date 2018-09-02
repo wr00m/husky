@@ -21,23 +21,23 @@ void main()
 {
   vsColor = vertColor;
   vsScale = vertTexCoord;
-  //mat4 MV = mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(mtxModelView[3].xyz, 1));
-  gl_Position = mtxModelView * vec4(vertPosition, 1.0);
+  gl_Position = (mtxModelView * vec4(vertPosition, 1.0));
 })";
 
   static const char *billboardGeomSrc =
 R"(//#version 400 core
+#define M_PI 3.14159265358979323846
 uniform mat4 mtxModelView;
+//uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
+uniform vec3 cylindricalUpDir = vec3(0, 0, 1); // Model or world coordinates?
+uniform vec2 numSubTextures = vec2(32, 31); // Integer
 uniform vec2 viewportSize = vec2(1280, 720); // Pixels
 #if defined(BILLBOARD_FIXED_PX)
 uniform vec2 billboardSize = vec2(64, 64); // Pixels
 #else
 uniform vec2 billboardSize = vec2(1, 1); // World units
 #endif
-uniform vec2 numSubTextures = vec2(16, 7); // TODO: ivec2?
-uniform vec2 subTexIndex = vec2(0, 3); // TODO: vec2(0, 0)
-uniform vec3 cylindricalUpDir = vec3(0, 0, 1);
 in vec2 vsScale[1];
 in vec4 vsColor[1];
 out vec2 gsTexCoord;
@@ -45,11 +45,27 @@ out vec4 gsColor;
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
+float angleSigned(const vec3 a, const vec3 b, const vec3 axis)
+{
+  float cosTheta = dot(a, b);
+  float theta = acos(cosTheta); // [0,pi]
+  float sinTheta = dot(cross(axis, a), b);
+  if (sinTheta < 0) {
+    theta = -theta;
+  }
+  return theta;
+}
+
 void emitVertFinalize(const vec2 offset)
 {
-  gsTexCoord = vec2(0.5 + 0.5 * offset.x, 0.5 - 0.5 * offset.y); // [0,1]; Flip V
-  gsTexCoord += subTexIndex; // [0,numSubTextures]
-  gsTexCoord /= numSubTextures; // [0,1]
+  //emitVertFinalize(offset, vec4(0, 0, 1, 1));
+}
+
+void emitVertFinalize(const vec2 offset, const vec4 subTexBounds)
+{
+  gsTexCoord = 0.5 + 0.5 * offset; // Subtexture UV; [0,1]
+  gsTexCoord = mix(subTexBounds.xy, subTexBounds.zw, gsTexCoord); // Texture UV; [0,1]
+  gsTexCoord.y = (1.0 - gsTexCoord.y); // Flip V
   gsColor = vsColor[0];
   EmitVertex();
 }
@@ -71,13 +87,13 @@ void emitVertViewplaneCylindrical(const vec2 offset, const vec3 up)
   emitVertFinalize(offset);
 }
 
-void emitVert(const vec2 offset, const vec3 right, const vec3 up)
+void emitVert(const vec2 offset, const vec3 right, const vec3 up, const vec4 subTexBounds)
 {
   gl_Position = gl_in[0].gl_Position;
   gl_Position.xyz += (right * offset.x * billboardSize.x * vsScale[0].x);
   gl_Position.xyz += (up    * offset.y * billboardSize.y * vsScale[0].y);
   gl_Position = (mtxProjection * gl_Position);
-  emitVertFinalize(offset);
+  emitVertFinalize(offset, subTexBounds);
 }
 
 void emitVertFixedSize(const vec2 offset, const vec2 billboardSizeNDC)
@@ -95,6 +111,8 @@ void main()
   const vec2 ul = vec2(-1,  1);
   const vec2 ur = vec2( 1,  1);
 
+  vec3 cylindricalUpDirVS = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz; // TODO: mtxNormal?
+
 #if defined(BILLBOARD_VIEWPLANE_SPHERICAL)
   emitVertViewplaneSpherical(ll);
   emitVertViewplaneSpherical(lr);
@@ -103,7 +121,7 @@ void main()
 #endif
 
 #if defined(BILLBOARD_VIEWPLANE_CYLINDRICAL)
-  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+  vec3 up = cylindricalUpDirVS;
   emitVertViewplaneCylindrical(ll, up);
   emitVertViewplaneCylindrical(lr, up);
   emitVertViewplaneCylindrical(ul, up);
@@ -114,15 +132,21 @@ void main()
   vec3 dir = gl_in[0].gl_Position.xyz;
   vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
   vec3 up = normalize(cross(right, dir));
-  emitVert(ll, right, up);
-  emitVert(lr, right, up);
-  emitVert(ul, right, up);
-  emitVert(ur, right, up);
+  float angle = angleSigned(up, cylindricalUpDirVS, right); // [-pi,pi]
+  float nn = mod(abs(angle / M_PI) + 0.5, 1); // [0,1]
+  vec2 subTexIndex = vec2(0, nn); // [0,1]
+  subTexIndex = (subTexIndex * numSubTextures); // [0,numSubTextures]
+  vec4 subTexBounds = floor(subTexIndex.xy).xyxy + vec4(0, 0, 1, 1); // Integer; [0,numSubTextures]
+  subTexBounds /= numSubTextures.xyxy; // [0,1]
+  emitVert(ll, right, up, subTexBounds);
+  emitVert(lr, right, up, subTexBounds);
+  emitVert(ul, right, up, subTexBounds);
+  emitVert(ur, right, up, subTexBounds);
 #endif
 
 #if defined(BILLBOARD_CYLINDRICAL)
   vec3 dir = gl_in[0].gl_Position.xyz;
-  vec3 up = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz;
+  vec3 up = cylindricalUpDirVS;
   vec3 right = normalize(cross(dir, up));
   emitVert(ll, right, up);
   emitVert(lr, right, up);
@@ -260,8 +284,8 @@ MultidirTexture Billboard::getMultidirectionalBillboardTexture(const Entity &ent
 
       glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 
-      Vector3d color(random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0));
-      drawFullscreenQuad((Vector3f)color);
+      //Vector3d color(random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0), random.getDouble(0.8, 1.0));
+      //drawFullscreenQuad((Vector3f)color);
 
       entity.draw(viewport, cam);
     }

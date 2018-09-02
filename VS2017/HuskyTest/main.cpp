@@ -299,7 +299,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader billboardShader = husky::Billboard::getBillboardShader(husky::BillboardMode::CYLINDRICAL);
+  static const husky::Shader billboardShader = husky::Billboard::getBillboardShader(husky::BillboardMode::SPHERICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
   image.setPixel(0, 0, husky::Vector4b(255, 255, 255, 255));
@@ -356,8 +356,8 @@ int main()
 
   {
     //const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
-    const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 1024, 1024, 16, 7);
-    //texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
+    const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 2048, 2048, 32, 31);
+    texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
 
     husky::Random random;
 

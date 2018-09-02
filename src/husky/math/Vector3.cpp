@@ -91,7 +91,7 @@ T Vector3<T>::angleSigned(const Vector3<T> &target, const Vector3<T> &axis) cons
   T theta = (T)std::acos(cosTheta); // [0,pi]
   T sinTheta = axis.cross(a).dot(b);
   if (sinTheta < 0) {
-    theta = -theta;
+    theta = -theta; // [-pi,pi]
   }
   return theta;
 }
