@@ -63,9 +63,6 @@
     <ClCompile Include="..\..\src\husky\util\StringUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\husky\math\Frustum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -112,6 +109,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\husky\render\Billboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\husky\planet\Planet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\husky\geo\CoordSys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -173,9 +176,6 @@
     <ClInclude Include="..\..\include\husky\util\StringUtil.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\husky\math\Frustum.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -219,6 +219,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\husky\render\Billboard.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\husky\planet\Planet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\husky\geo\CoordSys.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

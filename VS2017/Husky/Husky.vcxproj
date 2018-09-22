@@ -105,14 +105,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\include</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,19 +144,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;GLAD_GLAPI_EXPORT;GLAD_GLAPI_EXPORT_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;%HUSKY_CONTRIB_ROOT%\Assimp\include;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\lib;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\glad\glad.c" />
+    <ClCompile Include="..\..\src\husky\geo\CoordSys.cpp" />
     <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\Log.cpp" />
     <ClCompile Include="..\..\src\husky\math\Box.cpp" />
@@ -177,7 +178,7 @@
     <ClCompile Include="..\..\src\husky\mesh\Mesh.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Transform.cpp" />
-    <ClCompile Include="..\..\src\husky\planet\PlanetTerrain.cpp" />
+    <ClCompile Include="..\..\src\husky\planet\Planet.cpp" />
     <ClCompile Include="..\..\src\husky\render\Billboard.cpp" />
     <ClCompile Include="..\..\src\Husky\Render\Camera.cpp" />
     <ClCompile Include="..\..\src\husky\render\Component.cpp" />
@@ -193,6 +194,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\glad\glad.h" />
     <ClInclude Include="..\..\include\husky\Common.hpp" />
+    <ClInclude Include="..\..\include\husky\geo\CoordSys.hpp" />
     <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\Log.hpp" />
     <ClInclude Include="..\..\include\husky\math\Box.hpp" />
@@ -214,7 +216,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Mesh.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Transform.hpp" />
-    <ClInclude Include="..\..\include\husky\planet\PlanetTerrain.hpp" />
+    <ClInclude Include="..\..\include\husky\planet\Planet.hpp" />
     <ClInclude Include="..\..\include\husky\render\Billboard.hpp" />
     <ClInclude Include="..\..\include\Husky\Render\Camera.hpp" />
     <ClInclude Include="..\..\include\husky\render\Component.hpp" />

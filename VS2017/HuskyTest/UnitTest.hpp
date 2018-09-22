@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <husky/Log.hpp>
+#include <husky/geo/CoordSys.hpp>
 #include <husky/math/Math.hpp>
 #include <husky/math/EulerAngles.hpp>
 #include <husky/util/StringUtil.hpp>
@@ -196,4 +197,28 @@ static void runUnitTests() // TODO: Remove GLM; use explicit expected matrices
   assert(husky::StringUtil::endsWith("abcd", "bcd"));
   assert(husky::StringUtil::endsWith("bcd", "bcd"));
   assert(husky::StringUtil::endsWith("bcd", "abcd") == false);
+
+  husky::CoordSys csUtm33N(32633);
+  husky::CoordSys csWgs(4326);
+  husky::CoordSys csWgsWkt(
+R"(GEOGCS["WGS 84",
+    DATUM["WGS_1984",
+        SPHEROID["WGS 84",6378137,298.257223563,
+            AUTHORITY["EPSG","7030"]],
+        AUTHORITY["EPSG","6326"]],
+    PRIMEM["Greenwich",0,
+        AUTHORITY["EPSG","8901"]],
+    UNIT["degree",0.01745329251994328,
+        AUTHORITY["EPSG","9122"]],
+    AUTHORITY["EPSG","4326"]])");
+
+  assert(csWgs.sameAs(csWgsWkt));
+
+  const husky::Vector3d pt1(15.0, 55.0, 0.0);
+  husky::Vector3d pt2 = pt1;
+  husky::CoordTransformation ct1(csWgs, csUtm33N);
+  husky::CoordTransformation ct2(csUtm33N, csWgs);
+  assert(ct1.convert(pt2));
+  assert(ct2.convert(pt2));
+  assert((pt1 - pt2).length2() < 1e-9);
 }
