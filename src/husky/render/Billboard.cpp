@@ -30,8 +30,11 @@ R"(//#version 400 core
 uniform mat4 mtxModelView;
 //uniform mat3 mtxNormal;
 uniform mat4 mtxProjection;
-uniform vec3 cylindricalUpDir = vec3(0, 0, 1); // Model or world coordinates?
-uniform vec2 numSubTextures = vec2(32, 31); // Integer
+uniform mat3 mtxLocalOrientation // mtxNormal? Model or world coordinates?
+  = mat3(1, 0, 0,  // Right
+         0, 1, 0,  // Forward
+         0, 0, 1); // Up
+uniform vec2 numSubTextures = vec2(64, 63); // Integer
 uniform vec2 viewportSize = vec2(1280, 720); // Pixels
 #if defined(BILLBOARD_FIXED_PX)
 uniform vec2 billboardSize = vec2(64, 64); // Pixels
@@ -55,6 +58,13 @@ float angleSigned(const vec3 a, const vec3 b, const vec3 axis)
   }
   return theta;
 }
+
+//float angleAbs(const vec3 a, const vec3 b)
+//{
+//  float cosTheta = dot(a, b);
+//  float theta = acos(cosTheta); // [0,pi]
+//  return theta;
+//}
 
 void emitVertFinalize(const vec2 offset)
 {
@@ -111,7 +121,10 @@ void main()
   const vec2 ul = vec2(-1,  1);
   const vec2 ur = vec2( 1,  1);
 
-  vec3 cylindricalUpDirVS = (mtxModelView * vec4(cylindricalUpDir, 0.0)).xyz; // TODO: mtxNormal?
+  mat3 mtxLocalOrientationVS = mat3(mtxModelView) * mtxLocalOrientation;
+  vec3 localRightVS = mtxLocalOrientationVS[0];
+  //vec3 localForwardVS = mtxLocalOrientationVS[1];
+  vec3 localUpVS = mtxLocalOrientationVS[2];
 
 #if defined(BILLBOARD_VIEWPLANE_SPHERICAL)
   emitVertViewplaneSpherical(ll);
@@ -121,7 +134,7 @@ void main()
 #endif
 
 #if defined(BILLBOARD_VIEWPLANE_CYLINDRICAL)
-  vec3 up = cylindricalUpDirVS;
+  vec3 up = localUpVS;
   emitVertViewplaneCylindrical(ll, up);
   emitVertViewplaneCylindrical(lr, up);
   emitVertViewplaneCylindrical(ul, up);
@@ -132,10 +145,15 @@ void main()
   vec3 dir = gl_in[0].gl_Position.xyz;
   vec3 right = normalize(cross(dir, vec3(0, 1, 0)));
   vec3 up = normalize(cross(right, dir));
-  float angle = angleSigned(up, cylindricalUpDirVS, right); // [-pi,pi]
-  float nn = mod(abs(angle / M_PI) + 0.5, 1); // [0,1]
-  vec2 subTexIndex = vec2(0, nn); // [0,1]
-  subTexIndex = (subTexIndex * numSubTextures); // [0,numSubTextures]
+
+  // Note: This yaw/pitch calculation is a bit off, but will do for now...
+  float yaw = angleSigned(right, localRightVS, vec3(0, 1, 0)); // [-pi,pi]
+  float nYaw = 0.5 - yaw / (M_PI * 2); // [0,1]
+  float pitch = angleSigned(up, localUpVS, right); // [-pi,pi]
+  float nPitch = -0.25 + pitch / (M_PI * 2); // [0,1]
+
+  vec2 subTexIndex = vec2(nYaw, nPitch); // [0,1]
+  subTexIndex *= numSubTextures; // [0,numSubTextures]
   vec4 subTexBounds = floor(subTexIndex.xy).xyxy + vec4(0, 0, 1, 1); // Integer; [0,numSubTextures]
   subTexBounds /= numSubTextures.xyxy; // [0,1]
   emitVert(ll, right, up, subTexBounds);
@@ -146,7 +164,7 @@ void main()
 
 #if defined(BILLBOARD_CYLINDRICAL)
   vec3 dir = gl_in[0].gl_Position.xyz;
-  vec3 up = cylindricalUpDirVS;
+  vec3 up = localUpVS;
   vec3 right = normalize(cross(dir, up));
   emitVert(ll, right, up);
   emitVert(lr, right, up);
@@ -268,7 +286,7 @@ MultidirTexture Billboard::getMultidirectionalBillboardTexture(const Entity &ent
 
   for (int iLat = 0; iLat < numLat; iLat++) {
     double v = (iLat / (double)(numLat - 1));
-    double latRad = (-v * Math::pi);
+    double latRad = (-v * Math::twoPi);
     viewport.y = (iLat * viewport.height);
 
     for (int iLon = 0; iLon < numLon; iLon++) {

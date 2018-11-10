@@ -356,8 +356,8 @@ int main()
 
   {
     //const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
-    const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 2048, 2048, 32, 31);
-    texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
+    const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 8192, 8192, 64, 63);
+    //texBillboard.tex.downloadImageData().save("C:/tmp/hejhopp.png");
 
     husky::Random random;
 

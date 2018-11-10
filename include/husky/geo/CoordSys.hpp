@@ -10,11 +10,19 @@ namespace husky {
 enum class HeightRef
 {
   UNDEFINED,
+  CENTER,
   ELLIPSOID_WGS84,
   GEOID_EGM96,
   GEOID_EGM2008,
   GROUND,
 };
+
+//enum class CoordSysType
+//{
+//  GEOCENTRIC,
+//  SPHERICAL,
+//  LOCAL,
+//};
 
 class CoordSysImpl;
 
@@ -25,6 +33,7 @@ public:
   //static CoordSys utm(int zone, int hemisphere, HeightRef heightRef);
   //static CoordSys geocentric();
   //static CoordSys eastNorthUp(const Vector3d &geocentricPt);
+  //static CoordSys northEastDown(const Vector3d &geocentricPt);
 
   CoordSys(int epsg);
   CoordSys(const std::string &wkt);
