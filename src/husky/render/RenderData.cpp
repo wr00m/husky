@@ -7,25 +7,81 @@
 
 namespace husky {
 
+int VertexAttribute::getBytesPerElement(VertexAttributeDataType dataType)
+{
+  switch (dataType)
+  {
+  case VertexAttributeDataType::FLOAT32 : return 4;
+  case VertexAttributeDataType::FLOAT64 : return 8;
+  case VertexAttributeDataType::INT8    : return 1;
+  case VertexAttributeDataType::INT16   : return 2;
+  case VertexAttributeDataType::INT32   : return 4;
+  case VertexAttributeDataType::UINT8   : return 1;
+  case VertexAttributeDataType::UINT16  : return 2;
+  case VertexAttributeDataType::UINT32  : return 4;
+  default: return 0;
+  }
+}
+
+const VertexAttribute VertexAttribute::Empty = VertexAttribute("", VertexAttributeDataType::UNDEFINED, 0, 0);
+
+VertexAttribute::VertexAttribute(const std::string &name, VertexAttributeDataType dataType, int elementCount, int byteOffset)
+  : name(name)
+  , dataType(dataType)
+  , elementCount(elementCount)
+  , byteCount(getBytesPerElement(dataType) * elementCount)
+  , byteOffset(byteOffset)
+{
+}
+
+VertexDescription::VertexDescription()
+  : byteCount(0)
+  , attrs()
+{
+}
+
+int VertexDescription::addAttr(const std::string &name, VertexAttributeDataType dataType, int elementCount)
+{
+  int i = (int)attrs.size();
+  attrs.emplace_back(name, dataType, elementCount, byteCount);
+  byteCount += attrs.back().byteCount;
+  return i;
+}
+
+int VertexDescription::getAttrIndex(const std::string &name) const
+{
+  for (int i = 0; i < attrs.size(); i++) {
+    if (attrs[i].name == name) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+const VertexAttribute& VertexDescription::getAttr(const std::string &attrName) const
+{
+  int i = getAttrIndex(attrName);
+  return getAttr(i);
+}
+
+const VertexAttribute& VertexDescription::getAttr(int i) const
+{
+  return (i >= 0 && i < attrs.size()) ? attrs[i] : VertexAttribute::Empty;
+}
+
 RenderData::RenderData()
-  : RenderData(Mode::POINTS)
+  : RenderData({}, PrimitiveType::UNDEFINED, 0)
 {
 }
 
-RenderData::RenderData(Mode mode)
-  : mode(mode)
+RenderData::RenderData(const VertexDescription &vertDesc, PrimitiveType primitiveType, int vertCount)
+  : vertDesc(vertDesc)
+  , primitiveType(primitiveType)
   , anchor(0, 0, 0)
-  , vertCount(0)
-  , vertByteCount(0)
+  , vertCount(vertCount)
   , bytes{}
-  , attrByteOffsets((int)Attribute::BONE_WEIGHTS + 1, -1)
 {
-}
-
-void RenderData::init(int vertCount)
-{
-  this->vertCount = vertCount;
-  bytes.resize(vertCount * vertByteCount);
+  bytes.resize(vertCount * vertDesc.getByteCount());
 }
 
 void RenderData::addPoint(int v0)
@@ -46,16 +102,9 @@ void RenderData::addTriangle(int v0, int v1, int v2)
   indices.emplace_back(v2);
 }
 
-void RenderData::addAttr(Attribute attr, int attrByteCount)
+bool RenderData::getAttribPointer(const std::string &attrName, const void *&ptr) const
 {
-  attrByteOffsets[(int)attr] = vertByteCount;
-  vertByteCount += attrByteCount;
-  //return attrByteOffsets[(int)attr];
-}
-
-bool RenderData::getAttribPointer(Attribute attr, const void *&ptr) const
-{
-  int offset = attrByteOffsets[(int)attr];
+  int offset = vertDesc.getAttr(attrName).byteOffset;
   if (offset >= 0) {
     ptr = ((const std::uint8_t*)nullptr) + offset;
     return true;
@@ -195,44 +244,45 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   glBindVertexArray(vao);
 
   const void *attrPtr = nullptr;
+  const int stride = vertDesc.getByteCount();
 
-  if (shader.getAttributeLocation("vertPosition", varLocation) && getAttribPointer(RenderData::Attribute::POSITION, attrPtr)) {
+  if (shader.getAttributeLocation("vertPosition", varLocation) && getAttribPointer(VertexAttribute::POSITION, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, vertByteCount, attrPtr);
+    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, stride, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertNormal", varLocation) && getAttribPointer(RenderData::Attribute::NORMAL, attrPtr)) {
+  if (shader.getAttributeLocation("vertNormal", varLocation) && getAttribPointer(VertexAttribute::NORMAL, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, vertByteCount, attrPtr);
+    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, stride, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertTexCoord", varLocation) && getAttribPointer(RenderData::Attribute::TEXCOORD, attrPtr)) {
+  if (shader.getAttributeLocation("vertTexCoord", varLocation) && getAttribPointer(VertexAttribute::TEXCOORD, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 2, GL_FLOAT, GL_FALSE, vertByteCount, attrPtr);
+    glVertexAttribPointer(varLocation, 2, GL_FLOAT, GL_FALSE, stride, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertColor", varLocation) && getAttribPointer(RenderData::Attribute::COLOR, attrPtr)) {
+  if (shader.getAttributeLocation("vertColor", varLocation) && getAttribPointer(VertexAttribute::COLOR, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertByteCount, attrPtr);
+    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, attrPtr);
   }
 
-  if (shader.getAttributeLocation("vertBoneIndices", varLocation) && getAttribPointer(RenderData::Attribute::BONE_INDICES, attrPtr)) {
+  if (shader.getAttributeLocation("vertBoneIndices", varLocation) && getAttribPointer(VertexAttribute::BONE_INDICES, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribIPointer(varLocation, 4, GL_UNSIGNED_BYTE, vertByteCount, attrPtr);
+    glVertexAttribIPointer(varLocation, 4, GL_UNSIGNED_BYTE, stride, attrPtr);
   }
   //else { glDisableVertexAttribArray(varLocation); } // TODO
 
-  if (shader.getAttributeLocation("vertBoneWeights", varLocation) && getAttribPointer(RenderData::Attribute::BONE_WEIGHTS, attrPtr)) {
+  if (shader.getAttributeLocation("vertBoneWeights", varLocation) && getAttribPointer(VertexAttribute::BONE_WEIGHTS, attrPtr)) {
     glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertByteCount, attrPtr);
+    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, attrPtr);
   }
 
   GLenum mode = GL_POINTS; // Default fallback
-  switch (this->mode) {
-  case     RenderData::Mode::POINTS:    mode = GL_POINTS;          break;
-  case     RenderData::Mode::LINES:     mode = GL_LINES;           break;
-  case     RenderData::Mode::TRIANGLES: mode = GL_TRIANGLES;       break;
-  default: Log::warning("Unsupported RenderData::Mode: %d", mode); break;
+  switch (this->primitiveType) {
+  case     PrimitiveType::POINTS:    mode = GL_POINTS;          break;
+  case     PrimitiveType::LINES:     mode = GL_LINES;           break;
+  case     PrimitiveType::TRIANGLES: mode = GL_TRIANGLES;       break;
+  default: Log::warning("Unsupported PrimitiveType: %d", mode); break;
   }
 
   if (indices.empty()) {

@@ -354,6 +354,14 @@ int main()
     //entities.back()->addComponent<husky::DebugDrawComponent>();
   }
 
+  //{
+  //  husky::Model mdl = husky::Model::load("C:/tmp/Models/fir1_3ds/firtree1.3ds");
+  //  models.emplace_back(std::make_unique<husky::Model>(std::move(mdl)));
+  //  entities.emplace_back(std::make_unique<husky::Entity>("Tree", &defaultShaderBones, models.back().get()));
+  //  entities.back()->modelInstance.mtxTransform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::translate(-entities.back()->modelInstance.model->bboxLocal.center());
+  //  entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { -5, -5, 0 }));
+  //}
+
   {
     //const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);
     const husky::MultidirTexture texBillboard = husky::Billboard::getMultidirectionalBillboardTexture(*entities[6].get(), 8192, 8192, 64, 63);

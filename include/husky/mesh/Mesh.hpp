@@ -108,6 +108,7 @@ private:
   std::vector<Tangent>  vertTangent;
   std::vector<TexCoord> vertTexCoord;
   std::vector<Color>    vertColor;
+  //std::vector<Vector4f> vertCustom;
   std::vector<std::vector<BoneWeight>> vertBoneWeights;
   std::vector<Line>     lines;
   std::vector<Triangle> tris;

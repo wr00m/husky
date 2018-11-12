@@ -502,27 +502,30 @@ RenderData Mesh::getRenderData() const
       Log::warning("Mesh has both lines and faces");
     }
 
-    RenderData r(RenderData::Mode::TRIANGLES);
-    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-    r.addAttr(RenderData::Attribute::NORMAL, sizeof(Vector3f));
-    r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f));
-    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
+    VertexDescription vertDesc;
+    int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
+    int iNormal = vertDesc.addAttr(VertexAttribute::NORMAL, VertexAttributeDataType::FLOAT32, 3);
+    int iTexCoord = vertDesc.addAttr(VertexAttribute::TEXCOORD, VertexAttributeDataType::FLOAT32, 2);
+    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4);
+    int iBoneIndices = -1;
+    int iBoneWeights = -1;
     if (hasBoneWeights()) {
-      r.addAttr(RenderData::Attribute::BONE_INDICES, sizeof(Vector4b));
-      r.addAttr(RenderData::Attribute::BONE_WEIGHTS, sizeof(Vector4b));
+      iBoneIndices = vertDesc.addAttr(VertexAttribute::BONE_INDICES, VertexAttributeDataType::UINT8, 4);
+      iBoneWeights = vertDesc.addAttr(VertexAttribute::BONE_WEIGHTS, VertexAttributeDataType::UINT8, 4);
     }
-    r.init(numVerts());
+
+    RenderData r(vertDesc, PrimitiveType::TRIANGLES, numVerts());
 
     if (numVerts() > 0) {
       r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-        if (hasNormals()) { r.setValue(i, RenderData::Attribute::NORMAL, (Vector3f)vertNormal[i]); }
-        if (hasTexCoords()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
-        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        if (hasNormals()) { r.setValue(i, iNormal, (Vector3f)vertNormal[i]); }
+        if (hasTexCoords()) { r.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
+        r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
 
-        if (hasBoneWeights()) {
+        if (iBoneIndices >= 0 && iBoneWeights >= 0) {
           const auto &boneWeights = vertBoneWeights[i];
           Vector4b indices; // = { 0, 1, 2, 3 };
           Vector4b weights; // = { 255, 0, 0, 0 };
@@ -537,8 +540,8 @@ RenderData Mesh::getRenderData() const
             weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
           }
 
-          r.setValue(i, RenderData::Attribute::BONE_INDICES, indices);
-          r.setValue(i, RenderData::Attribute::BONE_WEIGHTS, weights);
+          r.setValue(i, iBoneIndices, indices);
+          r.setValue(i, iBoneWeights, weights);
         }
       }
 
@@ -556,17 +559,18 @@ RenderData Mesh::getRenderData() const
     return r;
   }
   else if (hasLines()) {
-    RenderData r(RenderData::Mode::LINES);
-    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-    r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b));
-    r.init(numVerts());
+    VertexDescription vertDesc;
+    int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
+    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4);
+
+    RenderData r(vertDesc, PrimitiveType::LINES, numVerts());
 
     if (numVerts() > 0) {
       r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-        r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255));
+        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
       }
 
       for (const Line &l : lines) {
@@ -591,19 +595,20 @@ RenderData Mesh::getRenderData() const
     return r;
   }
   else { // Neither faces nor lines => Assume points
-    RenderData r(RenderData::Mode::POINTS);
-    r.addAttr(RenderData::Attribute::POSITION, sizeof(Vector3f));
-    if (hasTexCoords()) { r.addAttr(RenderData::Attribute::TEXCOORD, sizeof(Vector2f)); }
-    if (hasColors()) { r.addAttr(RenderData::Attribute::COLOR, sizeof(Vector4b)); }
-    r.init(numVerts());
+    VertexDescription vertDesc;
+    int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
+    int iTexCoord = (hasTexCoords() ? vertDesc.addAttr(VertexAttribute::TEXCOORD, VertexAttributeDataType::FLOAT32, 2) : -1);
+    int iColor = (hasColors() ? vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4) : -1);
+
+    RenderData r(vertDesc, PrimitiveType::POINTS, numVerts());
 
     if (numVerts() > 0) {
       r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, RenderData::Attribute::POSITION, (Vector3f)vertPosition[i]);
-        if (hasTexCoords()) { r.setValue(i, RenderData::Attribute::TEXCOORD, (Vector2f)vertTexCoord[i]); }
-        if (hasColors()) { r.setValue(i, RenderData::Attribute::COLOR, hasColors() ? vertColor[i] : Vector4b(255)); }
+        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        if (hasTexCoords()) { r.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
+        if (hasColors()) { r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255)); }
         //r.addPoint(i); // TODO: Remove?
       }
     }
