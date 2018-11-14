@@ -27,21 +27,25 @@ class HUSKY_DLL VertexAttribute
 {
 public:
   static int getBytesPerElement(VertexAttributeDataType dataType);
-  static const VertexAttribute Empty;
-  static constexpr char POSITION[]      = "Position";
-  static constexpr char NORMAL[]        = "Normal";
-  static constexpr char TEXCOORD[]      = "TexCoord";
-  static constexpr char COLOR[]         = "Color";
-  static constexpr char BONE_INDICES[]  = "BoneIndices";
-  static constexpr char BONE_WEIGHTS[]  = "BoneWeights";
-  static constexpr char TANGENTS[]      = "Tangents";
+
+  static constexpr char POSITION[]      = "vertPosition";
+  static constexpr char NORMAL[]        = "vertNormal";
+  static constexpr char TEXCOORD[]      = "vertTexCoord";
+  static constexpr char COLOR[]         = "vertColor";
+  static constexpr char BONE_INDICES[]  = "vertBoneIndices";
+  static constexpr char BONE_WEIGHTS[]  = "vertBoneWeights";
+  static constexpr char TANGENTS[]      = "vertTangents";
   // TODO: Pack vertex attributes according to http://www.humus.name/Articles/Persson_CreatingVastGameWorlds.pdf#page=22 / https://www.khronos.org/opengl/wiki/Vertex_Specification_Best_Practices
 
-  VertexAttribute(const std::string &name, VertexAttributeDataType dataType, int elementCount, int byteOffset);
+  VertexAttribute(const std::string &name, VertexAttributeDataType dataType, int elementCount, bool normalize, int byteOffset);
+
+  operator bool() const;
+  const void* getAttribPointer() const;
 
   std::string name;
   VertexAttributeDataType dataType;
   int elementCount;
+  bool normalize;
   int byteCount;
   int byteOffset;
 };
@@ -51,13 +55,13 @@ class HUSKY_DLL VertexDescription
 public:
   VertexDescription();
 
-  int addAttr(const std::string &name, VertexAttributeDataType dataType, int elementCount);
+  int addAttr(const std::string &name, VertexAttributeDataType dataType, int elementCount, bool normalize = false);
   int getAttrIndex(const std::string &name) const;
   const VertexAttribute& getAttr(const std::string &attrName) const;
   const VertexAttribute& getAttr(int i) const;
-  inline int getByteCount() const { return byteCount; }
+  //inline int getByteCount() const { return byteCount; }
 
-private:
+//private:
   int byteCount;
   std::vector<VertexAttribute> attrs;
 };
@@ -83,44 +87,48 @@ public:
   void addPoint(int v0);
   void addLine(int v0, int v1);
   void addTriangle(int v0, int v1, int v2);
-  bool getAttribPointer(const std::string &attrName, const void *&ptr) const;
   void uploadToGpu(); // TODO: Remove?
 
   template<typename T>
   bool setValue(int vertIndex, int attrIndex, const T &value)
   {
-    const VertexAttribute attr = vertDesc.getAttr(attrIndex);
-    if (attr.byteOffset < 0 || vertIndex >= vertCount) {
-      assert(0); // We should never get here
+    if (vertIndex < 0 || vertIndex >= vertCount) {
       return false;
     }
 
-    assert(sizeof(T) == attr.byteCount);
+    if (const VertexAttribute &attr = vertDesc.getAttr(attrIndex)) {
+      if (sizeof(T) > attr.byteCount) {
+        return false;
+      }
 
-    const std::uint8_t *b = reinterpret_cast<const std::uint8_t*>(&value);
-    
-    const int byteStartIndex = (vertIndex * vertDesc.getByteCount() + attr.byteOffset);
-    std::copy(b, b + sizeof(T), bytes.begin() + byteStartIndex);
-
-    return true;
-  }
-
-  template<typename T>
-  T getValue(int vertIndex, int attrIndex) const
-  {
-    const VertexAttribute attr = vertDesc.getAttr(attrIndex);
-    if (attr.byteOffset < 0 || vertIndex >= vertCount) {
-      assert(0); // We should never get here
-      return T();
+      const std::uint8_t *b = reinterpret_cast<const std::uint8_t*>(&value);
+      const int byteStartIndex = (vertIndex * vertDesc.byteCount + attr.byteOffset);
+      std::copy(b, b + sizeof(T), bytes.begin() + byteStartIndex);
+      return true;
     }
 
-    assert(sizeof(T) == attr.byteCount);
-
-    const int byteStartIndex = (vertIndex * vertDesc.getByteCount() + attr.byteOffset);
-    const T *t = reinterpret_cast<const T*>(&bytes[byteStartIndex]);
-
-    return *t;
+    return false;
   }
+
+  //template<typename T>
+  //T getValue(int vertIndex, int attrIndex) const
+  //{
+  //  if (vertIndex < 0 || vertIndex >= vertCount) {
+  //    return T();
+  //  }
+
+  //  if (const VertexAttribute &attr = vertDesc.getAttr(attrIndex)) {
+  //    if (sizeof(T) < attr.byteCount) {
+  //      return T();
+  //    }
+
+  //    const int byteStartIndex = (vertIndex * vertDesc.byteCount + attr.byteOffset);
+  //    const T *t = reinterpret_cast<const T*>(&bytes[byteStartIndex]);
+  //    return *t;
+  //  }
+
+  //  return T();
+  //}
 
   void draw(const Shader &shader, const Material &mtl, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones = {}) const;
 };

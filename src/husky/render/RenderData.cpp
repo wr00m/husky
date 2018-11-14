@@ -23,15 +23,24 @@ int VertexAttribute::getBytesPerElement(VertexAttributeDataType dataType)
   }
 }
 
-const VertexAttribute VertexAttribute::Empty = VertexAttribute("", VertexAttributeDataType::UNDEFINED, 0, 0);
-
-VertexAttribute::VertexAttribute(const std::string &name, VertexAttributeDataType dataType, int elementCount, int byteOffset)
+VertexAttribute::VertexAttribute(const std::string &name, VertexAttributeDataType dataType, int elementCount, bool normalize, int byteOffset)
   : name(name)
   , dataType(dataType)
   , elementCount(elementCount)
+  , normalize(normalize)
   , byteCount(getBytesPerElement(dataType) * elementCount)
   , byteOffset(byteOffset)
 {
+}
+
+VertexAttribute::operator bool() const
+{
+  return (byteOffset != -1);
+}
+
+const void* VertexAttribute::getAttribPointer() const
+{
+  return ((const std::uint8_t*)nullptr) + byteOffset;
 }
 
 VertexDescription::VertexDescription()
@@ -40,10 +49,10 @@ VertexDescription::VertexDescription()
 {
 }
 
-int VertexDescription::addAttr(const std::string &name, VertexAttributeDataType dataType, int elementCount)
+int VertexDescription::addAttr(const std::string &name, VertexAttributeDataType dataType, int elementCount, bool normalize)
 {
   int i = (int)attrs.size();
-  attrs.emplace_back(name, dataType, elementCount, byteCount);
+  attrs.emplace_back(name, dataType, elementCount, normalize, byteCount);
   byteCount += attrs.back().byteCount;
   return i;
 }
@@ -66,7 +75,8 @@ const VertexAttribute& VertexDescription::getAttr(const std::string &attrName) c
 
 const VertexAttribute& VertexDescription::getAttr(int i) const
 {
-  return (i >= 0 && i < attrs.size()) ? attrs[i] : VertexAttribute::Empty;
+  static const VertexAttribute empty = VertexAttribute("", VertexAttributeDataType::UNDEFINED, false, 0, -1);
+  return (i >= 0 && i < attrs.size()) ? attrs[i] : empty;
 }
 
 RenderData::RenderData()
@@ -81,7 +91,7 @@ RenderData::RenderData(const VertexDescription &vertDesc, PrimitiveType primitiv
   , vertCount(vertCount)
   , bytes{}
 {
-  bytes.resize(vertCount * vertDesc.getByteCount());
+  bytes.resize(vertCount * vertDesc.byteCount);
 }
 
 void RenderData::addPoint(int v0)
@@ -100,19 +110,6 @@ void RenderData::addTriangle(int v0, int v1, int v2)
   indices.emplace_back(v0);
   indices.emplace_back(v1);
   indices.emplace_back(v2);
-}
-
-bool RenderData::getAttribPointer(const std::string &attrName, const void *&ptr) const
-{
-  int offset = vertDesc.getAttr(attrName).byteOffset;
-  if (offset >= 0) {
-    ptr = ((const std::uint8_t*)nullptr) + offset;
-    return true;
-  }
-  else {
-    ptr = nullptr;
-    return false;
-  }
 }
 
 void RenderData::uploadToGpu()
@@ -148,76 +145,74 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
 
   glUseProgram(shader.shaderProgramHandle);
 
-  int varLocation;
-
-  if (shader.getUniformLocation("mtxModelView", varLocation)) {
-    glUniformMatrix4fv(varLocation, 1, GL_FALSE, modelView.m);
+  if (const ShaderUniform &uniform = shader.getUniform("mtxModelView")) {
+    glUniformMatrix4fv(uniform.location, 1, GL_FALSE, modelView.m);
   }
 
   const Matrix33f normalMatrix = modelView.get3x3(); // Fast, but only works with uniform scaling
   //const Matrix33f normalMatrix = modelView.inverted().transposed().get3x3(); // TODO: Use pre-inverted matrix for better performance
   //const Matrix33f normalMatrix = modelView.get3x3().inverted().transposed();
-  if (shader.getUniformLocation("mtxNormal", varLocation)) {
-    glUniformMatrix3fv(varLocation, 1, GL_FALSE, normalMatrix.m);
+  if (const ShaderUniform &uniform = shader.getUniform("mtxNormal")) {
+    glUniformMatrix3fv(uniform.location, 1, GL_FALSE, normalMatrix.m);
   }
 
-  if (shader.getUniformLocation("mtxProjection", varLocation)) {
-    glUniformMatrix4fv(varLocation, 1, GL_FALSE, projection.m);
+  if (const ShaderUniform &uniform = shader.getUniform("mtxProjection")) {
+    glUniformMatrix4fv(uniform.location, 1, GL_FALSE, projection.m);
   }
 
-  if (shader.getUniformLocation("mtxBones", varLocation)) {
+  if (const ShaderUniform &uniform = shader.getUniform("mtxBones")) {
     if (mtxBones.empty()) {
-      glUniformMatrix4fv(varLocation, 1, GL_FALSE, Matrix44f::identity().m); // Single identity matrix
+      glUniformMatrix4fv(uniform.location, 1, GL_FALSE, Matrix44f::identity().m); // Single identity matrix
     }
     else {
-      glUniformMatrix4fv(varLocation, (GLsizei)mtxBones.size(), GL_FALSE, mtxBones.front().m);
+      glUniformMatrix4fv(uniform.location, (GLsizei)mtxBones.size(), GL_FALSE, mtxBones.front().m);
     }
   }
 
-  if (shader.getUniformLocation("useBones", varLocation)) {
-    glUniform1i(varLocation, !mtxBones.empty());
+  if (const ShaderUniform &uniform = shader.getUniform("useBones")) {
+    glUniform1i(uniform.location, !mtxBones.empty());
   }
 
-  if (shader.getUniformLocation("tex", varLocation)) {
-    glUniform1i(varLocation, 0);
+  if (const ShaderUniform &uniform = shader.getUniform("tex")) {
+    glUniform1i(uniform.location, 0);
   }
 
-  if (shader.getUniformLocation("lightDir", varLocation)) {
+  if (const ShaderUniform &uniform = shader.getUniform("lightDir")) {
     Vector3f lightDir(20, -40, 100); // TODO
     lightDir = (view * Vector4f(lightDir, 0.0)).xyz.normalized();
-    glUniform3fv(varLocation, 1, lightDir.val);
+    glUniform3fv(uniform.location, 1, lightDir.val);
   }
 
-  if (shader.getUniformLocation("mtlAmbient", varLocation)) {
-    glUniform3fv(varLocation, 1, mtl.ambient.val);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlAmbient")) {
+    glUniform3fv(uniform.location, 1, mtl.ambient.val);
   }
 
-  if (shader.getUniformLocation("mtlDiffuse", varLocation)) {
-    glUniform3fv(varLocation, 1, mtl.diffuse.val);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlDiffuse")) {
+    glUniform3fv(uniform.location, 1, mtl.diffuse.val);
   }
 
-  if (shader.getUniformLocation("mtlSpecular", varLocation)) {
-    glUniform3fv(varLocation, 1, mtl.specular.val);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlSpecular")) {
+    glUniform3fv(uniform.location, 1, mtl.specular.val);
   }
 
-  if (shader.getUniformLocation("mtlEmissive", varLocation)) {
-    glUniform3fv(varLocation, 1, mtl.emissive.val);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlEmissive")) {
+    glUniform3fv(uniform.location, 1, mtl.emissive.val);
   }
 
-  if (shader.getUniformLocation("mtlShininess", varLocation)) {
-    glUniform1f(varLocation, mtl.shininess);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlShininess")) {
+    glUniform1f(uniform.location, mtl.shininess);
   }
 
-  if (shader.getUniformLocation("mtlShininessStrength", varLocation)) {
-    glUniform1f(varLocation, mtl.shininessStrength);
+  if (const ShaderUniform &uniform = shader.getUniform("mtlShininessStrength")) {
+    glUniform1f(uniform.location, mtl.shininessStrength);
   }
 
-  if (shader.getUniformLocation("viewportSize", varLocation)) {
-    glUniform2f(varLocation, (float)viewport.width, (float)viewport.height);
+  if (const ShaderUniform &uniform = shader.getUniform("viewportSize")) {
+    glUniform2f(uniform.location, (float)viewport.width, (float)viewport.height);
   }
 
-  if (shader.getUniformLocation("lineWidth", varLocation)) {
-    glUniform1f(varLocation, mtl.lineWidth);
+  if (const ShaderUniform &uniform = shader.getUniform("lineWidth")) {
+    glUniform1f(uniform.location, mtl.lineWidth);
   }
 
   if (mtl.tex.valid()) {
@@ -243,45 +238,82 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBindVertexArray(vao);
 
-  const void *attrPtr = nullptr;
-  const int stride = vertDesc.getByteCount();
+  const int stride = vertDesc.byteCount;
 
-  if (shader.getAttributeLocation("vertPosition", varLocation) && getAttribPointer(VertexAttribute::POSITION, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, stride, attrPtr);
-  }
+  for (const ShaderAttribute &shaderAttr : shader.attrs) {
+    if (const VertexAttribute &attr = vertDesc.getAttr(shaderAttr.name)) {
+      glEnableVertexAttribArray(shaderAttr.location);
 
-  if (shader.getAttributeLocation("vertNormal", varLocation) && getAttribPointer(VertexAttribute::NORMAL, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 3, GL_FLOAT, GL_FALSE, stride, attrPtr);
-  }
+      const void *attrPtr = attr.getAttribPointer();
 
-  if (shader.getAttributeLocation("vertTexCoord", varLocation) && getAttribPointer(VertexAttribute::TEXCOORD, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 2, GL_FLOAT, GL_FALSE, stride, attrPtr);
-  }
-
-  if (shader.getAttributeLocation("vertColor", varLocation) && getAttribPointer(VertexAttribute::COLOR, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, attrPtr);
-  }
-
-  if (shader.getAttributeLocation("vertBoneIndices", varLocation) && getAttribPointer(VertexAttribute::BONE_INDICES, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribIPointer(varLocation, 4, GL_UNSIGNED_BYTE, stride, attrPtr);
-  }
-  //else { glDisableVertexAttribArray(varLocation); } // TODO
-
-  if (shader.getAttributeLocation("vertBoneWeights", varLocation) && getAttribPointer(VertexAttribute::BONE_WEIGHTS, attrPtr)) {
-    glEnableVertexAttribArray(varLocation);
-    glVertexAttribPointer(varLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, attrPtr);
+      if (attr.dataType == VertexAttributeDataType::FLOAT32) {
+        glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_FLOAT, GL_FALSE, stride, attrPtr);
+      }
+      else if (attr.dataType == VertexAttributeDataType::FLOAT64) {
+        glVertexAttribLPointer(shaderAttr.location, attr.elementCount, GL_DOUBLE, stride, attrPtr);
+      }
+      else if (attr.dataType == VertexAttributeDataType::INT8) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_BYTE, GL_TRUE, stride, attrPtr);
+        }
+        else { // TODO: Do we ever want to call glVertexAttribPointer() instead of glVertexAttribIPointer() for integer data types when attr.normalize is false?
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_BYTE, stride, attrPtr);
+        }
+      }
+      else if (attr.dataType == VertexAttributeDataType::INT16) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_SHORT, GL_TRUE, stride, attrPtr);
+        }
+        else {
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_SHORT, stride, attrPtr);
+        }
+      }
+      else if (attr.dataType == VertexAttributeDataType::INT32) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_INT, GL_TRUE, stride, attrPtr);
+        }
+        else {
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_INT, stride, attrPtr);
+        }
+      }
+      else if (attr.dataType == VertexAttributeDataType::UINT8) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_BYTE, GL_TRUE, stride, attrPtr);
+        }
+        else {
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_BYTE, stride, attrPtr);
+        }
+      }
+      else if (attr.dataType == VertexAttributeDataType::UINT16) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_SHORT, GL_TRUE, stride, attrPtr);
+        }
+        else {
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_SHORT, stride, attrPtr);
+        }
+      }
+      else if (attr.dataType == VertexAttributeDataType::UINT32) {
+        if (attr.normalize) {
+          glVertexAttribPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_INT, GL_TRUE, stride, attrPtr);
+        }
+        else {
+          glVertexAttribIPointer(shaderAttr.location, attr.elementCount, GL_UNSIGNED_INT, stride, attrPtr);
+        }
+      }
+      else {
+        Log::warning("Unsupported VertexAttributeDataType: %d", attr.dataType);
+      }
+    }
+    else {
+      glDisableVertexAttribArray(shaderAttr.location);
+    }
   }
 
   GLenum mode = GL_POINTS; // Default fallback
   switch (this->primitiveType) {
-  case     PrimitiveType::POINTS:    mode = GL_POINTS;          break;
-  case     PrimitiveType::LINES:     mode = GL_LINES;           break;
-  case     PrimitiveType::TRIANGLES: mode = GL_TRIANGLES;       break;
+  case PrimitiveType::POINTS: mode = GL_POINTS; break;
+  case PrimitiveType::LINES: mode = GL_LINES; break;
+  case PrimitiveType::TRIANGLES: mode = GL_TRIANGLES; break;
   default: Log::warning("Unsupported PrimitiveType: %d", mode); break;
   }
 

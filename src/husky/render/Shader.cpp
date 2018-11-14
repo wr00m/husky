@@ -7,6 +7,42 @@
 
 namespace husky {
 
+ShaderUniform::ShaderUniform()
+  : ShaderUniform("", -1, -1, -1)
+{
+}
+
+ShaderUniform::ShaderUniform(const std::string &name, int location, int type, int size)
+  : name(name)
+  , location(location)
+  , type(type)
+  , size(size)
+{
+}
+
+ShaderUniform::operator bool() const
+{
+  return (location != -1);
+}
+
+ShaderAttribute::ShaderAttribute()
+  : ShaderAttribute("", -1, -1, -1)
+{
+}
+
+ShaderAttribute::ShaderAttribute(const std::string &name, int location, int type, int size)
+  : name(name)
+  , location(location)
+  , type(type)
+  , size(size)
+{
+}
+
+ShaderAttribute::operator bool() const
+{
+  return (location != -1);
+}
+
 static GLuint compileShader(GLenum shaderType, const std::string &shaderSrc)
 {
   GLuint shader = glCreateShader(shaderType);
@@ -251,7 +287,7 @@ Shader::Shader(unsigned int shaderProgramHandle)
     if (b != std::string::npos) {
       uniformName = uniformName.substr(0, b);
     }
-    uniformLocations[uniformName] = glGetUniformLocation(shaderProgramHandle, varName);
+    uniforms.emplace_back(uniformName, glGetUniformLocation(shaderProgramHandle, varName), varType, varSize);
   }
 
   // Get active (vertex) attributes
@@ -259,7 +295,7 @@ Shader::Shader(unsigned int shaderProgramHandle)
   glGetProgramiv(shaderProgramHandle, GL_ACTIVE_ATTRIBUTES, &attrCount);
   for (int iAttr = 0; iAttr < attrCount; iAttr++) {
     glGetActiveAttrib(shaderProgramHandle, (GLuint)iAttr, varNameLengthMax, &varNameLength, &varSize, &varType, varName);
-    attrLocations[varName] = glGetAttribLocation(shaderProgramHandle, varName);
+    attrs.emplace_back(varName, glGetAttribLocation(shaderProgramHandle, varName), varType, varSize);
   }
 }
 
@@ -268,30 +304,26 @@ Shader::Shader(const std::string &vertSrc, const std::string &geomSrc, const std
 {
 }
 
-bool Shader::getUniformLocation(const std::string &uniformName, int &location) const
+const ShaderUniform& Shader::getUniform(const std::string &uniformName) const
 {
-  auto it = uniformLocations.find(uniformName);
-  if (it != uniformLocations.end()) {
-    location = it->second;
-    return true;
+  for (const ShaderUniform &uniform : uniforms) {
+    if (uniform.name == uniformName) {
+      return uniform;
+    }
   }
-  else {
-    location = -1;
-    return false;
-  }
+  static const ShaderUniform empty;
+  return empty;
 }
 
-bool Shader::getAttributeLocation(const std::string &attrName, int &location) const
+const ShaderAttribute& Shader::getAttribute(const std::string &attrName) const
 {
-  auto it = attrLocations.find(attrName);
-  if (it != attrLocations.end()) {
-    location = it->second;
-    return true;
+  for (const ShaderAttribute &attr : attrs) {
+    if (attr.name == attrName) {
+      return attr;
+    }
   }
-  else {
-    location = -1;
-    return false;
-  }
+  static const ShaderAttribute empty;
+  return empty;
 }
 
 }

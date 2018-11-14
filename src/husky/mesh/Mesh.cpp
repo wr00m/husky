@@ -506,12 +506,12 @@ RenderData Mesh::getRenderData() const
     int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
     int iNormal = vertDesc.addAttr(VertexAttribute::NORMAL, VertexAttributeDataType::FLOAT32, 3);
     int iTexCoord = vertDesc.addAttr(VertexAttribute::TEXCOORD, VertexAttributeDataType::FLOAT32, 2);
-    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4);
+    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4, true);
     int iBoneIndices = -1;
     int iBoneWeights = -1;
     if (hasBoneWeights()) {
       iBoneIndices = vertDesc.addAttr(VertexAttribute::BONE_INDICES, VertexAttributeDataType::UINT8, 4);
-      iBoneWeights = vertDesc.addAttr(VertexAttribute::BONE_WEIGHTS, VertexAttributeDataType::UINT8, 4);
+      iBoneWeights = vertDesc.addAttr(VertexAttribute::BONE_WEIGHTS, VertexAttributeDataType::UINT8, 4, true);
     }
 
     RenderData r(vertDesc, PrimitiveType::TRIANGLES, numVerts());
@@ -561,7 +561,7 @@ RenderData Mesh::getRenderData() const
   else if (hasLines()) {
     VertexDescription vertDesc;
     int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
-    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4);
+    int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4, true);
 
     RenderData r(vertDesc, PrimitiveType::LINES, numVerts());
 
@@ -598,7 +598,7 @@ RenderData Mesh::getRenderData() const
     VertexDescription vertDesc;
     int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
     int iTexCoord = (hasTexCoords() ? vertDesc.addAttr(VertexAttribute::TEXCOORD, VertexAttributeDataType::FLOAT32, 2) : -1);
-    int iColor = (hasColors() ? vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4) : -1);
+    int iColor = (hasColors() ? vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4, true) : -1);
 
     RenderData r(vertDesc, PrimitiveType::POINTS, numVerts());
 
