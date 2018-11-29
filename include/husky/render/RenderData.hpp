@@ -66,28 +66,15 @@ public:
   std::vector<VertexAttribute> attrs;
 };
 
-enum class PrimitiveType { UNDEFINED, POINTS, LINES, TRIANGLES, };
-
-class HUSKY_DLL RenderData
+class HUSKY_DLL VertexData
 {
 public:
+  VertexData(const VertexDescription &vertDesc, int vertCount);
+
   VertexDescription vertDesc;
-  PrimitiveType primitiveType;
-  Vector3f anchor;
-  int vertCount;
   std::vector<std::uint8_t> bytes;
-  std::vector<std::uint16_t> indices;
-  unsigned int vbo = 0; // TODO: Remove?
-  unsigned int vao = 0; // TODO: Remove?
-
-  RenderData();
-  RenderData(const VertexDescription &vertDesc, PrimitiveType primitiveType, int vertCount);
-  //~RenderData(); // TODO: Cleanup (VBO, VAO, ...) here?
-
-  void addPoint(int v0);
-  void addLine(int v0, int v1);
-  void addTriangle(int v0, int v1, int v2);
-  void uploadToGpu(); // TODO: Remove?
+  int vertCount;
+  Vector3f anchor;
 
   template<typename T>
   bool setValue(int vertIndex, int attrIndex, const T &value)
@@ -129,8 +116,38 @@ public:
 
   //  return T();
   //}
+};
 
+enum class PrimitiveType { UNDEFINED, POINTS, LINES, TRIANGLES, };
+
+class HUSKY_DLL IndexData
+{
+public:
+  IndexData(PrimitiveType primitiveType);
+
+  void addPoint(int v0);
+  void addLine(int v0, int v1);
+  void addTriangle(int v0, int v1, int v2);
+
+  PrimitiveType primitiveType;
+  std::vector<std::uint16_t> indices;
+};
+
+class HUSKY_DLL RenderData
+{
+public:
+  unsigned int vbo = 0; // TODO: Remove?
+  unsigned int vao = 0; // TODO: Remove?
+
+  RenderData();
+  RenderData(VertexData &&vertData, IndexData &&indexData);
+  //~RenderData(); // TODO: Cleanup (VBO, VAO, ...) here?
+
+  void uploadToGpu(); // TODO: Remove?
   void draw(const Shader &shader, const Material &mtl, const Viewport &viewport, const Matrix44f &view, const Matrix44f &modelView, const Matrix44f &projection, const std::vector<Matrix44f> &mtxBones = {}) const;
+  
+  VertexData _vertData;
+  IndexData _indexData;
 };
 
 }

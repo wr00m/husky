@@ -80,32 +80,43 @@ const VertexAttribute& VertexDescription::getAttr(int i) const
 }
 
 RenderData::RenderData()
-  : RenderData({}, PrimitiveType::UNDEFINED, 0)
+  : RenderData(VertexData({}, 0), IndexData(PrimitiveType::UNDEFINED))
 {
 }
 
-RenderData::RenderData(const VertexDescription &vertDesc, PrimitiveType primitiveType, int vertCount)
+RenderData::RenderData(VertexData &&vertData, IndexData &&indexData)
+  : _vertData(vertData)
+  , _indexData(indexData)
+{
+}
+
+VertexData::VertexData(const VertexDescription &vertDesc, int vertCount)
   : vertDesc(vertDesc)
-  , primitiveType(primitiveType)
-  , anchor(0, 0, 0)
-  , vertCount(vertCount)
   , bytes{}
+  , vertCount(vertCount)
+  , anchor(0, 0, 0)
 {
   bytes.resize(vertCount * vertDesc.byteCount);
 }
 
-void RenderData::addPoint(int v0)
+IndexData::IndexData(PrimitiveType primitiveType)
+  : primitiveType(primitiveType)
+  , indices{}
+{
+}
+
+void IndexData::addPoint(int v0)
 {
   indices.emplace_back(v0);
 }
 
-void RenderData::addLine(int v0, int v1)
+void IndexData::addLine(int v0, int v1)
 {
   indices.emplace_back(v0);
   indices.emplace_back(v1);
 }
 
-void RenderData::addTriangle(int v0, int v1, int v2)
+void IndexData::addTriangle(int v0, int v1, int v2)
 {
   indices.emplace_back(v0);
   indices.emplace_back(v1);
@@ -116,7 +127,7 @@ void RenderData::uploadToGpu()
 {
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, bytes.size(), bytes.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, _vertData.bytes.size(), _vertData.bytes.data(), GL_STATIC_DRAW);
 
   glGenVertexArrays(1, &vao);
   //glBindVertexArray(vao);
@@ -238,6 +249,7 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBindVertexArray(vao);
 
+  const VertexDescription &vertDesc = _vertData.vertDesc;
   const int stride = vertDesc.byteCount;
 
   for (const ShaderAttribute &shaderAttr : shader.attrs) {
@@ -310,18 +322,18 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   }
 
   GLenum mode = GL_POINTS; // Default fallback
-  switch (this->primitiveType) {
+  switch (_indexData.primitiveType) {
   case PrimitiveType::POINTS: mode = GL_POINTS; break;
   case PrimitiveType::LINES: mode = GL_LINES; break;
   case PrimitiveType::TRIANGLES: mode = GL_TRIANGLES; break;
   default: Log::warning("Unsupported PrimitiveType: %d", mode); break;
   }
 
-  if (indices.empty()) {
-    glDrawArrays(mode, 0, vertCount);
+  if (_indexData.indices.empty()) {
+    glDrawArrays(mode, 0, _vertData.vertCount);
   }
   else {
-    glDrawElements(mode, (int)indices.size(), GL_UNSIGNED_SHORT, indices.data());
+    glDrawElements(mode, (int)_indexData.indices.size(), GL_UNSIGNED_SHORT, _indexData.indices.data());
   }
 }
 

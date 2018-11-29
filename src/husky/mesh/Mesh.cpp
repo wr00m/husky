@@ -514,16 +514,17 @@ RenderData Mesh::getRenderData() const
       iBoneWeights = vertDesc.addAttr(VertexAttribute::BONE_WEIGHTS, VertexAttributeDataType::UINT8, 4, true);
     }
 
-    RenderData r(vertDesc, PrimitiveType::TRIANGLES, numVerts());
+    VertexData vertData(vertDesc, numVerts());
+    IndexData indexData(PrimitiveType::TRIANGLES);
 
     if (numVerts() > 0) {
-      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+      vertData.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
-        if (hasNormals()) { r.setValue(i, iNormal, (Vector3f)vertNormal[i]); }
-        if (hasTexCoords()) { r.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
-        r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
+        vertData.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        if (hasNormals()) { vertData.setValue(i, iNormal, (Vector3f)vertNormal[i]); }
+        if (hasTexCoords()) { vertData.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
+        vertData.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
 
         if (iBoneIndices >= 0 && iBoneWeights >= 0) {
           const auto &boneWeights = vertBoneWeights[i];
@@ -540,21 +541,22 @@ RenderData Mesh::getRenderData() const
             weights[j] = (std::uint8_t)(boneWeights[j].weight * 255); // Check/clamp value?
           }
 
-          r.setValue(i, iBoneIndices, indices);
-          r.setValue(i, iBoneWeights, weights);
+          vertData.setValue(i, iBoneIndices, indices);
+          vertData.setValue(i, iBoneWeights, weights);
         }
       }
 
       for (const Triangle &t : tris) {
-        r.addTriangle(t[0], t[1], t[2]);
+        indexData.addTriangle(t[0], t[1], t[2]);
       }
 
       for (const Quad &q : quads) {
-        r.addTriangle(q[0], q[1], q[2]);
-        r.addTriangle(q[0], q[2], q[3]);
+        indexData.addTriangle(q[0], q[1], q[2]);
+        indexData.addTriangle(q[0], q[2], q[3]);
       }
     }
 
+    RenderData r(std::move(vertData), std::move(indexData));
     r.uploadToGpu();
     return r;
   }
@@ -563,18 +565,19 @@ RenderData Mesh::getRenderData() const
     int iPosition = vertDesc.addAttr(VertexAttribute::POSITION, VertexAttributeDataType::FLOAT32, 3);
     int iColor = vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4, true);
 
-    RenderData r(vertDesc, PrimitiveType::LINES, numVerts());
+    VertexData vertData(vertDesc, numVerts());
+    IndexData indexData(PrimitiveType::LINES);
 
     if (numVerts() > 0) {
-      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+      vertData.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
-        r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
+        vertData.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        vertData.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255));
       }
 
       for (const Line &l : lines) {
-        r.addLine(l[0], l[1]);
+        indexData.addLine(l[0], l[1]);
       }
 
       //for (const Triangle &t : tris) {
@@ -591,6 +594,7 @@ RenderData Mesh::getRenderData() const
       //}
     }
 
+    RenderData r(std::move(vertData), std::move(indexData));
     r.uploadToGpu();
     return r;
   }
@@ -600,19 +604,21 @@ RenderData Mesh::getRenderData() const
     int iTexCoord = (hasTexCoords() ? vertDesc.addAttr(VertexAttribute::TEXCOORD, VertexAttributeDataType::FLOAT32, 2) : -1);
     int iColor = (hasColors() ? vertDesc.addAttr(VertexAttribute::COLOR, VertexAttributeDataType::UINT8, 4, true) : -1);
 
-    RenderData r(vertDesc, PrimitiveType::POINTS, numVerts());
+    VertexData vertData(vertDesc, numVerts());
+    IndexData indexData(PrimitiveType::POINTS);
 
     if (numVerts() > 0) {
-      r.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
+      vertData.anchor = Vector3f(0, 0, 0); //(Vector3f)verts.front().pos;
 
       for (int i = 0; i < numVerts(); i++) {
-        r.setValue(i, iPosition, (Vector3f)vertPosition[i]);
-        if (hasTexCoords()) { r.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
-        if (hasColors()) { r.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255)); }
-        //r.addPoint(i); // TODO: Remove?
+        vertData.setValue(i, iPosition, (Vector3f)vertPosition[i]);
+        if (hasTexCoords()) { vertData.setValue(i, iTexCoord, (Vector2f)vertTexCoord[i]); }
+        if (hasColors()) { vertData.setValue(i, iColor, hasColors() ? vertColor[i] : Vector4b(255)); }
+        //indexData.addPoint(i); // TODO: Remove?
       }
     }
 
+    RenderData r(std::move(vertData), std::move(indexData));
     r.uploadToGpu();
     return r;
   }
