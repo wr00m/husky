@@ -367,8 +367,17 @@ int main()
 
   {
     husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
+
     husky::Mesh mesh;
     for (const husky::Feature &feature : featureTable._features) {
+
+
+      // TODO
+      std::vector<husky::Vector3d> outPts;
+      std::vector<husky::Vector3i> outTris;
+      husky::Tessellator::tessellate(feature, outPts, outTris);
+
+
       if (feature._parts.empty()) {
         continue;
       }

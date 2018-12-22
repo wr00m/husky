@@ -1,6 +1,5 @@
 #pragma once
 
-#include <husky/Common.hpp>
 #include <husky/math/Vector3.hpp>
 #include <vector>
 

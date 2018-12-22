@@ -97,6 +97,7 @@ FeatureTable Shapefile::load(const std::string &shpFilePath)
     if (shapeType == ShapeType::Null) {
       feature._geometryType = GeometryType::None;
     }
+    // TODO: Handle more shape types
     else if (shapeType == ShapeType::Polygon) {
       feature._geometryType = GeometryType::Polygon;
       feature._bboxMin.xy = read<Vector2d>(file);
