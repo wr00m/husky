@@ -130,7 +130,8 @@ public:
   void addTriangle(int v0, int v1, int v2);
 
   PrimitiveType primitiveType;
-  std::vector<std::uint16_t> indices;
+  std::vector<std::uint16_t> indices16;
+  std::vector<std::uint32_t> indices32; // TODO: Use multiple lists of 16-bit indices instead?
 };
 
 class HUSKY_DLL RenderData

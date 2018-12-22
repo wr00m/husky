@@ -9,8 +9,10 @@
 #include <husky/render/Component.hpp>
 #include <husky/render/Entity.hpp>
 #include <husky/render/Billboard.hpp>
+#include <husky/geo/Shapefile.hpp>
 #include <husky/image/Image.hpp>
 #include <husky/mesh/Model.hpp>
+#include <husky/mesh/Tessellator.hpp>
 #include <husky/math/Intersect.hpp>
 #include <husky/math/EulerAngles.hpp>
 #include <husky/math/Random.hpp>
@@ -299,6 +301,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
+  static const husky::Shader lineShader = husky::Shader::getLineShader();
   static const husky::Shader billboardShader = husky::Billboard::getBillboardShader(husky::BillboardMode::SPHERICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -361,6 +364,30 @@ int main()
   //  entities.back()->modelInstance.mtxTransform = husky::Matrix44d::rotate(husky::Math::pi2, { 1, 0, 0 }) * husky::Matrix44d::translate(-entities.back()->modelInstance.model->bboxLocal.center());
   //  entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { -5, -5, 0 }));
   //}
+
+  {
+    husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
+    husky::Mesh mesh;
+    for (const husky::Feature &feature : featureTable._features) {
+      if (feature._parts.empty()) {
+        continue;
+      }
+      int iVert0 = mesh.numVerts();
+      for (const auto &point : feature._points) {
+        mesh.addVert(point.xyz);
+      }
+      for (int iPart = 0; iPart < (int)feature._parts.size(); iPart++) {
+        int iVertBeginIncl = feature._parts[iPart];
+        int iVertEndExcl = (iPart == feature._parts.size() - 1 ? (int)feature._points.size() : feature._parts[iPart + 1]);
+        for (int iVert = iVertBeginIncl + 1; iVert < iVertEndExcl; iVert++) {
+          mesh.addLine(iVert0 + iVert - 1, iVert0 + iVert);
+        }
+      }
+    }
+    models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), {})));
+    entities.emplace_back(std::make_unique<husky::Entity>("Countries", &lineShader, models.back().get()));
+    entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 0, 0, 0 }));
+  }
 
   {
     //const husky::Texture texTree("C:/tmp/Billboard/tree.png", husky::TexWrap::REPEAT, husky::TexFilter::LINEAR, husky::TexMipmaps::STANDARD);

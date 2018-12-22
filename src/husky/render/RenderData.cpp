@@ -101,26 +101,40 @@ VertexData::VertexData(const VertexDescription &vertDesc, int vertCount)
 
 IndexData::IndexData(PrimitiveType primitiveType)
   : primitiveType(primitiveType)
-  , indices{}
+  , indices16{}
+  , indices32{}
 {
 }
 
 void IndexData::addPoint(int v0)
 {
-  indices.emplace_back(v0);
+  if (v0 <= std::numeric_limits<std::uint16_t>::max()) {
+    indices16.emplace_back(v0);
+    return;
+  }
+
+  // Convert 16-bit indices to 32-bit
+  if (!indices16.empty()) {
+    for (std::uint16_t ui16 : indices16) {
+      indices32.emplace_back(ui16);
+    }
+    indices16.clear();
+  }
+
+  indices32.emplace_back(v0);
 }
 
 void IndexData::addLine(int v0, int v1)
 {
-  indices.emplace_back(v0);
-  indices.emplace_back(v1);
+  addPoint(v0);
+  addPoint(v1);
 }
 
 void IndexData::addTriangle(int v0, int v1, int v2)
 {
-  indices.emplace_back(v0);
-  indices.emplace_back(v1);
-  indices.emplace_back(v2);
+  addPoint(v0);
+  addPoint(v1);
+  addPoint(v2);
 }
 
 void RenderData::uploadToGpu()
@@ -329,11 +343,14 @@ void RenderData::draw(const Shader &shader, const Material &mtl, const Viewport 
   default: Log::warning("Unsupported PrimitiveType: %d", mode); break;
   }
 
-  if (_indexData.indices.empty()) {
-    glDrawArrays(mode, 0, _vertData.vertCount);
+  if (!_indexData.indices16.empty()) {
+    glDrawElements(mode, (int)_indexData.indices16.size(), GL_UNSIGNED_SHORT, _indexData.indices16.data());
+  }
+  else if (!_indexData.indices32.empty()) {
+    glDrawElements(mode, (int)_indexData.indices32.size(), GL_UNSIGNED_INT, _indexData.indices32.data());
   }
   else {
-    glDrawElements(mode, (int)_indexData.indices.size(), GL_UNSIGNED_SHORT, _indexData.indices.data());
+    glDrawArrays(mode, 0, _vertData.vertCount);
   }
 }
 

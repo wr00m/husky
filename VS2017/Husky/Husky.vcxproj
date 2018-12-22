@@ -23,7 +23,7 @@
     <ProjectGuid>{BACF0575-873B-4AE0-B175-F17743ADD9FD}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Husky</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -112,7 +112,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;ws2_32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,12 +152,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%HUSKY_CONTRIB_ROOT%\Assimp\lib\x64;%HUSKY_CONTRIB_ROOT%\gdal-2.3.1-x64\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;gdal_i.lib;ws2_32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\glad\glad.c" />
     <ClCompile Include="..\..\src\husky\geo\CoordSys.cpp" />
+    <ClCompile Include="..\..\src\husky\geo\Shapefile.cpp" />
     <ClCompile Include="..\..\src\husky\image\Image.cpp" />
     <ClCompile Include="..\..\src\husky\Log.cpp" />
     <ClCompile Include="..\..\src\husky\math\Box.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="..\..\src\husky\mesh\Material.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Mesh.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\Tessellator.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Transform.cpp" />
     <ClCompile Include="..\..\src\husky\planet\Planet.cpp" />
     <ClCompile Include="..\..\src\husky\render\Billboard.cpp" />
@@ -195,6 +197,7 @@
     <ClInclude Include="..\..\include\glad\glad.h" />
     <ClInclude Include="..\..\include\husky\Common.hpp" />
     <ClInclude Include="..\..\include\husky\geo\CoordSys.hpp" />
+    <ClInclude Include="..\..\include\husky\geo\Shapefile.hpp" />
     <ClInclude Include="..\..\include\husky\image\Image.hpp" />
     <ClInclude Include="..\..\include\husky\Log.hpp" />
     <ClInclude Include="..\..\include\husky\math\Box.hpp" />
@@ -215,6 +218,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Mesh.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
+    <ClInclude Include="..\..\include\husky\mesh\Tessellator.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Transform.hpp" />
     <ClInclude Include="..\..\include\husky\planet\Planet.hpp" />
     <ClInclude Include="..\..\include\husky\render\Billboard.hpp" />
