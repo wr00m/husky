@@ -367,22 +367,30 @@ int main()
 
   {
     husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
-
     husky::Mesh mesh;
     for (const husky::Feature &feature : featureTable._features) {
       std::vector<husky::Vector3d> tessPts;
       std::vector<husky::Vector3i> tessTris;
       husky::Tessellator::tessellate(feature, tessPts, tessTris);
-
       int iVert0 = mesh.numVerts();
       for (const auto &pt : tessPts) {
-        mesh.addVert(pt);
+        constexpr double radius = 100.0;
+        double theta = (180.0 + pt.x) * husky::Math::deg2rad;
+        double phi = (90.0 - pt.y) * husky::Math::deg2rad;
+        husky::Vector3d normal;
+        normal.x = std::cos(theta) * std::sin(phi);
+        normal.y = std::sin(theta) * std::sin(phi);
+        normal.z = std::cos(phi);
+        husky::Vector3d ptGeocentric = (normal * radius);
+        husky::Vector2d texCoord = pt.xy;
+        mesh.addVert(ptGeocentric, normal, texCoord);
       }
-
       for (const auto &tri : tessTris) {
         mesh.addTriangle(tri + iVert0);
+        //mesh.addLine(tri[0] + iVert0, tri[1] + iVert0);
+        //mesh.addLine(tri[1] + iVert0, tri[2] + iVert0);
+        //mesh.addLine(tri[2] + iVert0, tri[0] + iVert0);
       }
-
       //if (feature._parts.empty()) {
       //  continue;
       //}
@@ -398,7 +406,7 @@ int main()
       //  }
       //}
     }
-    models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), husky::Material({ 0.1f, 0.5f, 0.2f }))));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), husky::Material({ 0.1f, 0.5f, 0.2f }, tex))));
     entities.emplace_back(std::make_unique<husky::Entity>("Countries", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 0, 0, 0 }));
   }
