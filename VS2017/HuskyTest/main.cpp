@@ -301,7 +301,7 @@ int main()
 
   static const husky::Shader defaultShader = husky::Shader::getDefaultShader(true, false);
   static const husky::Shader defaultShaderBones = husky::Shader::getDefaultShader(true, true);
-  static const husky::Shader lineShader = husky::Shader::getLineShader();
+  //static const husky::Shader lineShader = husky::Shader::getLineShader();
   static const husky::Shader billboardShader = husky::Billboard::getBillboardShader(husky::BillboardMode::SPHERICAL);
 
   husky::Image image(2, 2, husky::ImageFormat::RGBA8);
@@ -370,31 +370,36 @@ int main()
 
     husky::Mesh mesh;
     for (const husky::Feature &feature : featureTable._features) {
+      std::vector<husky::Vector3d> tessPts;
+      std::vector<husky::Vector3i> tessTris;
+      husky::Tessellator::tessellate(feature, tessPts, tessTris);
 
-
-      // TODO
-      std::vector<husky::Vector3d> outPts;
-      std::vector<husky::Vector3i> outTris;
-      husky::Tessellator::tessellate(feature, outPts, outTris);
-
-
-      if (feature._parts.empty()) {
-        continue;
-      }
       int iVert0 = mesh.numVerts();
-      for (const auto &point : feature._points) {
-        mesh.addVert(point.xyz);
+      for (const auto &pt : tessPts) {
+        mesh.addVert(pt);
       }
-      for (int iPart = 0; iPart < (int)feature._parts.size(); iPart++) {
-        int iVertBeginIncl = feature._parts[iPart];
-        int iVertEndExcl = (iPart == feature._parts.size() - 1 ? (int)feature._points.size() : feature._parts[iPart + 1]);
-        for (int iVert = iVertBeginIncl + 1; iVert < iVertEndExcl; iVert++) {
-          mesh.addLine(iVert0 + iVert - 1, iVert0 + iVert);
-        }
+
+      for (const auto &tri : tessTris) {
+        mesh.addTriangle(tri + iVert0);
       }
+
+      //if (feature._parts.empty()) {
+      //  continue;
+      //}
+      //int iVert0 = mesh.numVerts();
+      //for (const auto &point : feature._points) {
+      //  mesh.addVert(point.xyz);
+      //}
+      //for (int iPart = 0; iPart < (int)feature._parts.size(); iPart++) {
+      //  int iVertBeginIncl = feature._parts[iPart];
+      //  int iVertEndExcl = (iPart == feature._parts.size() - 1 ? (int)feature._points.size() : feature._parts[iPart + 1]);
+      //  for (int iVert = iVertBeginIncl + 1; iVert < iVertEndExcl; iVert++) {
+      //    mesh.addLine(iVert0 + iVert - 1, iVert0 + iVert);
+      //  }
+      //}
     }
-    models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), {})));
-    entities.emplace_back(std::make_unique<husky::Entity>("Countries", &lineShader, models.back().get()));
+    models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), husky::Material({ 0.1f, 0.5f, 0.2f }))));
+    entities.emplace_back(std::make_unique<husky::Entity>("Countries", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 0, 0, 0 }));
   }
 
