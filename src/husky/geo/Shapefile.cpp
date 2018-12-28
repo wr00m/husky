@@ -40,6 +40,19 @@ public:
   std::double_t _mMax;
 };
 
+const Vector4d* Feature::getPartVertexArrayPointer(int iPart) const
+{
+  return _points.data() + _parts[iPart];
+}
+
+int Feature::getPartVertexCount(int iPart) const
+{
+  int iVertBeginIncl = _parts[iPart];
+  int iVertEndExcl = (iPart == _parts.size() - 1 ? (int)_points.size() : _parts[iPart + 1]);
+  int partVertCount = (iVertEndExcl - iVertBeginIncl);
+  return partVertCount;
+}
+
 template<class T>
 static inline T read(std::ifstream &file)
 {

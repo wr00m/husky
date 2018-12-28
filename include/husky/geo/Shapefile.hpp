@@ -23,6 +23,9 @@ public:
   Vector4d _bboxMax;
   std::vector<int> _parts;
   std::vector<Vector4d> _points;
+
+  const Vector4d* getPartVertexArrayPointer(int iPart) const;
+  int getPartVertexCount(int iPart) const;
 };
 
 class HUSKY_DLL FeatureTable // TODO: Move to separate file

@@ -252,7 +252,7 @@ static void windowSizeCallback(GLFWwindow *win, int width, int height)
 int main()
 {
   runUnitTests();
-
+   
   if (!glfwInit()) {
     return -1;
   }
@@ -365,13 +365,22 @@ int main()
   //  entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { -5, -5, 0 }));
   //}
 
-  {
+  //{
     husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
+    {
     husky::Mesh mesh;
     for (const husky::Feature &feature : featureTable._features) {
       std::vector<husky::Vector3d> tessPts;
       std::vector<husky::Vector3i> tessTris;
       husky::Tessellator::tessellate(feature, tessPts, tessTris);
+
+      husky::Log::debug("Triangles: %d", tessTris.size());
+
+      //static int i = 0;
+      //if (i++ == 20) {
+      //  break; // TODO: Remove
+      //}
+
       int iVert0 = mesh.numVerts();
       for (const auto &pt : tessPts) {
         constexpr double radius = 100.0;
@@ -601,6 +610,49 @@ int main()
       ImGui::Image(((std::uint8_t*)nullptr) + tex.handle, { 100, 100 });
 
       ImGui::End();
+
+      {
+        ImGui::Begin("Triangulator");
+
+        static int verts = 0;
+        static int featureId = 0;
+        bool retessellate = ImGui::SliderInt("Feature ID", &featureId, 0, (int)featureTable._features.size() - 1);
+        if (retessellate) {
+          verts = 0;
+        }
+        const auto &feature = featureTable._features[featureId];
+        static std::vector<ImVec2> tessPts;
+        static std::vector<husky::Vector3i> tessTris;
+        retessellate |= ImGui::SliderInt("Vertices", &verts, 0, feature.getPartVertexCount(0));
+        if (retessellate) {
+          std::vector<husky::Vector4d> polyline(feature.getPartVertexArrayPointer(0), feature.getPartVertexArrayPointer(0) + verts);
+          std::vector<husky::Vector4d> tessPtsTmp;
+          husky::Tessellator::constrainedDelaunayTriangulation(polyline, tessPtsTmp, tessTris);
+          tessPts.clear();
+          ImVec2 p = ImGui::GetCursorScreenPos();
+          for (auto pt : tessPtsTmp) {
+            pt.x = p.x + (0.0 + pt.x) * 10.0;
+            pt.y = p.y + (0.0 + pt.y) * 10.0;
+            tessPts.emplace_back((float)pt.x, (float)pt.y);
+          }
+        }
+
+        {
+          ImGui::BeginChild("Test");
+          auto drawList = ImGui::GetWindowDrawList();
+          for (const auto &tri : tessTris) {
+            const ImVec2 triPts[3] = { tessPts[tri[0]], tessPts[tri[1]], tessPts[tri[2]], };
+            drawList->AddPolyline(triPts, 3, 0xFF0000FF, true, 1.0f);
+          }
+          for (const auto &pt : tessPts) {
+            drawList->AddCircleFilled(pt, 2.0f, 0xFFFFFFFF);
+          }
+          //drawList->AddCircleFilled(p, 5.0f, IM_COL32(255, 0, 0, 255)); // TODO: Remove
+          ImGui::EndChild();
+        }
+
+        ImGui::End();
+      }
 
       ImGui::Render();
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
