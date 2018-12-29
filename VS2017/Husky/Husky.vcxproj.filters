@@ -120,7 +120,7 @@
     <ClCompile Include="..\..\src\husky\geo\Shapefile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\husky\mesh\Tessellator.cpp">
+    <ClCompile Include="..\..\src\husky\mesh\Triangulator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -236,7 +236,7 @@
     <ClInclude Include="..\..\include\husky\geo\Shapefile.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\husky\mesh\Tessellator.hpp">
+    <ClInclude Include="..\..\include\husky\mesh\Triangulator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

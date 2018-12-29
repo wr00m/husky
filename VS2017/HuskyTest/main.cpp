@@ -1,8 +1,9 @@
 #include <cstdio>
-#include <vector>
-#include <string>
-#include <map>
 #include <algorithm>
+#include <ctime>
+#include <map>
+#include <string>
+#include <vector>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <husky/render/Camera.hpp>
@@ -12,7 +13,7 @@
 #include <husky/geo/Shapefile.hpp>
 #include <husky/image/Image.hpp>
 #include <husky/mesh/Model.hpp>
-#include <husky/mesh/Tessellator.hpp>
+#include <husky/mesh/Triangulator.hpp>
 #include <husky/math/Intersect.hpp>
 #include <husky/math/EulerAngles.hpp>
 #include <husky/math/Random.hpp>
@@ -366,15 +367,50 @@ int main()
   //}
 
   //{
-    husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
-    {
+  husky::FeatureTable featureTable = husky::Shapefile::load("F:/Geodata/World_Countries/World_Countries.shp");
+  {
+    std::clock_t gluStartTime = std::clock();
+    husky::Mesh gluMesh;
+    for (const husky::Feature &feature : featureTable._features) {
+      std::vector<husky::Vector3d> tessPts;
+      std::vector<husky::Vector3i> tessTris;
+      husky::Triangulator::tessellateGlu(feature, tessPts, tessTris);
+
+      //husky::Log::debug("Triangles: %d", tessTris.size());
+
+      //static int i = 0;
+      //if (i++ == 20) {
+      //  break; // TODO: Remove
+      //}
+
+      int iVert0 = gluMesh.numVerts();
+      for (const auto &pt : tessPts) {
+        constexpr double radius = 100.0;
+        double theta = (180.0 + pt.x) * husky::Math::deg2rad;
+        double phi = (90.0 - pt.y) * husky::Math::deg2rad;
+        husky::Vector3d normal;
+        normal.x = std::cos(theta) * std::sin(phi);
+        normal.y = std::sin(theta) * std::sin(phi);
+        normal.z = std::cos(phi);
+        husky::Vector3d ptGeocentric = (normal * radius);
+        husky::Vector2d texCoord = pt.xy;
+        gluMesh.addVert(ptGeocentric, normal, texCoord);
+      }
+      for (const auto &tri : tessTris) {
+        gluMesh.addTriangle(tri + iVert0);
+      }
+    }
+    husky::Log::debug("GLU time: %d", std::clock() - gluStartTime);
+
+
+    std::clock_t startTime = std::clock();
     husky::Mesh mesh;
     for (const husky::Feature &feature : featureTable._features) {
       std::vector<husky::Vector3d> tessPts;
       std::vector<husky::Vector3i> tessTris;
-      husky::Tessellator::tessellate(feature, tessPts, tessTris);
+      husky::Triangulator::tessellate(feature, tessPts, tessTris);
 
-      husky::Log::debug("Triangles: %d", tessTris.size());
+      //husky::Log::debug("Triangles: %d", tessTris.size());
 
       //static int i = 0;
       //if (i++ == 20) {
@@ -396,25 +432,11 @@ int main()
       }
       for (const auto &tri : tessTris) {
         mesh.addTriangle(tri + iVert0);
-        //mesh.addLine(tri[0] + iVert0, tri[1] + iVert0);
-        //mesh.addLine(tri[1] + iVert0, tri[2] + iVert0);
-        //mesh.addLine(tri[2] + iVert0, tri[0] + iVert0);
       }
-      //if (feature._parts.empty()) {
-      //  continue;
-      //}
-      //int iVert0 = mesh.numVerts();
-      //for (const auto &point : feature._points) {
-      //  mesh.addVert(point.xyz);
-      //}
-      //for (int iPart = 0; iPart < (int)feature._parts.size(); iPart++) {
-      //  int iVertBeginIncl = feature._parts[iPart];
-      //  int iVertEndExcl = (iPart == feature._parts.size() - 1 ? (int)feature._points.size() : feature._parts[iPart + 1]);
-      //  for (int iVert = iVertBeginIncl + 1; iVert < iVertEndExcl; iVert++) {
-      //    mesh.addLine(iVert0 + iVert - 1, iVert0 + iVert);
-      //  }
-      //}
     }
+    husky::Log::debug("Time: %d", std::clock() - startTime);
+
+
     models.emplace_back(std::make_unique<husky::Model>(husky::Model(std::move(mesh), husky::Material({ 0.1f, 0.5f, 0.2f }, tex))));
     entities.emplace_back(std::make_unique<husky::Entity>("Countries", &defaultShader, models.back().get()));
     entities.back()->setTransform(husky::Matrix44d::compose({ 1, 1, 1 }, husky::Matrix33d::identity(), { 0, 0, 0 }));
@@ -615,25 +637,34 @@ int main()
         ImGui::Begin("Triangulator");
 
         static int verts = 0;
-        static int featureId = 0;
+        static int featureId = 207;
         bool retessellate = ImGui::SliderInt("Feature ID", &featureId, 0, (int)featureTable._features.size() - 1);
-        if (retessellate) {
-          verts = 0;
-        }
         const auto &feature = featureTable._features[featureId];
+        if (retessellate) {
+          verts = feature.getPartVertexCount(0);
+        }
         static std::vector<ImVec2> tessPts;
         static std::vector<husky::Vector3i> tessTris;
         retessellate |= ImGui::SliderInt("Vertices", &verts, 0, feature.getPartVertexCount(0));
         if (retessellate) {
+          husky::Triangulator triangulator(feature._bboxMin.xy, feature._bboxMax.xy);
           std::vector<husky::Vector4d> polyline(feature.getPartVertexArrayPointer(0), feature.getPartVertexArrayPointer(0) + verts);
-          std::vector<husky::Vector4d> tessPtsTmp;
-          husky::Tessellator::constrainedDelaunayTriangulation(polyline, tessPtsTmp, tessTris);
+          for (const auto &pt : polyline) {
+            triangulator.addPoint(pt.xy);
+          }
+
           tessPts.clear();
+          auto featureBboxSize = (feature._bboxMax - feature._bboxMin);
           ImVec2 p = ImGui::GetCursorScreenPos();
-          for (auto pt : tessPtsTmp) {
-            pt.x = p.x + (0.0 + pt.x) * 10.0;
-            pt.y = p.y + (0.0 + pt.y) * 10.0;
+          for (auto pt : triangulator._pts) {
+            pt.x = p.x + (pt.x - feature._bboxMin.x) / featureBboxSize.x * 500.0 + 10.0;
+            pt.y = p.y + (feature._bboxMax.y - pt.y) / featureBboxSize.y * 500.0 + 10.0;
             tessPts.emplace_back((float)pt.x, (float)pt.y);
+          }
+
+          tessTris.clear();
+          for (const auto &tri : triangulator._tris) {
+            tessTris.emplace_back(tri.v0, tri.v1, tri.v2);
           }
         }
 
@@ -641,11 +672,16 @@ int main()
           ImGui::BeginChild("Test");
           auto drawList = ImGui::GetWindowDrawList();
           for (const auto &tri : tessTris) {
+          //if (!tessTris.empty()) { const auto &tri = tessTris.back();
             const ImVec2 triPts[3] = { tessPts[tri[0]], tessPts[tri[1]], tessPts[tri[2]], };
-            drawList->AddPolyline(triPts, 3, 0xFF0000FF, true, 1.0f);
+            drawList->AddConvexPolyFilled(triPts, 3, 0xFF00FF00);
+          }
+          for (const auto &tri : tessTris) {
+            const ImVec2 triPts[3] = { tessPts[tri[0]], tessPts[tri[1]], tessPts[tri[2]], };
+            drawList->AddPolyline(triPts, 3, 0xFFFFFFFF, true, 1.0f);
           }
           for (const auto &pt : tessPts) {
-            drawList->AddCircleFilled(pt, 2.0f, 0xFFFFFFFF);
+            drawList->AddCircleFilled(pt, 2.0f, 0xFF0000FF);
           }
           //drawList->AddCircleFilled(p, 5.0f, IM_COL32(255, 0, 0, 255)); // TODO: Remove
           ImGui::EndChild();

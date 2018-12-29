@@ -178,7 +178,7 @@
     <ClCompile Include="..\..\src\husky\mesh\Material.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Mesh.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Model.cpp" />
-    <ClCompile Include="..\..\src\husky\mesh\Tessellator.cpp" />
+    <ClCompile Include="..\..\src\husky\mesh\Triangulator.cpp" />
     <ClCompile Include="..\..\src\husky\mesh\Transform.cpp" />
     <ClCompile Include="..\..\src\husky\planet\Planet.cpp" />
     <ClCompile Include="..\..\src\husky\render\Billboard.cpp" />
@@ -218,7 +218,7 @@
     <ClInclude Include="..\..\include\husky\mesh\Material.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Mesh.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Model.hpp" />
-    <ClInclude Include="..\..\include\husky\mesh\Tessellator.hpp" />
+    <ClInclude Include="..\..\include\husky\mesh\Triangulator.hpp" />
     <ClInclude Include="..\..\include\husky\mesh\Transform.hpp" />
     <ClInclude Include="..\..\include\husky\planet\Planet.hpp" />
     <ClInclude Include="..\..\include\husky\render\Billboard.hpp" />
